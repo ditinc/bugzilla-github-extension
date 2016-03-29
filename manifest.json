@@ -1,0 +1,32 @@
+{
+	"manifest_version": 2,
+
+	"name": "DITBugzillaGitHub",
+	"description": "This extension integrates GitHub and Bugzilla",
+	"version": "0.1",
+
+	"browser_action": {
+		"default_icon": "icon.png"
+	},
+	"permissions": [
+		"activeTab",
+		"https://ajax.googleapis.com/"
+	],
+	"content_scripts": [
+		{
+			"matches": [
+				"*://github.com/ditinc*",
+				"*://bugzilla.dtec.com/*"
+			],
+			"js": [
+				"jquery-2.2.2.min.js",
+				"jquery.xmlrpc.min.js",
+				"bugzilla.js",
+				"content.js"
+			]
+		}
+	],
+	"background": {
+		"scripts": ["background.js"]
+	}
+}
