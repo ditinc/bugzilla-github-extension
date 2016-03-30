@@ -38,3 +38,15 @@ Bugzilla.prototype.addComment = function(bugId, comment, hoursWorked) {
 		params: [{"id": bugId, "comment": comment, "work_time": hoursWorked}]
 	});
 }
+
+Bugzilla.prototype.updateBug = function(bugId, params) {
+	"use strict";
+	params.ids = [bugId];
+	console.log(params);
+	
+	return $.xmlrpc({
+		url: this.url,
+		methodName: 'Bug.update',
+		params: [params]
+	});
+}
