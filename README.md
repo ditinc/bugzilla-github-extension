@@ -1,4 +1,18 @@
 # DIT-Bugzilla-GitHub
+This Chrome extension integrates Bugzilla and GitHub to make your life easier.  It is a work in progress, so feel free to contribute!
+
+## Features
+#### Bugzilla
+- If GitHub Pull Request URL is populated with the pull request's URL, then a link will be added to the bug's title
+
+#### GitHub
+- If the pull request's title includes the bug number (ex: 83513, [83513], Bug 83513, Bug83513):
+  - Bug number in title will be a link to the bug
+  - Bugzilla section added to side listing some bug details
+  - Comments will be sent to Bugzilla along with the Hours Worked entered in a new input added next to the comment buttons
+  - Merging the pull request will update the Code Status in Bugzilla to "Merged to master/trunk" or "Merged to parent branch"
+
+## Install
 Here's how you load an extension in Chrome, taken from https://developer.chrome.com/extensions/getstarted#unpacked:
 > Extensions that you download from the Chrome Web Store are packaged up as .crx files, which is great for distribution, but not so great for development. Recognizing this, Chrome gives you a quick way of loading up your working directory for testing. Let's do that now.
 > 
