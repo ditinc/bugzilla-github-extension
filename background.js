@@ -9,5 +9,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
 // Called when the page is updated
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-	chrome.tabs.sendMessage(tabId, {"message": "tab_updated"});
+	if (changeInfo.status !== "loading") {
+		chrome.tabs.sendMessage(tabId, {"message": "tab_updated"});
+	}
 });

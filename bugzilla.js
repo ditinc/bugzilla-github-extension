@@ -1,8 +1,23 @@
+/**
+ * Constructs a Bugzilla object.
+ * @class
+ * @classdesc An object that communicates with Bugzilla via XML-RPC.
+ */
 var Bugzilla = function() {
 	"use strict";
+	
+	/**
+	 * The URL of the Bugzilla server.  TODO: make as an option when creating the class.
+	 * @private
+	 * @type {String}
+	 */
 	this.url = 'https://bugzilla.dtec.com/xmlrpc.cgi';
 }
 
+/**
+ * Gets the version of Bugzilla and spits it to the console.
+ * Not really useful other than confirming connectivity.
+ */
 Bugzilla.prototype.getVersion = function() {
 	"use strict";
 	
@@ -10,7 +25,7 @@ Bugzilla.prototype.getVersion = function() {
 		url: this.url,
 		methodName: 'Bugzilla.version',
 		success: function(response, status, jqXHR) {
-			console.log(response);
+			console.log(response[0].version);
 		},
 		error: function(jqXHR, status, error) {
 			console.log(arguments);
@@ -18,6 +33,11 @@ Bugzilla.prototype.getVersion = function() {
 	});
 }
 
+/**
+ * Gets a promise that will return bug info for the passed in bug number.
+ * @param {number} bugId - The bug number.
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
 Bugzilla.prototype.getBug = function(bugId) {
 	"use strict";
 
@@ -28,6 +48,13 @@ Bugzilla.prototype.getBug = function(bugId) {
 	});
 }
 
+/**
+ * Adds a comment to the bug passed in.
+ * @param {number} bugId - The bug number.
+ * @param {String} comment - The comment.
+ * @param {number} hoursWorked - The number of hours worked. Default: 0
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
 Bugzilla.prototype.addComment = function(bugId, comment, hoursWorked) {
 	"use strict";
 	hoursWorked = hoursWorked || 0;
@@ -39,10 +66,15 @@ Bugzilla.prototype.addComment = function(bugId, comment, hoursWorked) {
 	});
 }
 
+/**
+ * Updates the bug with the given parameters.
+ * @param {number} bugId - The bug number.
+ * @param {Object} params - An key-value object with the fields to be updated (see documentation for details).
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
 Bugzilla.prototype.updateBug = function(bugId, params) {
 	"use strict";
 	params.ids = [bugId];
-	console.log(params);
 	
 	return $.xmlrpc({
 		url: this.url,
