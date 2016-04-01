@@ -154,16 +154,17 @@ function init() {
 					/* Updates the code status in Bugzilla when merging a pull request */
 					.off("click.DITBugzillaGitHub", "button.js-merge-commit-button")
 					.on("click.DITBugzillaGitHub", "button.js-merge-commit-button", function() {
-						var newCodeStatus, comment;
+						var newCodeStatus;
+						var comment = "Merged pull request " + $(".gh-header-number").html();
 						var mergeTarget = $(".current-branch").eq(0).children().html();
 						
 						if (mergeTarget === "master") {
 							newCodeStatus = "Merged to master/trunk";
-							comment = "Merged to master.";
+							comment += " to master.";
 						}
 						else {
 							newCodeStatus = "Merged to parent branch";
-							comment = "Merged to parent branch.";
+							comment += " to parent branch.";
 						}
 						
 						bugzilla.updateBug(bugId, {"cf_codestatus": newCodeStatus, "comment": {"body": comment}});
