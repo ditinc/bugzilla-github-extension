@@ -30,6 +30,10 @@ function init() {
 			if (url) {
 				var $bugTitle = $('#summary_alias_container');
 				
+				if ($($bugTitle[0].previousSibling).is("A")) {
+					$($bugTitle[0].previousSibling).remove();
+				}
+				
 				$bugTitle[0].previousSibling.textContent = " - ";
 				
 				$bugTitle.before(
@@ -116,6 +120,7 @@ function init() {
 				});
 				
 				/* This will modify the comment form to allow entering Hours Worked and update Bugzilla with the comment */
+				$("#workTime").remove();
 				$("#partial-new-comment-form-actions button")
 					.last()
 						.after(
@@ -150,10 +155,20 @@ function init() {
 					.on("click.DITBugzillaGitHub", "#partial-new-comment-form-actions button", function() {
 						bugzilla.addComment(bugId, $("#new_comment_field").val(), $("#workTime").val());
 					})
+					
+					/* Syncs line comments with the bug in Bugzilla */
+					.off("click.DITBugzillaGitHub", ".js-inline-comment-form button[type='submit']")
+					.on("click.DITBugzillaGitHub", ".js-inline-comment-form button[type='submit']", function() {
+						var $form = $(this).closest("form");
+						var comment = $form.find("textarea").val();
+						var line = $form.find("[name='line']").val();
+						var path = $form.find("[name='path']").val();
+						bugzilla.addComment(bugId, path + " line " + line + ": " + comment, 0);
+					})
 				
 					/* Updates the code status in Bugzilla when merging a pull request */
-					.off("click.DITBugzillaGitHub", "button.js-merge-commit-button")
-					.on("click.DITBugzillaGitHub", "button.js-merge-commit-button", function() {
+					.off("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button")
+					.on("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button", function() {
 						var newCodeStatus;
 						var comment = "Merged pull request " + $(".gh-header-number").html();
 						var mergeTarget = $(".current-branch").eq(0).children().html();
