@@ -205,7 +205,7 @@ function init() {
 		}
 		
 		if (repo && repo.length > 0 && !productMap[repo] && $("#productMapSelector").length === 0) {
-			$("body").before(
+			$("body").prepend(
 				$("<div>")
 					.attr({id: "productMapSelector"})
 					.addClass("commit-tease js-sticky")
@@ -250,6 +250,7 @@ function init() {
 									name: selectedProduct
 								};
 								chrome.storage.sync.set({productMap: productMap}, function(obj) {
+									$("#productMapSelector").prev(".is-placeholder").remove();
 									$("#productMapSelector").remove();
 								});
 							})
