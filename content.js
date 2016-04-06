@@ -208,7 +208,8 @@ function init() {
 			$("body").before(
 				$("<div>")
 					.attr({id: "productMapSelector"})
-					.addClass("commit-tease")
+					.addClass("commit-tease js-sticky")
+					.css("z-index", 10)
 					.html(
 						$("<img>")
 							.attr({src: chrome.extension.getURL("icon.png")})
