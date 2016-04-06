@@ -10,7 +10,8 @@
 	},
 	"permissions": [
 		"activeTab",
-		"https://ajax.googleapis.com/"
+		"https://ajax.googleapis.com/",
+		"storage"
 	],
 	"content_scripts": [
 		{
@@ -28,5 +29,8 @@
 	],
 	"background": {
 		"scripts": ["background.js"]
-	}
+	},
+	"web_accessible_resources": [
+		"icon.png"
+	]
 }
