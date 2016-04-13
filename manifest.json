@@ -6,15 +6,8 @@
 	"version": "0.1",
 
 	"browser_action": {
-		"default_icon": "icon.png"
+		"default_icon": "images/icon.png"
 	},
-	"permissions": [
-		"activeTab",
-		"https://ajax.googleapis.com/",
-		"storage",
-		"webRequest",
-		"*://github.com/ditinc*"
-	],
 	"content_scripts": [
 		{
 			"matches": [
@@ -22,17 +15,14 @@
 				"*://bugzilla.dtec.com/*"
 			],
 			"js": [
-				"jquery-2.2.2.min.js",
-				"jquery.xmlrpc.min.js",
-				"bugzilla.js",
-				"content.js"
+				"lib/jquery-2.2.2.min.js",
+				"lib/jquery.xmlrpc.min.js",
+				"src/bugzilla.js",
+				"src/content-script.js"
 			]
 		}
 	],
-	"background": {
-		"scripts": ["background.js"]
-	},
 	"web_accessible_resources": [
-		"icon.png"
+		"src/injected.js"
 	]
 }
