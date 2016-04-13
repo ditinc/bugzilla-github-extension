@@ -12,10 +12,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	switch (request.message) {
 		/* This will reinitialize the plugin when the extension button is pressed */
 		case "clicked_browser_action":
-			init();
-			break;
 		/* This will reinitialize the plugin when the tab is updated */
 		case "tab_updated":
+		/* This will reinitialize the plugin when an AJAX request is made... GitHub changes content via AJAX */
+		default:
 			chrome.storage.sync.get('productMap', function (obj) {
 				if (obj && obj.productMap) {
 					productMap = obj.productMap;
