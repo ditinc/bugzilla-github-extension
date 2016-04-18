@@ -114,7 +114,7 @@ var DITBugzillaGitHub = function() {
 			}
 		}
 		
-		if ($sidebar.length) {
+		if ($sidebar.length && $sidebar.find("div.sidebar-dit-bugzilla").length === 0) {
 			$sidebar.prepend(
 				$("<div>")
 					.addClass("discussion-sidebar-item sidebar-dit-bugzilla")
@@ -157,7 +157,7 @@ var DITBugzillaGitHub = function() {
 			}
 		}
 		
-		if ($buttons.length) {
+		if ($buttons.length && $buttons.parent().find("input#workTime").length === 0) {
 			$buttons
 				.last()
 					.after(
