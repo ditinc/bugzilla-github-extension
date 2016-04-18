@@ -142,7 +142,7 @@ var DITBugzillaGitHub = function() {
 	};
 	
 	var injectHoursWorkedInput = function(contents) {
-		var selector = '#partial-new-comment-form-actions button';
+		var selector = '#partial-new-comment-form-actions';
 		var $buttons;
 		
 		if ($(contents).length === 1 && $(contents).is(selector)) {
@@ -157,35 +157,33 @@ var DITBugzillaGitHub = function() {
 			}
 		}
 		
-		if ($buttons.length && $buttons.parent().find("input#workTime").length === 0) {
+		if ($buttons.length && $buttons.find("input#workTime").length === 0) {
 			$buttons
-				.last()
-					.after(
-						$("<label>")
-							.text("Hours Worked")
-							.attr({
-								for: "workTime"
-							})
-							.css({
-								float: "right",
-								padding: "7px 0"
-							})
-					)
-					.after(
-						$("<input>")
-							.attr({
-								name: "workTime",
-								id: "workTime",
-								type: "number",
-								step: "0.5"
-							})
-							.css({
-								width: "2.5em",
-								float: "right",
-								margin: "5px"
-							})
-					);
-					
+				.append(
+					$("<input>")
+						.attr({
+							name: "workTime",
+							id: "workTime",
+							type: "number",
+							step: "0.5"
+						})
+						.css({
+							width: "2.5em",
+							float: "right",
+							margin: "5px"
+						})
+				)
+				.append(
+					$("<label>")
+						.text("Hours Worked")
+						.attr({
+							for: "workTime"
+						})
+						.css({
+							float: "right",
+							padding: "7px 0"
+						})
+				);
 		}
 	};
 	
