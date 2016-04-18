@@ -5,11 +5,10 @@ var DITBugzillaGitHub = function() {
 	var bugId;
 	var $ = require('github/jquery').default;
 	
-	var init = function() {
-		createListeners();
-		linkifyBugNumber(document);
-		showBugDetailsInSidebar(document);
-		injectHoursWorkedInput(document);
+	var applyExtension = function(contents) {
+		linkifyBugNumber(contents);
+		showBugDetailsInSidebar(contents);
+		injectHoursWorkedInput(contents);
 	};
 	
 	var getBugUrl = function() {
@@ -20,16 +19,12 @@ var DITBugzillaGitHub = function() {
 		// This handles partial updates
 		var proxied = $.fn.replaceWith;
 		$.fn.replaceWith = function(contents) {
-			linkifyBugNumber(contents);
-			showBugDetailsInSidebar(contents);
-			injectHoursWorkedInput(contents);
+			applyExtension(contents);
 			return proxied.apply(this, arguments);
 		};
 		
 		var pjaxBeforeReplaceHandler = function(e) {
-			linkifyBugNumber(e.originalEvent.detail.contents);
-			showBugDetailsInSidebar(e.originalEvent.detail.contents);
-			injectHoursWorkedInput(e.originalEvent.detail.contents);
+			applyExtension(e.originalEvent.detail.contents);
 		};
 		
 		$(document)
@@ -54,7 +49,7 @@ var DITBugzillaGitHub = function() {
 				var line = $form.find("[name='line']").val();
 				var path = $form.find("[name='path']").val();
 				if ($.trim(comment).length) {
-					if (line) {
+					if (!line) {
 						comment = path + ": " + comment;
 					}
 					else {
@@ -194,7 +189,8 @@ var DITBugzillaGitHub = function() {
 		}
 	};
 	
-	init();
+	createListeners();
+	applyExtension(document);
 };
 
 new DITBugzillaGitHub();
