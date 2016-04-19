@@ -74,6 +74,7 @@ var DITBugzillaGitHub = function() {
 					newCodeStatus = "Merged to parent branch";
 					comment += " to parent branch.";
 				}
+				comment += " (" + window.location.href + ")";
 				
 				window.postMessage({method: "updateBug", bugId: bugId, params: {"cf_codestatus": newCodeStatus, "comment": {"body": comment}}}, '*');
 			});
