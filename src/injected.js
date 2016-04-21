@@ -36,6 +36,8 @@ var DITBugzillaGitHub = function() {
 			/* Syncs comments with the bug in Bugzilla */
 			.off("click.DITBugzillaGitHub", "#partial-new-comment-form-actions button")
 			.on("click.DITBugzillaGitHub", "#partial-new-comment-form-actions button", function() {
+				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+			
 				var comment = $("#new_comment_field").val();
 				if ($.trim(comment).length) {
 					window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: $("#workTime").val()}, '*');
@@ -45,6 +47,8 @@ var DITBugzillaGitHub = function() {
 			/* Syncs line comments with the bug in Bugzilla */
 			.off("click.DITBugzillaGitHub", ".js-inline-comment-form button[type='submit']")
 			.on("click.DITBugzillaGitHub", ".js-inline-comment-form button[type='submit']", function() {
+				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+
 				var $form = $(this).closest("form");
 				var comment = $form.find("textarea").val();
 				var line = $form.find("[name='line']").val();
@@ -63,6 +67,8 @@ var DITBugzillaGitHub = function() {
 			/* Make sure we display correct mergeTarget */
 			.off("click.DITBugzillaGitHub", "button.js-merge-branch-action")
 			.on("click.DITBugzillaGitHub", "button.js-merge-branch-action", function() {
+				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+
 				var mergeTarget = $(".current-branch").eq(0).children().html();
 				var newCodeStatus;
 				
@@ -79,6 +85,8 @@ var DITBugzillaGitHub = function() {
 			/* Updates the bug in Bugzilla when merging a pull request */
 			.off("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button")
 			.on("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button", function() {
+				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+			
 				var resolveBug = $("#resolveBug").prop("checked");
 				var updateBugCodeStatus = $("#updateBugCodeStatus").prop("checked");
 				var mergeTarget = $(".current-branch").eq(0).children().html();
@@ -131,12 +139,17 @@ var DITBugzillaGitHub = function() {
 				/* This will turn the bug number into a link to the bug */
 				newHtml = $issueTitle.html().replace(REGEX, '<a href="' + getBugUrl() + '">[' + bugId + ']</a>');
 			}
+			else {
+				bugId = null;
+			}
 		}
 
 		$issueTitle.html(newHtml);
 	};
 	
 	var showBugDetailsInSidebar = function(contents) {
+		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+	
 		var selector = '#partial-discussion-sidebar';
 		var $sidebar;
 		
@@ -177,9 +190,15 @@ var DITBugzillaGitHub = function() {
 			
 			window.postMessage({method: "loadBugDetails", bugId: bugId}, '*');
 		}
+		else if ($sidebar.length) {
+			// Need this line or else we lose previously applied changes.
+			$sidebar.html($sidebar.html());
+		}
 	};
 	
 	var injectHoursWorkedInput = function(contents) {
+		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+	
 		var selector = '#partial-new-comment-form-actions';
 		var $buttons;
 		
@@ -223,9 +242,15 @@ var DITBugzillaGitHub = function() {
 						})
 				);
 		}
+		else if ($buttons.length) {
+			// Need this line or else we lose previously applied changes.
+			$buttons.html($buttons.html());
+		}
 	};
 	
 	var injectResolveBugCheckbox = function(contents) {
+		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+	
 		var selector = '#partial-pull-merging div.js-merge-methods';
 		var $buttons;
 		
@@ -303,6 +328,10 @@ var DITBugzillaGitHub = function() {
 								.html("Set the bug's code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
 						)
 				);
+		}
+		else if ($buttons.length) {
+			// Need this line or else we lose previously applied changes.
+			$buttons.html($buttons.html());
 		}
 	};
 	
