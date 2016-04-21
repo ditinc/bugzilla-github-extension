@@ -1,5 +1,8 @@
 'use strict';
 
+// Make the icon active when we're on our GitHub or Bugzilla pages
+chrome.runtime.sendMessage({}, function(response) {});
+
 // Check the URL to determine if we're in Bugzilla or GitHub
 if (location.href.indexOf("bugzilla") > -1) {
 	// We're in Bugzilla
