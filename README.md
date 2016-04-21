@@ -10,7 +10,10 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
   - Bug number in title will be a link to the bug
   - Bugzilla section added to side listing some bug details
   - Comments will be sent to Bugzilla along with the Hours Worked entered in a new input added next to the comment buttons
-  - Merging the pull request will update the Code Status in Bugzilla to "Merged to master/trunk" or "Merged to parent branch"
+    - This includes line comments
+  - When merging a pull request, you have the option to:
+    - Update the Code Status in Bugzilla to "Merged to master/trunk" or "Merged to parent branch"
+    - Update the bug to RESOLVED TESTED
 
 ## Install
 Here's how you load an extension in Chrome, taken from https://developer.chrome.com/extensions/getstarted#unpacked:
