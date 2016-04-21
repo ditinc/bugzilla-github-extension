@@ -9,6 +9,7 @@ var DITBugzillaGitHub = function() {
 		linkifyBugNumber(contents);
 		showBugDetailsInSidebar(contents);
 		injectHoursWorkedInput(contents);
+		injectCommentOptions(contents);
 		injectResolveBugCheckbox(contents);
 	};
 	
@@ -38,9 +39,33 @@ var DITBugzillaGitHub = function() {
 			.on("click.DITBugzillaGitHub", "#partial-new-comment-form-actions button", function() {
 				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 			
-				var comment = $("#new_comment_field").val();
-				if ($.trim(comment).length) {
-					window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: $("#workTime").val()}, '*');
+				var $form = $(this).closest("form");
+				var syncComment = $form.find(".syncComment").prop("checked");
+				var resolveBug = $form.find(".resolveBug").prop("checked");
+				var comment = (syncComment ? $("#new_comment_field").val() : "");
+				var hoursWorked = $("#workTime").val();
+				
+				if (syncComment && !resolveBug) {
+					if ($.trim(comment).length) {
+						window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: hoursWorked}, '*');
+					}
+				}
+				else if (resolveBug) {
+					var params = {
+						status: "RESOLVED",
+						resolution: "FIXED",
+						"work_time": hoursWorked
+					};
+					
+					if (syncComment) {
+						comment += "\r\n\r\n";
+					}
+					
+					comment += "Marking as FIXED.";
+					
+					params["comment"] = {"body": $.trim(comment)};
+				
+					window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
 				}
 			})
 			
@@ -50,17 +75,23 @@ var DITBugzillaGitHub = function() {
 				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 
 				var $form = $(this).closest("form");
-				var comment = $form.find("textarea").val();
-				var line = $form.find("[name='line']").val();
-				var path = $form.find("[name='path']").val();
-				if ($.trim(comment).length) {
-					if (!line) {
-						comment = path + ": " + comment;
+				var syncComment = $form.find(".syncComment").prop("checked");
+				
+				if (syncComment) {
+					var comment = $form.find("textarea").val();
+					var line = $form.find("[name='line']").val();
+					var path = $form.find("[name='path']").val();
+					
+					if ($.trim(comment).length) {
+						if (!line || line === "false") {
+							comment = path + ": " + comment;
+						}
+						else {
+							comment = path + " line " + line + ": " + comment
+						}
+						
+						window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: 0}, '*');
 					}
-					else {
-						comment = path + " line " + line + ": " + comment
-					}
-					window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: 0}, '*');
 				}
 			})
 			
@@ -196,6 +227,98 @@ var DITBugzillaGitHub = function() {
 		}
 	};
 	
+	var injectCommentOptions = function(contents) {
+		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+	
+		var selector = '.js-previewable-comment-form';
+		var $div;
+		
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$div = $(contents);
+		}
+		else {
+			try {
+				$div = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+		
+		if ($div.length) {
+			$div.each(function(i) {
+				var $this = $(this);
+				var $form = $this.closest("form"); 
+
+				// Don't do anything if we've already updated previously or if it's an update to an existing comment
+				if ($this.find("input.syncComment").length > 0 || $form.is(".js-comment-update")) { return; }
+				
+				var showResolveInput = $form.is(".js-new-comment-form");
+				
+				if (showResolveInput) {
+					$this.find("div.toolbar-help")
+						.before(
+							$("<div>")
+								.addClass("pl-3")
+								.html(
+									$("<div>")
+										.addClass("form-checkbox")
+										.append(
+											$("<label>")
+												.text("Resolve bug " + bugId)
+												.append(
+													$("<input>")
+														.addClass("resolveBug")
+														.attr({
+															type: "checkbox"
+														})
+														.prop('checked', false)
+												)
+										)
+										.append(
+											$("<p>")
+												.addClass("note")
+												.html("Set the bug to <strong>RESOLVED FIXED</strong> in Bugzilla.")
+										)
+								)
+						);
+				}
+			
+				$this.find("div.toolbar-help")
+					.before(
+						$("<div>")
+							.addClass("pl-3")
+							.html(
+								$("<div>")
+									.addClass("form-checkbox")
+									.append(
+										$("<label>")
+											.text("Post comment to bug " + bugId)
+											.append(
+												$("<input>")
+													.addClass("syncComment")
+													.attr({
+														type: "checkbox",
+														checked: "checked"
+													})
+													.prop('checked', true)
+											)
+									)
+									.append(
+										$("<p>")
+											.addClass("note")
+											.html("Add the comment to the bug in Bugzilla.")
+									)
+							)
+					);
+			});
+		}
+		else if ($div.length) {
+			// Need this line or else we lose previously applied changes.
+			$div.html($div.html());
+		}
+	};
+	
 	var injectHoursWorkedInput = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
@@ -292,7 +415,8 @@ var DITBugzillaGitHub = function() {
 										.attr({
 											name: "resolveBug",
 											id: "resolveBug",
-											type: "checkbox"
+											type: "checkbox",
+											checked: "checked"
 										})
 										.prop('checked', true)
 								)
@@ -317,7 +441,8 @@ var DITBugzillaGitHub = function() {
 										.attr({
 											name: "updateBugCodeStatus",
 											id: "updateBugCodeStatus",
-											type: "checkbox"
+											type: "checkbox",
+											checked: "checked"
 										})
 										.prop('checked', true)
 								)
