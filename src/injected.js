@@ -59,6 +59,22 @@ var DITBugzillaGitHub = function() {
 					window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: 0}, '*');
 				}
 			})
+			
+			/* Make sure we display correct mergeTarget */
+			.off("click.DITBugzillaGitHub", "button.js-merge-branch-action")
+			.on("click.DITBugzillaGitHub", "button.js-merge-branch-action", function() {
+				var mergeTarget = $(".current-branch").eq(0).children().html();
+				var newCodeStatus;
+				
+				if (mergeTarget === "master") {
+					newCodeStatus = "Merged to master/trunk";
+				}
+				else {
+					newCodeStatus = "Merged to parent branch";
+				}
+
+				$("#newCodeStatus").html(newCodeStatus);
+			})
 				
 			/* Updates the bug in Bugzilla when merging a pull request */
 			.off("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button")
@@ -284,7 +300,7 @@ var DITBugzillaGitHub = function() {
 						.append(
 							$("<p>")
 								.addClass("note")
-								.html("Set the bug's code status to <strong>" + newCodeStatus + "</strong> in Bugzilla.")
+								.html("Set the bug's code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
 						)
 				);
 		}
