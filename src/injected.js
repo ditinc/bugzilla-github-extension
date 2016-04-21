@@ -65,37 +65,39 @@ var DITBugzillaGitHub = function() {
 			.on("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button", function() {
 				var resolveBug = $("#resolveBug").prop("checked");
 				var updateBugCodeStatus = $("#updateBugCodeStatus").prop("checked");
-
-				if (resolveBug || updateBugCodeStatus) {
-					var params = {};
-					var comment = "";
-					var newCodeStatus;
+				var mergeTarget = $(".current-branch").eq(0).children().html();
+				var params = {};
+				var comment = "";
+				var newCodeStatus;
 					
-					if (resolveBug) {
-						comment += "Marking as TESTED.  ";
-					}
-					
-					comment += "Merged pull request " + $(".gh-header-number").html();
-					var mergeTarget = $(".current-branch").eq(0).children().html();
-					
-					if (mergeTarget === "master") {
-						newCodeStatus = "Merged to master/trunk";
-						comment += " to master.";
-					}
-					else {
-						newCodeStatus = "Merged to parent branch";
-						comment += " to parent branch.";
-					}
-					comment += " (" + window.location.href + ")";
-						
-					if (updateBugCodeStatus) {
-						params["cf_codestatus"] = newCodeStatus;
-					}
-					
-					params["comment"] = {"body": $.trim(comment)};
-					
-					window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
+				/* If we chose to resolve, set to RESOLVED TESTED and comment as much */
+				if (resolveBug) {
+					comment += "Marking as TESTED.  ";
+					params["status"] = "RESOLVED";
+					params["resolution"] = "TESTED";
 				}
+					
+				/* Always comment that we merged it */
+				comment += "Merged pull request " + $(".gh-header-number").html();
+				
+				if (mergeTarget === "master") {
+					newCodeStatus = "Merged to master/trunk";
+					comment += " to master.";
+				}
+				else {
+					newCodeStatus = "Merged to parent branch";
+					comment += " to parent branch.";
+				}
+				comment += " (" + window.location.href + ")";
+					
+				/* Update code status is we chose to */
+				if (updateBugCodeStatus) {
+					params["cf_codestatus"] = newCodeStatus;
+				}
+				
+				params["comment"] = {"body": $.trim(comment)};
+				
+				window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
 			});
 	};
 
