@@ -9,6 +9,7 @@ var DITBugzillaGitHub = function() {
 		linkifyBugNumber(contents);
 		showBugDetailsInSidebar(contents);
 		injectHoursWorkedInput(contents);
+		injectResolveBugCheckbox(contents);
 	};
 	
 	var getBugUrl = function() {
@@ -59,24 +60,42 @@ var DITBugzillaGitHub = function() {
 				}
 			})
 				
-			/* Updates the code status in Bugzilla when merging a pull request */
+			/* Updates the bug in Bugzilla when merging a pull request */
 			.off("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button")
 			.on("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button", function() {
-				var newCodeStatus;
-				var comment = "Merged pull request " + $(".gh-header-number").html();
-				var mergeTarget = $(".current-branch").eq(0).children().html();
+				var resolveBug = $("#resolveBug").prop("checked");
+				var updateBugCodeStatus = $("#updateBugCodeStatus").prop("checked");
 				
-				if (mergeTarget === "master") {
-					newCodeStatus = "Merged to master/trunk";
-					comment += " to master.";
+				if (resolveBug || updateBugCodeStatus) {
+					var params = {};
+					var comment = "";
+					var newCodeStatus;
+					
+					if (resolveBug) {
+						comment += "Marking as TESTED.  ";
+					}
+					
+					comment += "Merged pull request " + $(".gh-header-number").html();
+					var mergeTarget = $(".current-branch").eq(0).children().html();
+					
+					if (mergeTarget === "master") {
+						newCodeStatus = "Merged to master/trunk";
+						comment += " to master.";
+					}
+					else {
+						newCodeStatus = "Merged to parent branch";
+						comment += " to parent branch.";
+					}
+					comment += " (" + window.location.href + ")";
+						
+					if (updateBugCodeStatus) {
+						params["cf_codestatus"] = newCodeStatus;
+					}
+					
+					params["comment"] = {"body": $.trim(comment)};
+					
+					window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
 				}
-				else {
-					newCodeStatus = "Merged to parent branch";
-					comment += " to parent branch.";
-				}
-				comment += " (" + window.location.href + ")";
-				
-				window.postMessage({method: "updateBug", bugId: bugId, params: {"cf_codestatus": newCodeStatus, "comment": {"body": comment}}}, '*');
 			});
 	};
 
@@ -184,6 +203,87 @@ var DITBugzillaGitHub = function() {
 							float: "right",
 							padding: "7px 0"
 						})
+				);
+		}
+	};
+	
+	var injectResolveBugCheckbox = function(contents) {
+		var selector = '#partial-pull-merging div.js-merge-methods';
+		var $buttons;
+		
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$buttons = $(contents);
+		}
+		else {
+			try {
+				$buttons = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+		
+		if ($buttons.length && $buttons.find("input#resolveBug").length === 0) {
+			var newCodeStatus = "Merged to ";
+			var mergeTarget = $(".current-branch").eq(0).children().html();
+			
+			if (mergeTarget === "master") {
+				newCodeStatus += "master/trunk";
+			}
+			else {
+				newCodeStatus += "parent branch";
+			}
+			
+			$buttons
+				.append(
+					$("<div>")
+						.addClass("form-checkbox")
+						.append(
+							$("<label>")
+								.text("Resolve bug " + bugId)
+								.attr({
+									for: "resolveBug"
+								})
+								.append(
+									$("<input>")
+										.attr({
+											name: "resolveBug",
+											id: "resolveBug",
+											type: "checkbox"
+										})
+										.prop('checked', true)
+								)
+						)
+						.append(
+							$("<p>")
+								.addClass("note")
+								.html("Set the bug to <strong>RESOLVED TESTED</strong> in Bugzilla.")
+						)
+				)
+				.append(
+					$("<div>")
+						.addClass("form-checkbox")
+						.append(
+							$("<label>")
+								.text("Update code status of bug " + bugId)
+								.attr({
+									for: "updateBugCodeStatus"
+								})
+								.append(
+									$("<input>")
+										.attr({
+											name: "updateBugCodeStatus",
+											id: "updateBugCodeStatus",
+											type: "checkbox"
+										})
+										.prop('checked', true)
+								)
+						)
+						.append(
+							$("<p>")
+								.addClass("note")
+								.html("Set the bug's code status to <strong>" + newCodeStatus + "</strong> in Bugzilla.")
+						)
 				);
 		}
 	};
