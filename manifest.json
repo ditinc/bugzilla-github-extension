@@ -4,9 +4,11 @@
 	"name": "DITBugzillaGitHub",
 	"description": "This extension integrates GitHub and Bugzilla",
 	"version": "0.1",
-
-	"browser_action": {
-		"default_icon": "images/icon128.png"
+	"background": {
+		"scripts": ["src/background.js"]
+	},
+	"page_action": {
+		"default_icon": "images/icon48.png"
 	},
 	"content_scripts": [
 		{
