@@ -65,7 +65,7 @@ var DITBugzillaGitHub = function() {
 			.on("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button", function() {
 				var resolveBug = $("#resolveBug").prop("checked");
 				var updateBugCodeStatus = $("#updateBugCodeStatus").prop("checked");
-				
+
 				if (resolveBug || updateBugCodeStatus) {
 					var params = {};
 					var comment = "";
