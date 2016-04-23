@@ -5,15 +5,26 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
 #### Bugzilla
 - If GitHub Pull Request URL is populated with the pull request's URL, then a link will be added to the bug's title
 
+###### TODOs:
+- Open to suggestions
+
 #### GitHub
 - If the pull request's title includes the bug number (ex: 83513, [83513], Bug 83513, Bug83513):
   - Bug number in title will be a link to the bug
   - Bugzilla section added to side listing some bug details
   - Comments will be sent to Bugzilla along with the Hours Worked entered in a new input added next to the comment buttons
-    - This includes line comments
+    - This includes line comments, though they do not have an Hours Worked field
+  - When creating a pull request, you have the option to:
+    - Update the GitHub Pull Request URL on the bug in Bugzilla
+    - Send the comment to Bugzilla
   - When merging a pull request, you have the option to:
     - Update the Code Status in Bugzilla to "Merged to master/trunk" or "Merged to parent branch"
     - Update the bug to RESOLVED TESTED
+
+###### TODOs:
+- Make sure all comment options are correctly updated when the bug number is changed in the title of the bug
+- Allow assigning QA or assignee?  Possibly tied to GitHub user?
+- Open to suggestions
 
 ## Install
 Here's how you load an extension in Chrome, taken from https://developer.chrome.com/extensions/getstarted#unpacked:
