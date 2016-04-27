@@ -14,6 +14,7 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
   - Bugzilla section added to side listing some bug details
   - Comments will be sent to Bugzilla along with the Hours Worked entered in a new input added next to the comment buttons
     - This includes line comments, though they do not have an Hours Worked field
+    - Have the option of setting but to RESOLVED FIXED when making a pull request comment
   - When creating a pull request, you have the option to:
     - Update the GitHub Pull Request URL on the bug in Bugzilla
     - Send the comment to Bugzilla
