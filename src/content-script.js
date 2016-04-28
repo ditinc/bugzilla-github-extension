@@ -62,35 +62,7 @@ else if (location.href.indexOf("github") > -1) {
 		switch (message.method) {
 			/* Puts Bugzilla bug info into our sidebar section */
 			case "loadBugDetails":
-				bugzilla.getBug(message.bugId).done(function(response) {
-					var bugInfo = response[0].bugs[0];
-					
-					$('.sidebar-dit-bugzilla div')
-						.html(
-							$('<p class="reason text-small text-muted">')
-								.html("Status: " + bugInfo.status)
-						)
-						.append(
-							$('<p class="reason text-small text-muted">')
-								.html("Resolution: " + bugInfo.resolution)
-						)
-						.append(
-							$('<p class="reason text-small text-muted">')
-								.html("LOE: " + bugInfo.estimated_time)
-						)
-						.append(
-							$('<p class="reason text-small text-muted">')
-								.html("Charge Code: " + bugInfo.cf_chargecode)
-						)
-						.append(
-							$('<p class="reason text-small text-muted">')
-								.html("Assignee: " + bugInfo.assigned_to)
-						)
-						.append(
-							$('<p class="reason text-small text-muted">')
-								.html("QA Contact: " + bugInfo.qa_contact)
-						);
-				});
+				loadBugDetails(message);
 				break;
 			
 			/* Sends comment to Bugzilla */
@@ -100,8 +72,43 @@ else if (location.href.indexOf("github") > -1) {
 				
 			/* Updates bug details */
 			case "updateBug":
-				bugzilla.updateBug(message.bugId, message.params);
+				bugzilla.updateBug(message.bugId, message.params).done(function() {
+					// Update the bug details when it's finished updating
+					loadBugDetails(message);
+				});
 				break;
 		}
 	});
+	
+	function loadBugDetails(message) {
+		bugzilla.getBug(message.bugId).done(function(response) {
+			var bugInfo = response[0].bugs[0];
+			
+			$('.sidebar-dit-bugzilla div')
+				.html(
+					$('<p class="reason text-small text-muted">')
+						.html("Status: " + bugInfo.status)
+				)
+				.append(
+					$('<p class="reason text-small text-muted">')
+						.html("Resolution: " + bugInfo.resolution)
+				)
+				.append(
+					$('<p class="reason text-small text-muted">')
+						.html("LOE: " + bugInfo.estimated_time)
+				)
+				.append(
+					$('<p class="reason text-small text-muted">')
+						.html("Charge Code: " + bugInfo.cf_chargecode)
+				)
+				.append(
+					$('<p class="reason text-small text-muted">')
+						.html("Assignee: " + bugInfo.assigned_to)
+				)
+				.append(
+					$('<p class="reason text-small text-muted">')
+						.html("QA Contact: " + bugInfo.qa_contact)
+				);
+		});
+	}
 }
