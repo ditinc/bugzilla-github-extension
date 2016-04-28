@@ -497,22 +497,23 @@ var DITBugzillaGitHub = function() {
 	var injectResolveBugCheckbox = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
-		var selector = '#partial-pull-merging div.js-merge-methods';
-		var $buttons;
-		
+		var selector = '#partial-pull-merging';
+		var $div;
+
 		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$buttons = $(contents);
+			$div = $(contents);
 		}
 		else {
 			try {
-				$buttons = $(contents).find(selector);
+				$div = $(contents).find(selector);
 			}
 			catch(e) {
 				// I don't know why but sometimes .find() fails if there are nulls
 			}
 		}
 		
-		if ($buttons.length && $buttons.find("input#resolveBug").length === 0) {
+		if ($div.length && $div.find("input#resolveBug").length === 0) {
+			var $buttons = $div.find("div.js-merge-methods");
 			var newCodeStatus = "Merged to ";
 			var mergeTarget = $(".current-branch").eq(0).children().html();
 			
@@ -577,9 +578,9 @@ var DITBugzillaGitHub = function() {
 						)
 				);
 		}
-		else if ($buttons.length) {
+		else if ($div.length) {
 			// Need this line or else we lose previously applied changes.
-			$buttons.html($buttons.html());
+			$div.html($div.html());
 		}
 	};
 	
