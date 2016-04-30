@@ -11,7 +11,21 @@ var Bugzilla = function() {
 	 * @private
 	 * @type {String}
 	 */
-	this.url = 'https://bugzilla.dtec.com/xmlrpc.cgi';
+	this.url = 'https://bugzilla.dtec.com';
+	
+	/**
+	 * The URL of the Bugzilla server's XMLRPC interface.
+	 * @private
+	 * @type {String}
+	 */
+	this.xmlrpcUrl = this.url + '/xmlrpc.cgi';
+	
+	/**
+	 * The URL for Bugzilla attachments.
+	 * @private
+	 * @type {String}
+	 */
+	this.attachmentUrl = this.url + '/attachment.cgi';
 }
 
 /**
@@ -22,7 +36,7 @@ Bugzilla.prototype.getVersion = function() {
 	"use strict";
 	
 	$.xmlrpc({
-		url: this.url,
+		url: this.xmlrpcUrl,
 		methodName: 'Bugzilla.version',
 		success: function(response, status, jqXHR) {
 			console.log(response[0].version);
@@ -42,7 +56,7 @@ Bugzilla.prototype.getBug = function(bugId) {
 	"use strict";
 
 	return $.xmlrpc({
-		url: this.url,
+		url: this.xmlrpcUrl,
 		methodName: 'Bug.get',
 		params: [{"ids": [bugId]}]
 	});
@@ -60,7 +74,7 @@ Bugzilla.prototype.addComment = function(bugId, comment, hoursWorked) {
 	hoursWorked = hoursWorked || 0;
 	
 	return $.xmlrpc({
-		url: this.url,
+		url: this.xmlrpcUrl,
 		methodName: 'Bug.add_comment',
 		params: [{"id": bugId, "comment": comment, "work_time": hoursWorked}]
 	});
@@ -77,9 +91,24 @@ Bugzilla.prototype.updateBug = function(bugId, params) {
 	params.ids = [bugId];
 	
 	return $.xmlrpc({
-		url: this.url,
+		url: this.xmlrpcUrl,
 		methodName: 'Bug.update',
 		params: [params]
+	});
+}
+
+/**
+ * Gets a promise that will return attachments for the passed in bug number.
+ * @param {number} bugId - The bug number.
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
+Bugzilla.prototype.getAttachments = function(bugId) {
+	"use strict";
+
+	return $.xmlrpc({
+		url: this.xmlrpcUrl,
+		methodName: 'Bug.attachments',
+		params: [{"ids": [bugId], "exclude_fields": ["data"]}]
 	});
 }
 
@@ -92,7 +121,7 @@ Bugzilla.prototype.searchBugs = function(searchCriteria) {
 	"use strict";
 
 	return $.xmlrpc({
-		url: this.url,
+		url: this.xmlrpcUrl,
 		methodName: 'Bug.search',
 		params: [searchCriteria]
 	});
@@ -106,12 +135,12 @@ Bugzilla.prototype.getProducts = function() {
 	"use strict";
 	
 	return $.xmlrpc({
-		url: this.url,
+		url: this.xmlrpcUrl,
 		methodName: 'Product.get_enterable_products'
 	})
 	.then(function(response) {
 		return $.xmlrpc({
-			url: this.url,
+			url: this.xmlrpcUrl,
 			methodName: 'Product.get',
 			params: [{ids: response[0].ids}],
 			dataFilter: function(data, type) {

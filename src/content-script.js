@@ -81,10 +81,14 @@ else if (location.href.indexOf("github") > -1) {
 	});
 	
 	function loadBugDetails(message) {
-		bugzilla.getBug(message.bugId).done(function(response) {
+		var bugInfoPromise = bugzilla.getBug(message.bugId);
+		var attachmentPromise = bugzilla.getAttachments(message.bugId);
+		
+		bugInfoPromise.success(function(response) {
 			var bugInfo = response[0].bugs[0];
-			
-			$('.sidebar-dit-bugzilla div')
+			var $sidebar = $('.sidebar-dit-bugzilla div');
+
+			$sidebar
 				.html(
 					$('<p class="reason text-small text-muted">')
 						.html("Status: " + bugInfo.status)
@@ -109,6 +113,33 @@ else if (location.href.indexOf("github") > -1) {
 					$('<p class="reason text-small text-muted">')
 						.html("QA Contact: " + bugInfo.qa_contact)
 				);
+				
+			attachmentPromise.success(function(response) {
+				var attachments = response[0].bugs[message.bugId];
+				
+				attachments = $.grep(attachments, function(attachment) {
+					return !attachment.is_obsolete;
+				});
+
+				$sidebar.append(
+					'<h3 class="discussion-sidebar-heading">Attachments</h3>'
+				);
+				if (attachments.length > 0) {
+					for (var i = 0; i < attachments.length; i++) {
+						var attachment = attachments[i];
+						$sidebar.append(
+							$('<p class="reason text-small text-muted">')
+								.html('<a href="' + bugzilla.attachmentUrl + '?id=' + attachment.id + '">' + attachment.summary + '</a>')
+						)
+					}
+				}
+				else {
+					$sidebar.append(
+						$('<p class="reason text-small text-muted">')
+							.html("No attachments")
+					);
+				}
+			});
 		});
 	}
 }
