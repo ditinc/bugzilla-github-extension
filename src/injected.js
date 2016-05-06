@@ -235,6 +235,18 @@ var DITBugzillaGitHub = function() {
 					)
 					.append(
 						$("<div>")
+							.addClass("sidebar-dit-bugzilla-details")
+							.html(
+								$('<p class="reason text-small text-muted">')
+									.html("Loading...")
+							)
+					)
+					.append(
+						'<h3 class="discussion-sidebar-heading">Attachments</h3>'
+					)
+					.append(
+						$("<div>")
+							.addClass("sidebar-dit-bugzilla-attachments")
 							.html(
 								$('<p class="reason text-small text-muted">')
 									.html("Loading...")

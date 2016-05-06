@@ -1,4 +1,11 @@
 {
+	/* This makes it "work" in Firefox, but CSP is preventing calls to Bugzilla. See Issue #31. */
+	"applications": {
+		"gecko": {
+			"id": "DITBugzillaGitHub@dtec.com"
+		}
+	},
+	
 	"manifest_version": 2,
 
 	"name": "DITBugzillaGitHub",

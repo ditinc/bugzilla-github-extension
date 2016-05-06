@@ -86,7 +86,7 @@ else if (location.href.indexOf("github") > -1) {
 		
 		bugInfoPromise.success(function(response) {
 			var bugInfo = response[0].bugs[0];
-			var $sidebar = $('.sidebar-dit-bugzilla div');
+			var $sidebar = $('.sidebar-dit-bugzilla-details');
 
 			$sidebar
 				.html(
@@ -116,25 +116,24 @@ else if (location.href.indexOf("github") > -1) {
 				
 			attachmentPromise.success(function(response) {
 				var attachments = response[0].bugs[message.bugId];
-				
+				var $attachments = $(".sidebar-dit-bugzilla-attachments");
+
 				attachments = $.grep(attachments, function(attachment) {
 					return !attachment.is_obsolete;
 				});
-
-				$sidebar.append(
-					'<h3 class="discussion-sidebar-heading">Attachments</h3>'
-				);
+				
 				if (attachments.length > 0) {
+					$attachments.html("");
 					for (var i = 0; i < attachments.length; i++) {
 						var attachment = attachments[i];
-						$sidebar.append(
+						$attachments.append(
 							$('<p class="reason text-small text-muted">')
 								.html('<a href="' + bugzilla.attachmentUrl + '?id=' + attachment.id + '">' + attachment.summary + '</a>')
 						)
 					}
 				}
 				else {
-					$sidebar.append(
+					$attachments.html(
 						$('<p class="reason text-small text-muted">')
 							.html("No attachments")
 					);
