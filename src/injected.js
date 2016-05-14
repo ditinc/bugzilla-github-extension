@@ -5,6 +5,7 @@ var DITBugzillaGitHub = function() {
 	var bugId;
 	var BUG_REGEX = /^\[(\d+)\]|^(\d+)|^Bug\s*(\d+)/i; // for example, matches [83508], 83508, Bug83508 or Bug 83508
 	var $ = require('github/jquery').default;
+	var doLabelSync = false;
 	
 	var applyExtension = function(contents) {
 		linkifyBugNumber(contents);
@@ -13,6 +14,7 @@ var DITBugzillaGitHub = function() {
 		injectCommentOptions(contents);
 		injectNewPullRequestOptions(contents);
 		injectResolveBugCheckbox(contents);
+		syncLabelsWithWhiteboard(contents);
 	};
 	
 	var getBugUrl = function() {
@@ -176,6 +178,16 @@ var DITBugzillaGitHub = function() {
 					window.localStorage.setItem("DIT-updateBug", updateBug);
 					window.localStorage.setItem("DIT-bugId", bugId);
 					window.localStorage.setItem("DIT-comment", comment);
+				}
+			})
+			
+			.off("click.DITBugzillaGitHub", "div.label-select-menu button.discussion-sidebar-heading")
+			.on("click.DITBugzillaGitHub", "div.label-select-menu button.discussion-sidebar-heading", function() {
+				var $labels = $("div.label-select-menu");
+				
+				if (!$labels.is(".active")) {
+					// Opened the label menu, so turn on label syncing
+					doLabelSync = true;
 				}
 			});
 	};
@@ -623,6 +635,33 @@ var DITBugzillaGitHub = function() {
 			window.localStorage.removeItem("DIT-comment");
 		}
 	}
+	
+	var syncLabelsWithWhiteboard = function(contents) {
+		if (!bugId || !doLabelSync) { return; } // Don't continue if we aren't mapped to a bug or aren't syncing labels
+	
+		var selector = '.discussion-sidebar-item.sidebar-labels';
+		var $div;
+		
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$div = $(contents);
+		}
+		else {
+			try {
+				$div = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+		
+		if ($div.length && $div.find("input#workTime").length === 0) {
+			doLabelSync = false;
+			
+			var labels = $div.find(".labels .label").map(function() { return $(this).html(); });
+			
+			window.postMessage({method: "updateBug", bugId: bugId, params: {"whiteboard": labels.toArray().join(' ')}}, '*');
+		}
+	};
 	
 	createListeners();
 	applyExtension(document);
