@@ -21,6 +21,7 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
   - When merging a pull request, you have the option to:
     - Update the Code Status in Bugzilla to "Merged to master/trunk" or "Merged to parent branch"
     - Update the bug to RESOLVED TESTED
+  - Labels are pushed to the Whiteboard field on the bug
 
 ###### TODOs:
 - Make sure all comment options are correctly updated when the bug number is changed in the title of the bug
