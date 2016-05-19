@@ -80,54 +80,142 @@ else if (location.href.indexOf("github") > -1) {
 		}
 	});
 	
+	function getFaultString(response) {
+		return $(response.responseXML).find("fault").find("member").first().find("string").html();
+	}
+	
+	function showLoginForm(callback) {
+		$(".header").after(
+			$("<form>")
+				.attr({id: "bzLoginForm"})
+				.addClass("commit-tease js-sticky")
+				.css("z-index", 100)
+				.html(
+					$("<div>")
+						.addClass("container")
+						.html(
+							$("<img>")
+								.attr({src: chrome.extension.getURL("images/icon48.png")})
+								.css({height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom'})
+						)
+						.append("You are not logged into Bugzilla.  Please login:")
+						.append(
+							$("<input>")
+								.addClass("form-control input-sm ml-3")
+								.attr({
+									type: "text",
+									placeholder: "Username",
+									name: "bzUsername",
+									id: "bzUsername"
+								})
+								.css("width", "8em")
+						)
+						.append(
+							$("<input>")
+								.addClass("form-control input-sm input-contrast ml-3")
+								.attr({
+									type: "password",
+									name: "bzPassword",
+									id: "bzPassword"
+								})
+								.css("width", "8em")
+						)
+						.append(
+							$("<button>")
+								.addClass("btn btn-sm btn-primary ml-3")
+								.attr({
+									type: "submit"
+								})
+								.html("Login")
+						)
+						.append(
+							$("<label>")
+								.addClass("ml-3 text-red one-fifth")
+						)
+				)
+				.submit(function(e) {
+					e.preventDefault();
+					
+					var $errorLabel = $("#bzLoginForm label");
+					var $submitButton = $(this).find("button");
+					
+					$errorLabel.html("");
+					$submitButton.prop("disabled", true);
+
+					bugzilla.login($("#bzUsername").val(), $("#bzPassword").val())
+						.error(function(response) {
+							$errorLabel.html(getFaultString(response));
+						})
+						.success(function(response) {
+							$("#bzLoginForm").prev(".is-placeholder").remove();
+							$("#bzLoginForm").remove();
+							callback();
+						})
+						.always(function() {
+							$submitButton.prop("disabled", false);
+						});
+				})
+		);
+	}
+	
 	function loadBugDetails(message) {
 		// TODO: make fieldsToShow configurable
 		var fieldsToShow = ["status", "resolution", "estimated_time", "cf_chargecode", "assigned_to", "qa_contact"];
 		var labels = ["Status", "Resolution", "LOE", "Charge Code", "Assignee", "QA Contact"];
 		var bugInfoPromise = bugzilla.getBug(message.bugId, fieldsToShow);
 		var attachmentPromise = bugzilla.getAttachments(message.bugId);
-		
-		bugInfoPromise.success(function(response) {
-			var bugInfo = response[0].bugs[0];
-			var $sidebar = $('.sidebar-dit-bugzilla-details');
 
-			$sidebar.html('');
-			
-			for (var i = 0; i < fieldsToShow.length; i++) {
-				var field = fieldsToShow[i];
-				var label = labels[i];
+		bugInfoPromise
+			.error(function(response) {
+				var faultString = getFaultString(response);
 				
-				$sidebar.append(
-					$('<p class="reason text-small text-muted">')
-						.html(label + ": " + bugInfo[field])
-				);
-			}
-				
-			attachmentPromise.success(function(response) {
-				var attachments = response[0].bugs[message.bugId];
-				var $attachments = $(".sidebar-dit-bugzilla-attachments");
-
-				attachments = $.grep(attachments, function(attachment) {
-					return !attachment.is_obsolete;
-				});
-				
-				if (attachments.length > 0) {
-					$attachments.html("");
-					for (var i = 0; i < attachments.length; i++) {
-						var attachment = attachments[i];
-						$attachments.append(
-							$('<p class="reason text-small text-muted">')
-								.html('<a href="' + bugzilla.attachmentUrl + '?id=' + attachment.id + '">' + attachment.summary + '</a>')
-						)
-					}
+				if (faultString === "You must log in before using this part of DER.") {
+					showLoginForm(function() {
+						loadBugDetails(message);
+					});
 				}
-				else {
-					$attachments.html(
+			})
+			.success(function(response) {
+				var bugInfo = response[0].bugs[0];
+				var $sidebar = $('.sidebar-dit-bugzilla-details');
+	
+				$sidebar.html('');
+				
+				for (var i = 0; i < fieldsToShow.length; i++) {
+					var field = fieldsToShow[i];
+					var label = labels[i];
+					
+					$sidebar.append(
 						$('<p class="reason text-small text-muted">')
-							.html("No attachments")
+							.html(label + ": " + bugInfo[field])
 					);
 				}
+					
+				attachmentPromise.success(function(response) {
+					var attachments = response[0].bugs[message.bugId];
+					var $attachments = $(".sidebar-dit-bugzilla-attachments");
+	
+					attachments = $.grep(attachments, function(attachment) {
+						return !attachment.is_obsolete;
+					});
+					
+					if (attachments.length > 0) {
+						$attachments.html("");
+						for (var i = 0; i < attachments.length; i++) {
+							var attachment = attachments[i];
+							$attachments.append(
+								$('<p class="reason text-small text-muted">')
+									.html('<a href="' + bugzilla.attachmentUrl + '?id=' + attachment.id + '">' + attachment.summary + '</a>')
+							)
+						}
+					}
+					else {
+						$attachments.html(
+							$('<p class="reason text-small text-muted">')
+								.html("No attachments")
+						);
+					}
+				});
 			});
-		});
 	}
 }

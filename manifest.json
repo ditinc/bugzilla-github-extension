@@ -38,6 +38,7 @@
 		"128": "images/icon128.png"
 	},
 	"web_accessible_resources": [
-		"src/injected.js"
+		"src/injected.js",
+		"images/icon48.png"
 	]
 }

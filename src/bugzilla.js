@@ -114,6 +114,35 @@ Bugzilla.prototype.getAttachments = function(bugId) {
 }
 
 /**
+ * Logs the user in.
+ * @param {string} username - The username of the user to log in.
+ * @param {string} password - The password of the user to log in.
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
+Bugzilla.prototype.login = function(username, password) {
+	"use strict";
+
+	return $.xmlrpc({
+		url: this.xmlrpcUrl,
+		methodName: 'User.login',
+		params: [{login: username, password: password, remember: true}]
+	});
+}
+
+/**
+ * Logs the user out.
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
+Bugzilla.prototype.logout = function(username, password) {
+	"use strict";
+
+	return $.xmlrpc({
+		url: this.xmlrpcUrl,
+		methodName: 'User.logout'
+	});
+}
+
+/**
  * Gets a promise that will return bug info for bugs using the passed in criteria.
  * @param {Object} searchCriteria - The search criteria.
  * @return {Promise} On success, will return the response object from Bugzilla.
