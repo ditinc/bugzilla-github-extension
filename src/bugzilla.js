@@ -50,15 +50,16 @@ Bugzilla.prototype.getVersion = function() {
 /**
  * Gets a promise that will return bug info for the passed in bug number.
  * @param {number} bugId - The bug number.
+ * @param {Array} includeFields - An optional array of fields to include.
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
-Bugzilla.prototype.getBug = function(bugId) {
+Bugzilla.prototype.getBug = function(bugId, includeFields) {
 	"use strict";
 
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
 		methodName: 'Bug.get',
-		params: [{"ids": [bugId]}]
+		params: [{"ids": [bugId], "include_fields": includeFields}]
 	});
 }
 

@@ -81,38 +81,27 @@ else if (location.href.indexOf("github") > -1) {
 	});
 	
 	function loadBugDetails(message) {
-		var bugInfoPromise = bugzilla.getBug(message.bugId);
+		// TODO: make fieldsToShow configurable
+		var fieldsToShow = ["status", "resolution", "estimated_time", "cf_chargecode", "assigned_to", "qa_contact"];
+		var labels = ["Status", "Resolution", "LOE", "Charge Code", "Assignee", "QA Contact"];
+		var bugInfoPromise = bugzilla.getBug(message.bugId, fieldsToShow);
 		var attachmentPromise = bugzilla.getAttachments(message.bugId);
 		
 		bugInfoPromise.success(function(response) {
 			var bugInfo = response[0].bugs[0];
 			var $sidebar = $('.sidebar-dit-bugzilla-details');
 
-			$sidebar
-				.html(
+			$sidebar.html('');
+			
+			for (var i = 0; i < fieldsToShow.length; i++) {
+				var field = fieldsToShow[i];
+				var label = labels[i];
+				
+				$sidebar.append(
 					$('<p class="reason text-small text-muted">')
-						.html("Status: " + bugInfo.status)
-				)
-				.append(
-					$('<p class="reason text-small text-muted">')
-						.html("Resolution: " + bugInfo.resolution)
-				)
-				.append(
-					$('<p class="reason text-small text-muted">')
-						.html("LOE: " + bugInfo.estimated_time)
-				)
-				.append(
-					$('<p class="reason text-small text-muted">')
-						.html("Charge Code: " + bugInfo.cf_chargecode)
-				)
-				.append(
-					$('<p class="reason text-small text-muted">')
-						.html("Assignee: " + bugInfo.assigned_to)
-				)
-				.append(
-					$('<p class="reason text-small text-muted">')
-						.html("QA Contact: " + bugInfo.qa_contact)
+						.html(label + ": " + bugInfo[field])
 				);
+			}
 				
 			attachmentPromise.success(function(response) {
 				var attachments = response[0].bugs[message.bugId];
