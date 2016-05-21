@@ -14,7 +14,7 @@ var DITBugzillaGitHub = function() {
 		injectCommentOptions(contents);
 		injectNewPullRequestOptions(contents);
 		injectResolveBugCheckbox(contents);
-		syncLabelsWithWhiteboard(contents);
+		syncLabels(contents);
 	};
 	
 	var getBugUrl = function() {
@@ -636,7 +636,7 @@ var DITBugzillaGitHub = function() {
 		}
 	}
 	
-	var syncLabelsWithWhiteboard = function(contents) {
+	var syncLabels = function(contents) {
 		if (!bugId || !doLabelSync) { return; } // Don't continue if we aren't mapped to a bug or aren't syncing labels
 	
 		var selector = '.discussion-sidebar-item.sidebar-labels';
@@ -659,7 +659,7 @@ var DITBugzillaGitHub = function() {
 			
 			var labels = $div.find(".labels .label").map(function() { return $(this).html(); });
 			
-			window.postMessage({method: "updateBug", bugId: bugId, params: {"whiteboard": labels.toArray().join(' ')}}, '*');
+			window.postMessage({method: "updateBug", bugId: bugId, params: {"cf_github_labels": labels.toArray().join(' ')}}, '*');
 		}
 	};
 	
