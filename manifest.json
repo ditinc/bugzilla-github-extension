@@ -1,5 +1,5 @@
 {
-	/* This makes it "work" in Firefox, but CSP is preventing calls to Bugzilla. See Issue #31. */
+	// This makes it "work" in Firefox, but CSP is preventing calls to Bugzilla. See Issue #31.
 	"applications": {
 		"gecko": {
 			"id": "DITBugzillaGitHub@dtec.com"
