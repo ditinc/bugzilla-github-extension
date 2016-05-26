@@ -85,77 +85,79 @@ else if (location.href.indexOf("github") > -1) {
 	}
 	
 	function showLoginForm(callback) {
-		$(".header").after(
-			$("<form>")
-				.attr({id: "bzLoginForm"})
-				.addClass("commit-tease js-sticky")
-				.css("z-index", 100)
-				.html(
-					$("<div>")
-						.addClass("container")
-						.html(
-							$("<img>")
-								.attr({src: chrome.extension.getURL("images/icon48.png")})
-								.css({height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom'})
-						)
-						.append("You are not logged into Bugzilla.  Please login:")
-						.append(
-							$("<input>")
-								.addClass("form-control input-sm ml-3")
-								.attr({
-									type: "text",
-									placeholder: "Username",
-									name: "bzUsername",
-									id: "bzUsername"
-								})
-								.css("width", "8em")
-						)
-						.append(
-							$("<input>")
-								.addClass("form-control input-sm input-contrast ml-3")
-								.attr({
-									type: "password",
-									name: "bzPassword",
-									id: "bzPassword"
-								})
-								.css("width", "8em")
-						)
-						.append(
-							$("<button>")
-								.addClass("btn btn-sm btn-primary ml-3")
-								.attr({
-									type: "submit"
-								})
-								.html("Login")
-						)
-						.append(
-							$("<label>")
-								.addClass("ml-3 text-red one-fifth")
-						)
-				)
-				.submit(function(e) {
-					e.preventDefault();
-					
-					var $errorLabel = $("#bzLoginForm label");
-					var $submitButton = $(this).find("button");
-					
-					$errorLabel.html("");
-					$submitButton.prop("disabled", true);
-
-					bugzilla.login($("#bzUsername").val(), $("#bzPassword").val())
-						.error(function(response) {
-							$errorLabel.html(getFaultString(response));
-						})
-						.success(function(response) {
-							$("#bzLoginForm").prev(".is-placeholder").remove();
-							$("#bzLoginForm").remove();
-							callback();
-						})
-						.always(function() {
-							$submitButton.prop("disabled", false);
-						});
-				})
-		);
+		if ($("#bzLoginForm").length === 0) {
+			$(".header").after(
+				$("<form>")
+					.attr({id: "bzLoginForm"})
+					.addClass("commit-tease js-sticky")
+					.css("z-index", 100)
+					.html(
+						$("<div>")
+							.addClass("container")
+							.html(
+								$("<img>")
+									.attr({src: chrome.extension.getURL("images/icon48.png")})
+									.css({height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom'})
+							)
+							.append("You are not logged into Bugzilla.  Please login:")
+							.append(
+								$("<input>")
+									.addClass("form-control input-sm ml-3")
+									.attr({
+										type: "text",
+										placeholder: "Username",
+										name: "bzUsername",
+										id: "bzUsername"
+									})
+									.css("width", "8em")
+							)
+							.append(
+								$("<input>")
+									.addClass("form-control input-sm input-contrast ml-3")
+									.attr({
+										type: "password",
+										name: "bzPassword",
+										id: "bzPassword"
+									})
+									.css("width", "8em")
+							)
+							.append(
+								$("<button>")
+									.addClass("btn btn-sm btn-primary ml-3")
+									.attr({
+										type: "submit"
+									})
+									.html("Login")
+							)
+							.append(
+								$("<label>")
+									.addClass("ml-3 text-red one-fifth")
+							)
+					)
+					.submit(function(e) {
+						e.preventDefault();
+						
+						var $errorLabel = $("#bzLoginForm label");
+						var $submitButton = $(this).find("button");
+						
+						$errorLabel.html("");
+						$submitButton.prop("disabled", true);
+	
+						bugzilla.login($("#bzUsername").val(), $("#bzPassword").val())
+							.error(function(response) {
+								$errorLabel.html(getFaultString(response));
+							})
+							.success(function(response) {
+								$("#bzLoginForm").prev(".is-placeholder").remove();
+								$("#bzLoginForm").remove();
+								callback();
+							})
+							.always(function() {
+								$submitButton.prop("disabled", false);
+							});
+					})
+			);
+		}
 	}
 	
 	function loadBugDetails(message) {
