@@ -40,5 +40,8 @@
 	"web_accessible_resources": [
 		"src/injected.js",
 		"images/icon48.png"
+	],
+	"permissions": [
+		"storage"
 	]
 }

@@ -1,15 +1,20 @@
 'use strict';
 
 var DITBugzillaGitHub = function() {
-	var bugUrl = "https://bugzilla.dtec.com/show_bug.cgi?id="; // TODO: make this dynamic
+	var bzUrl = "https://bugzilla.dtec.com"; // TODO: make this dynamic
+	var bugUrl = bzUrl + "/show_bug.cgi?id=";
+	var bugListUrl = bzUrl + "/buglist.cgi?columnlist=bug_id%2Cbug_severity%2Cpriority%2Cassigned_to%2Cbug_status%2Cresolution%2Ctarget_milestone%2Ccf_codestatus%2Cqa_contact%2Cshort_desc%2Cestimated_time%2Cactual_time&query_format=advanced&order=bug_status%2Cresolution%2Cbug_id";
 	var bugId;
 	var BUG_REGEX = /^\[(\d+)\]|^(\d+)|^Bug\s*(\d+)/i; // for example, matches [83508], 83508, Bug83508 or Bug 83508
 	var $ = require('github/jquery').default;
 	var doLabelSync = false;
+	var product;
 	
 	var applyExtension = function(contents) {
 		linkifyBugNumber(contents);
 		showBugDetailsInSidebar(contents);
+		injectProductName(contents);
+		injectPageHeadActions(contents);
 		injectHoursWorkedInput(contents);
 		injectCommentOptions(contents);
 		injectNewPullRequestOptions(contents);
@@ -271,6 +276,113 @@ var DITBugzillaGitHub = function() {
 		else if ($sidebar.length) {
 			// Need this line or else we lose previously applied changes.
 			$sidebar.html($sidebar.html());
+		}
+	};
+	
+	var injectProductName = function(contents) {
+		var selector = 'h1.entry-title';
+		var $el;
+		
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$el = $(contents);
+		}
+		else {
+			try {
+				$el = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+		
+		$el.find("h6#bzProduct").remove();
+
+		if ($el.length) {
+			$el.append(
+				$("<h6>")
+					.attr({
+						id: "bzProduct"
+					})
+					.append(
+						$("<a>")
+							.attr({
+								href: "#"
+							})
+							.css({
+								fill: "currentColor",
+								color: "#666"
+							})
+							.html(product ? product.name : "[Bugzilla product not set]")
+							.append('<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>')
+							.click(function(e){
+								e.preventDefault();
+								
+								window.postMessage({method: "showProductForm"}, '*');
+							})
+					)
+			);
+		}
+		else if ($el.length) {
+			// Need this line or else we lose previously applied changes.
+			$el.html($el.html());
+		}
+	};
+	
+	var injectPageHeadActions = function(contents) {
+		// Don't continue if we aren't mapped to a product
+		if (!product) { 
+			$("li#bzButtons").remove();
+			return;
+		}
+		var selector = 'ul.pagehead-actions';
+		var $ul;
+		
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$ul = $(contents);
+		}
+		else {
+			try {
+				$ul = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+		
+		$ul.find("li#bzButtons").remove();
+
+		if ($ul.length) {
+			$ul.prepend(
+				$("<li>")
+					.attr({
+						id: "bzButtons"
+					})
+					.addClass("btn-group")
+					.html(
+						$("<a>")
+							.addClass("btn btn-sm")
+							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+							.append(" Unresolved")
+							.attr({
+								href: bugListUrl + "&bug_status=NEW&bug_status=ASSIGNED&bug_status=UNCONFIRMED&product=" + encodeURIComponent(product.name),
+								target: "_blank"
+							})
+					)
+					.append(
+						$("<a>")
+							.addClass("btn btn-sm")
+							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+							.append(" Resolved")
+							.attr({
+								href: bugListUrl + "&bug_status=RESOLVED&product=" + encodeURIComponent(product.name),
+								target: "_blank"
+							})
+					)
+			);
+		}
+		else if ($ul.length) {
+			// Need this line or else we lose previously applied changes.
+			$ul.html($ul.html());
 		}
 	};
 	
@@ -662,6 +774,30 @@ var DITBugzillaGitHub = function() {
 			window.postMessage({method: "updateBug", bugId: bugId, params: {"cf_github_labels": labels.toArray().join(' ')}}, '*');
 		}
 	};
+	
+	// We'll accept messages from the content script here
+	window.addEventListener('message', function(event) {
+		// Only accept messages from same frame
+		if (event.source !== window) {
+			return;
+		}
+
+		var message = event.data;
+	
+		// Only accept messages that we know are ours
+		if (typeof message !== 'object' || message === null || !message.method) {
+			return;
+		}
+	
+		switch (message.method) {
+			/* Sets the product so we can do product-specific things */
+			case "setProduct":
+				product = message.product;
+				injectProductName(document);
+				injectPageHeadActions(document);
+				break;
+		}
+	})
 	
 	createListeners();
 	applyExtension(document);

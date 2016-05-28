@@ -163,14 +163,18 @@ Bugzilla.prototype.searchBugs = function(searchCriteria) {
  */
 Bugzilla.prototype.getProducts = function() {
 	"use strict";
+	var xmlrpcUrl = this.xmlrpcUrl;
 	
 	return $.xmlrpc({
-		url: this.xmlrpcUrl,
+		url: xmlrpcUrl,
 		methodName: 'Product.get_enterable_products'
+	})
+	.error(function(response) {
+		return response;
 	})
 	.then(function(response) {
 		return $.xmlrpc({
-			url: this.xmlrpcUrl,
+			url: xmlrpcUrl,
 			methodName: 'Product.get',
 			params: [{ids: response[0].ids}],
 			dataFilter: function(data, type) {
