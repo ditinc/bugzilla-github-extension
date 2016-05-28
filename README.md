@@ -6,9 +6,12 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
 - If GitHub Pull Request URL is populated with the pull request's URL, then a link will be added to the bug's title
 
 ###### TODOs:
-- Open to suggestions
+- Open to suggestions... add an issue!
 
 #### GitHub
+- If the repository is associated with a Bugzilla product:
+  - The Product will be listed under the repository name
+  - There will be buttons to jump to Bugzilla lists of unresolved or resolved bugs
 - If the pull request's title includes the bug number (ex: 83513, [83513], Bug 83513, Bug83513):
   - Bug number in title will be a link to the bug
   - Bugzilla section added to side listing some bug details
@@ -21,12 +24,10 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
   - When merging a pull request, you have the option to:
     - Update the Code Status in Bugzilla to "Merged to master/trunk" or "Merged to parent branch"
     - Update the bug to RESOLVED TESTED
-  - Labels are pushed to the Whiteboard field on the bug
+  - Labels are pushed to the GitHub Labels field on the bug
 
 ###### TODOs:
-- Make sure all comment options are correctly updated when the bug number is changed in the title of the bug
-- Allow assigning QA or assignee?  Possibly tied to GitHub user?
-- Open to suggestions
+- Open to suggestions... add an issue!
 
 ## Install
 Here's how you load an extension in Chrome, taken from https://developer.chrome.com/extensions/getstarted#unpacked:

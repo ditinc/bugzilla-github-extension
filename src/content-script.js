@@ -65,6 +65,11 @@ else if (location.href.indexOf("github") > -1) {
 				loadBugDetails(message);
 				break;
 			
+			/* Puts Bugzilla bug info into our sidebar section */
+			case "showProductForm":
+				showProductForm();
+				break;
+			
 			/* Sends comment to Bugzilla */
 			case "addComment":
 				bugzilla.addComment(message.bugId, message.comment, message.hoursWorked);
@@ -80,11 +85,120 @@ else if (location.href.indexOf("github") > -1) {
 		}
 	});
 	
+	// Here, we're setting up a map between Bugzilla product and GitHub repo in the user's storage.
+	var productMap = {};
+	chrome.storage.sync.get('productMap', function (obj) {
+		if (obj && obj.productMap) {
+			productMap = obj.productMap;
+			
+			var repo = location.href.replace(/.*.com\//, '').split('/')[1];
+			
+			if (repo && repo.length > 0 && productMap[repo]) {
+				window.postMessage({method: "setProduct", product: productMap[repo]}, '*');
+			}
+		}
+	});
+	
 	function getFaultString(response) {
 		return $(response.responseXML).find("fault").find("member").first().find("string").html();
 	}
 	
+	function hideInjectedForm($form) {
+		$form.prev(".is-placeholder").remove();
+		$form.remove();
+	}
+	
+	function showProductForm(repo) {
+		repo = repo || location.href.replace(/.*.com\//, '').split('/')[1];
+
+		$(".header").after(
+			$("<form>")
+				.attr({id: "productMapSelector"})
+				.addClass("commit-tease js-sticky")
+				.css("z-index", 100)
+				.html(
+					$("<div>")
+						.addClass("container")
+						.html(
+							$("<img>")
+								.attr({src: chrome.extension.getURL("images/icon48.png")})
+								.css({height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom'})
+						)
+						.append("<span>" + (productMap[repo] ? "" : "Bugzilla product not set.  ") + "Loading products...</span>")
+				)
+		);
+
+		bugzilla.getProducts()
+			.fail(function(response) {
+				var faultString = getFaultString(response);
+				
+				if (faultString === "You must log in before using this part of DER.") {
+					showLoginForm(function() {
+						showProductForm(repo);
+					});
+				}
+			})
+			.done(function(response) {
+				var products = response[0].products.sort(function(a, b) {
+					return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
+				});
+				$("form#productMapSelector")
+					.submit(function(e) {
+						e.preventDefault();
+						
+						var selectedProduct = $(this).find("select").val();
+						
+						if (selectedProduct === "") {
+							delete productMap[repo];
+						}
+						else {
+							productMap[repo] = {
+								name: selectedProduct
+							};
+						}
+						
+						chrome.storage.sync.set({productMap: productMap}, function(obj) {
+							window.postMessage({method: "setProduct", product: productMap[repo]}, '*');
+							hideInjectedForm($("#productMapSelector"));
+						});
+					})
+					.find("div span")
+						.html("Please choose the Bugzilla product this repo is associated with:")
+						.append(
+							$("<select>")
+								.addClass("form-control input-sm")
+								.css("margin", "0 5px")
+								.append("<option>")
+								.append(
+									$.map(products, function(el, i) {
+										return $("<option>").val(el.name).html(el.name).prop("selected", productMap[repo] && el.name === productMap[repo].name);
+									})
+								)
+						)
+						.append(
+							$("<button>")
+								.addClass("btn btn-sm btn-primary ml-3")
+								.attr({
+									type: "submit"
+								})
+								.html("OK")
+						)
+						.append(
+							$("<button>")
+								.addClass("btn btn-sm ml-3")
+								.attr({
+									type: "button"
+								})
+								.html("Cancel")
+								.click(function() {
+									$("#productMapSelector").remove();
+								})
+						);
+			});
+	}
+	
 	function showLoginForm(callback) {
+		hideInjectedForm($("#productMapSelector"));
 		if ($("#bzLoginForm").length === 0) {
 			$(".header").after(
 				$("<form>")
@@ -148,8 +262,7 @@ else if (location.href.indexOf("github") > -1) {
 								$errorLabel.html(getFaultString(response));
 							})
 							.success(function(response) {
-								$("#bzLoginForm").prev(".is-placeholder").remove();
-								$("#bzLoginForm").remove();
+								hideInjectedForm($("#bzLoginForm"));
 								callback();
 							})
 							.always(function() {
