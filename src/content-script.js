@@ -82,6 +82,11 @@ else if (location.href.indexOf("github") > -1) {
 					loadBugDetails(message);
 				});
 				break;
+				
+			/* Updates bug details */
+			case "updateBugs":
+				bugzilla.updateBugs(message.bugIds, message.params);
+				break;
 		}
 	});
 	

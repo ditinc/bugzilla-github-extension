@@ -82,6 +82,23 @@ Bugzilla.prototype.addComment = function(bugId, comment, hoursWorked) {
 }
 
 /**
+ * Updates the bugs with the given parameters.
+ * @param {Array} bugIds - The bug numbers.
+ * @param {Object} params - An key-value object with the fields to be updated (see documentation for details).
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
+Bugzilla.prototype.updateBugs = function(bugIds, params) {
+	"use strict";
+	params.ids = bugIds;
+	
+	return $.xmlrpc({
+		url: this.xmlrpcUrl,
+		methodName: 'Bug.update',
+		params: [params]
+	});
+}
+
+/**
  * Updates the bug with the given parameters.
  * @param {number} bugId - The bug number.
  * @param {Object} params - An key-value object with the fields to be updated (see documentation for details).

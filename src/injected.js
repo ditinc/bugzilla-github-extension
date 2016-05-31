@@ -19,6 +19,7 @@ var DITBugzillaGitHub = function() {
 		injectCommentOptions(contents);
 		injectNewPullRequestOptions(contents);
 		injectResolveBugCheckbox(contents);
+		injectReleaseOptions(contents);
 		syncLabels(contents);
 	};
 	
@@ -121,7 +122,87 @@ var DITBugzillaGitHub = function() {
 
 				$("#newCodeStatus").html(newCodeStatus);
 			})
+			
+			/* Make sure we display correct new code status (new release) */
+			.off("change.DITBugzillaGitHub", "input#release_prerelease")
+			.on("change.DITBugzillaGitHub", "input#release_prerelease", function() {
+				var isPreRelease = $("input#release_prerelease").prop("checked");
+				var mergeTarget = $(".releases-target-menu span.js-select-button").html();
+				var newCodeStatus;
 				
+				if (!isPreRelease && mergeTarget === "master") {
+					newCodeStatus = "In Production";
+				}
+				else {
+					newCodeStatus = "In Staging";
+				}
+
+				$(".newCodeStatus").html(newCodeStatus);
+			})
+			
+			/* Make sure we display correct new code status (new release) */
+			.off("click.DITBugzillaGitHub", "div.releases-target-menu .select-menu-item")
+			.on("click.DITBugzillaGitHub", "div.releases-target-menu .select-menu-item", function(e) {
+				var isPreRelease = $("input#release_prerelease").prop("checked");
+				var mergeTarget = $(e.currentTarget).find("div").html();
+				var newCodeStatus;
+				
+				if (!isPreRelease && mergeTarget === "master") {
+					newCodeStatus = "In Production";
+				}
+				else {
+					newCodeStatus = "In Staging";
+				}
+
+				$(".newCodeStatus").html(newCodeStatus);
+			})
+			
+			/* Update bugs in release to In Staging or In Production */
+			.off("click.DITBugzillaGitHub", "button.js-publish-release")
+			.on("click.DITBugzillaGitHub", "button.js-publish-release", function(e) {
+				var $form = $(e.currentTarget).closest("form");
+				var tag = $form.find("input#release_tag_name").val();
+				var title = $form.find("input#release_name").val();
+				var comments = $form.find("textarea").val();
+				var updateCodeStatus = $form.find("input#updateCodeStatus").prop("checked");
+				var updateRevision = $form.find("input#updateRevision").prop("checked");
+
+				if (comments.length && tag.length && title.length && (updateCodeStatus || updateRevision)) {
+					var matches = comments.match(/^(\[(\d+)\]|(\d+)|Bug\s*(\d+))|\n(\[(\d+)\]|(\d+)|Bug\s*(\d+))/ig);
+					
+					var bugIds = [];
+					for (var i = 0; i < matches.length; i++) {
+						bugIds.push(matches[i].match(/\d+/)[0]);
+					}
+					
+					if (bugIds.length) {
+						var params = {};
+						var comment = "";
+						
+						if (updateRevision) {
+							params["cf_revision"] = tag;
+							comment += "Bug added to new release: \r\n" + tag + " - " + title;
+						}
+						
+						if (updateCodeStatus) {
+							var newCodeStatus = $form.find(".newCodeStatus").html();
+							var pushedTo = "Staging.";
+							
+							if (newCodeStatus === "In Production") {
+								pushedTo = "Production.";
+							}
+							
+							comment += (comment.length ? "\r\n\r\n" : "") + "Pushed to " + pushedTo;
+							params["cf_codestatus"] = newCodeStatus;
+						}
+						
+						params["comment"] = {"body": comment};
+						
+						window.postMessage({method: "updateBugs", bugIds: bugIds, params: params}, '*');
+					}
+				}
+			})
+			
 			/* Updates the bug in Bugzilla when merging a pull request */
 			.off("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button")
 			.on("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button", function() {
@@ -711,6 +792,91 @@ var DITBugzillaGitHub = function() {
 							$("<p>")
 								.addClass("note")
 								.html("Set the bug's code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
+						)
+				);
+		}
+		else if ($div.length) {
+			// Need this line or else we lose previously applied changes.
+			$div.html($div.html());
+		}
+	};
+	
+	var injectReleaseOptions = function(contents) {
+		var selector = 'div.new-release';
+		var $div;
+
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$div = $(contents);
+		}
+		else {
+			try {
+				$div = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+		
+		if ($div.length && $div.find("input#updateRevision").length === 0) {
+			var mergeTarget = $div.find(".releases-target-menu span.js-select-button").html();
+			var $preRelease = $div.find("input#release_prerelease");
+			var newCodeStatus = "In Production";
+
+			if ($preRelease.prop("checked") || mergeTarget !== "master") {
+				newCodeStatus = "In Staging";
+			}
+			
+			$preRelease.closest("div")
+				.after(
+					$("<div>")
+						.addClass("form-checkbox")
+						.append(
+							$("<label>")
+								.html("Update bugs with release/tag")
+								.attr({
+									for: "updateRevision"
+								})
+								.append(
+									$("<input>")
+										.attr({
+											name: "updateRevision",
+											id: "updateRevision",
+											type: "checkbox",
+											checked: "checked"
+										})
+										.prop('checked', true)
+								)
+						)
+						.append(
+							$("<p>")
+								.addClass("note")
+								.html("Update the bugs referenced in the comments with this release/tag in Bugzilla.")
+						)
+				)
+				.after(
+					$("<div>")
+						.addClass("form-checkbox")
+						.append(
+							$("<label>")
+								.html("Update bugs to <span  class='newCodeStatus'>" + newCodeStatus + "</span>")
+								.attr({
+									for: "updateCodeStatus"
+								})
+								.append(
+									$("<input>")
+										.attr({
+											name: "updateCodeStatus",
+											id: "updateCodeStatus",
+											type: "checkbox",
+											checked: "checked"
+										})
+										.prop('checked', true)
+								)
+						)
+						.append(
+							$("<p>")
+								.addClass("note")
+								.html("Set the bugs referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
 						)
 				);
 		}

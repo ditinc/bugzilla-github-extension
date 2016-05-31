@@ -25,6 +25,9 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
     - Update the Code Status in Bugzilla to "Merged to master/trunk" or "Merged to parent branch"
     - Update the bug to RESOLVED TESTED
   - Labels are pushed to the GitHub Labels field on the bug
+- If the release's comments include bug numbers (ex: 83513, [83513], Bug 83513, Bug83513):
+  - Have the option of setting to In Staging or In Production in Bugzilla
+  - Have the option of updating Release field in Bugzilla
 
 ###### TODOs:
 - Open to suggestions... add an issue!
