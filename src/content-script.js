@@ -4,7 +4,7 @@
 chrome.runtime.sendMessage({}, function(response) {});
 
 // Check the URL to determine if we're in Bugzilla or GitHub
-if (location.href.indexOf("bugzilla") > -1) {
+if (location.href.indexOf("bugzilla.dtec.com") > -1) {
 	// We're in Bugzilla
 	
 	var url = $('#cf_pull_request_number').val();
@@ -33,7 +33,7 @@ if (location.href.indexOf("bugzilla") > -1) {
 		}
 	}
 }
-else if (location.href.indexOf("github") > -1) {
+else if (location.href.indexOf("github.com") > -1) {
 	// This injects the script that requires access to the window object into the DOM.
 	var s = document.createElement('script');
 	s.src = chrome.extension.getURL('src/injected.js');
