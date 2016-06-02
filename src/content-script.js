@@ -187,8 +187,7 @@ else if (location.href.indexOf("github") > -1) {
 					$("<div>")
 						.addClass("select-menu-clear-item select-menu-item js-navigation-item")
 						.attr({
-							"data-clear-products": "",
-							"tabindex": 0
+							"data-clear-products": ""
 						})
 						.data({
 							"clear-products": ""
