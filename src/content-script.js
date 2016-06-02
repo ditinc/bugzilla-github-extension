@@ -113,97 +113,152 @@ else if (location.href.indexOf("github") > -1) {
 		$form.remove();
 	}
 	
+	var products = [];
 	function showProductForm(repo) {
 		repo = repo || location.href.replace(/.*.com\//, '').split('/')[1];
-
-		$(".header").after(
-			$("<form>")
-				.attr({id: "productMapSelector"})
-				.addClass("commit-tease js-sticky")
-				.css("z-index", 100)
-				.html(
+		
+		var setProduct = function(productName) {
+			if (productName === "") {
+				delete productMap[repo];
+			}
+			else {
+				productMap[repo] = {
+					name: productName
+				};
+			}
+			
+			chrome.storage.sync.set({productMap: productMap}, function(obj) {
+				window.postMessage({method: "setProduct", product: productMap[repo]}, '*');
+			});
+		};
+		
+		var populateProductList = function() {
+			var $div = $(".product-select-menu").find(".select-menu-list");
+			
+			$div.prev(".loading").remove();
+			$div.prev(".select-menu-clear-item").remove();
+			$div.prev(".select-menu-text-filter").remove();
+			
+			$div
+				.before(
 					$("<div>")
-						.addClass("container")
+						.addClass("select-menu-text-filter")
+						.css({
+							"padding-bottom": "10px",
+							"border-bottom": "1px solid #ddd"
+						})
 						.html(
-							$("<img>")
-								.attr({src: chrome.extension.getURL("images/icon48.png")})
-								.css({height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom'})
+							$("<input>")
+								.addClass("js-filterable-field js-navigation-enable")
+								.attr({
+									id: "product-filter-field",
+									type: "text",
+									placeholder: "Filter products",
+									autocomplete: "off"
+								})
+								.keyup(function(e) {
+									e.stopPropagation();
+									var searchVal = $.trim(this.value);
+									
+									$(this).parent().parent().find(".select-menu-list .select-menu-item").each(function() {
+										var $el = $(this);
+										var text = $el.find(".select-menu-item-heading").html();
+										
+										if(searchVal.length && text.toLowerCase().indexOf(searchVal.toLowerCase()) < 0) {
+											$el.hide();
+										}
+										else {
+											$el.show();
+										}
+									});
+								})
+								.keydown(function(e) {
+									// Stops GitHub's JS interaction from messing us up
+									if (e.keyCode === 13) {
+										e.stopPropagation();
+										
+										var name = $div.find(".navigation-focus .select-menu-item-heading").html() || "";
+										setProduct(name);
+									}
+								})
 						)
-						.append("<span>" + (productMap[repo] ? "" : "Bugzilla product not set.  ") + "Loading products...</span>")
 				)
-		);
-
-		bugzilla.getProducts()
-			.fail(function(response) {
-				var faultString = getFaultString(response);
-				
-				if (faultString === "You must log in before using this part of DER.") {
-					showLoginForm(function() {
-						showProductForm(repo);
-					});
-				}
-			})
-			.done(function(response) {
-				var products = response[0].products.sort(function(a, b) {
-					return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
-				});
-				$("form#productMapSelector")
-					.submit(function(e) {
-						e.preventDefault();
-						
-						var selectedProduct = $(this).find("select").val();
-						
-						if (selectedProduct === "") {
-							delete productMap[repo];
-						}
-						else {
-							productMap[repo] = {
-								name: selectedProduct
-							};
-						}
-						
-						chrome.storage.sync.set({productMap: productMap}, function(obj) {
-							window.postMessage({method: "setProduct", product: productMap[repo]}, '*');
-							hideInjectedForm($("#productMapSelector"));
-						});
-					})
-					.find("div span")
-						.html("Please choose the Bugzilla product this repo is associated with:")
+				.before(
+					$("<div>")
+						.addClass("select-menu-clear-item select-menu-item js-navigation-item")
+						.attr({
+							"data-clear-products": "",
+							"tabindex": 0
+						})
+						.data({
+							"clear-products": ""
+						})
+						.html('<svg aria-hidden="true" class="octicon octicon-x select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path d="M7.48 8l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75-1.48-1.48 3.75-3.75L0.77 4.25l1.48-1.48 3.75 3.75 3.75-3.75 1.48 1.48-3.75 3.75z"></path></svg>')
 						.append(
-							$("<select>")
-								.addClass("form-control input-sm")
-								.css("margin", "0 5px")
-								.append("<option>")
-								.append(
-									$.map(products, function(el, i) {
-										return $("<option>").val(el.name).html(el.name).prop("selected", productMap[repo] && el.name === productMap[repo].name);
-									})
+							$("<div>")
+								.addClass("select-menu-item-text")
+								.html("Clear product")
+						)
+						.click(function(e) {
+							e.stopPropagation();
+							
+							setProduct("");
+						})
+				);
+					
+			$div = $div.children("div").last();
+			$div.html("");
+			
+			$.each(products, function(i, el) {
+				var selected = productMap[repo] && el.name === productMap[repo].name;
+				
+				$div.append(
+					$("<div>")
+						.addClass("select-menu-item js-navigation-item" + (selected ? " selected" : ""))
+						.html('<svg aria-hidden="true" class="octicon octicon-check select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path d="M12 5L4 13 0 9l1.5-1.5 2.5 2.5 6.5-6.5 1.5 1.5z"></path></svg>')
+						.append(
+							$("<div>")
+								.addClass("select-menu-item-text")
+								.html(
+									$("<span>")
+										.addClass("select-menu-item-heading")
+										.html(el.name)
 								)
 						)
-						.append(
-							$("<button>")
-								.addClass("btn btn-sm btn-primary ml-3")
-								.attr({
-									type: "submit"
-								})
-								.html("OK")
-						)
-						.append(
-							$("<button>")
-								.addClass("btn btn-sm ml-3")
-								.attr({
-									type: "button"
-								})
-								.html("Cancel")
-								.click(function() {
-									$("#productMapSelector").remove();
-								})
-						);
+						.click(function(e) {
+							e.stopPropagation();
+							
+							setProduct(el.name);
+						})
+				);
 			});
+		};
+		
+		if (products.length === 0) {
+			bugzilla.getProducts()
+				.fail(function(response) {
+					var faultString = getFaultString(response);
+					
+					if (faultString === "You must log in before using this part of DER.") {
+						showLoginForm(function() {
+							showProductForm(repo);
+						});
+					}
+				})
+				.done(function(response) {
+					products = response[0].products.sort(function(a, b) {
+						return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
+					});
+	
+					populateProductList();
+				});
+		}
+		else {
+			populateProductList();
+		}
 	}
 	
 	function showLoginForm(callback) {
-		hideInjectedForm($("#productMapSelector"));
 		if ($("#bzLoginForm").length === 0) {
 			$(".header").after(
 				$("<form>")

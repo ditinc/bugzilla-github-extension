@@ -361,7 +361,7 @@ var DITBugzillaGitHub = function() {
 	};
 	
 	var injectProductName = function(contents) {
-		var selector = 'h1.entry-title';
+		var selector = 'div.repohead-details-container';
 		var $el;
 		
 		if ($(contents).length === 1 && $(contents).is(selector)) {
@@ -381,8 +381,13 @@ var DITBugzillaGitHub = function() {
 		if ($el.length) {
 			$el.append(
 				$("<h6>")
+					.addClass("select-menu js-menu-container js-select-menu product-select-menu")
 					.attr({
 						id: "bzProduct"
+					})
+					.css({
+						float: "left",
+						clear: "both"
 					})
 					.append(
 						$("<a>")
@@ -397,9 +402,56 @@ var DITBugzillaGitHub = function() {
 							.append('<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>')
 							.click(function(e){
 								e.preventDefault();
-								
+								$(this).parent().find(".select-menu-modal-holder").show();
 								window.postMessage({method: "showProductForm"}, '*');
 							})
+					)
+					.append(
+						$("<div>")
+							.addClass("select-menu-modal-holder js-menu-content js-navigation-container js-active-navigation-container")
+							.html(
+								$("<div>")
+									.addClass("select-menu-modal")
+									.html(
+							 			$("<div>")
+											.addClass("select-menu-header")
+											.append('<svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path d="M7.48 8l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75-1.48-1.48 3.75-3.75L0.77 4.25l1.48-1.48 3.75 3.75 3.75-3.75 1.48 1.48-3.75 3.75z"></path></svg>')
+											.append(
+												$("<span>")
+													.addClass("select-menu-title")
+													.html("Select Bugzilla product for this repo")
+											)
+											.click(function(e) {
+												e.stopPropagation();
+												
+												$(this).closest(".select-menu-modal-holder").hide();
+											})
+									)
+									.append(
+										$("<div>")
+											.addClass("js-select-menu-deferred-content")
+											.html(
+												$("<div>")
+													.addClass("select-menu-filters")
+													.append("<div class='loading select-menu-item'>Loading...</div>")
+													.append(
+														$("<div>")
+															.addClass("select-menu-list")
+															.append(
+																$("<div>")
+																	.attr({
+																		"data-filterable-for": "products-filter-field",
+																		"data-filterable-type": "substring"
+																	})
+																	.data({
+																		"filterable-for": "products-filter-field",
+																		"filterable-type": "substring"
+																	})
+															)
+													)
+											)
+									)
+							)
 					)
 			);
 		}
@@ -959,6 +1011,8 @@ var DITBugzillaGitHub = function() {
 			/* Sets the product so we can do product-specific things */
 			case "setProduct":
 				product = message.product;
+				$(".product-select-menu .select-menu-modal-holder").hide();
+				
 				injectProductName(document);
 				injectPageHeadActions(document);
 				break;
