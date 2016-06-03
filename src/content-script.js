@@ -45,6 +45,13 @@ else if (location.href.indexOf("github.com") > -1) {
 	// This object will be used to interact with Bugzilla.
 	var bugzilla = new Bugzilla();
 	
+	// This object will be used to map GitHub repos with Bugzilla products.
+	var productMap = {};
+	
+	// These will be used to cache info from Bugzilla.
+	var products = [];
+	var milestones = [];
+	
 	// We'll accept messages from the injected script in order to make calls to Bugzilla.
 	window.addEventListener('message', function(event) {
 		// Only accept messages from same frame
@@ -65,9 +72,14 @@ else if (location.href.indexOf("github.com") > -1) {
 				loadBugDetails(message);
 				break;
 			
-			/* Puts Bugzilla bug info into our sidebar section */
+			/* Shows a select control for Bugzilla product */
 			case "showProductForm":
 				showProductForm();
+				break;
+			
+			/* Shows a select control for Bugzilla milestone */
+			case "showMilestoneForm":
+				showMilestoneForm();
 				break;
 			
 			/* Sends comment to Bugzilla */
@@ -91,7 +103,6 @@ else if (location.href.indexOf("github.com") > -1) {
 	});
 	
 	// Here, we're setting up a map between Bugzilla product and GitHub repo in the user's storage.
-	var productMap = {};
 	chrome.storage.sync.get('productMap', function (obj) {
 		if (obj && obj.productMap) {
 			productMap = obj.productMap;
@@ -113,7 +124,6 @@ else if (location.href.indexOf("github.com") > -1) {
 		$form.remove();
 	}
 	
-	var products = [];
 	function showProductForm(repo) {
 		repo = repo || location.href.replace(/.*.com\//, '').split('/')[1];
 		
@@ -135,7 +145,7 @@ else if (location.href.indexOf("github.com") > -1) {
 		var populateProductList = function() {
 			var $div = $(".product-select-menu").find(".select-menu-list");
 			
-			$div.prev(".loading").remove();
+			$div.prev(".is-loading").remove();
 			$div.prev(".select-menu-clear-item").remove();
 			$div.prev(".select-menu-text-filter").remove();
 			
@@ -162,7 +172,7 @@ else if (location.href.indexOf("github.com") > -1) {
 									
 									$(this).parent().parent().find(".select-menu-list .select-menu-item").each(function() {
 										var $el = $(this);
-										var text = $el.find(".select-menu-item-heading").html();
+										var text = $el.find(".select-menu-item-heading").text();
 										
 										if(searchVal.length && text.toLowerCase().indexOf(searchVal.toLowerCase()) < 0) {
 											$el.hide();
@@ -181,6 +191,7 @@ else if (location.href.indexOf("github.com") > -1) {
 										setProduct(name);
 									}
 								})
+								.focus()
 						)
 				)
 				.before(
@@ -205,6 +216,7 @@ else if (location.href.indexOf("github.com") > -1) {
 						})
 				);
 					
+			$("input#product-filter-field").focus();
 			$div = $div.children("div").last();
 			$div.html("");
 			
@@ -254,6 +266,180 @@ else if (location.href.indexOf("github.com") > -1) {
 		}
 		else {
 			populateProductList();
+		}
+	}
+	
+	function showMilestoneForm(repo) {
+		repo = repo || location.href.replace(/.*.com\//, '').split('/')[1];
+		
+		var setMilestone = function(milestoneName) {
+			$("input#milestone_title").val(milestoneName).focus();
+			$(".milestone-select-menu .select-menu-modal-holder").hide();
+		};
+		
+		var populateMilestoneList = function() {
+			var $div = $(".milestone-select-menu").find(".select-menu-list");
+			
+			$div.prev(".is-loading").remove();
+			$div.prev(".select-menu-clear-item").remove();
+			$div.prev(".select-menu-text-filter").remove();
+			
+			$div
+				.before(
+					$("<div>")
+						.addClass("select-menu-text-filter")
+						.css({
+							"padding-bottom": "10px",
+							"border-bottom": "1px solid #ddd"
+						})
+						.html(
+							$("<input>")
+								.addClass("js-filterable-field js-navigation-enable")
+								.attr({
+									id: "milestone-filter-field",
+									type: "text",
+									placeholder: "Filter milestones",
+									autocomplete: "off"
+								})
+								.keyup(function(e) {
+									e.stopPropagation();
+									var searchVal = $.trim(this.value);
+									
+									$(this).parent().parent().find(".select-menu-list .select-menu-item").each(function() {
+										var $el = $(this);
+										var text = $el.find(".select-menu-item-heading").text();
+										
+										if(searchVal.length && text.toLowerCase().indexOf(searchVal.toLowerCase()) < 0) {
+											$el.hide();
+										}
+										else {
+											$el.show();
+										}
+									});
+								})
+								.keydown(function(e) {
+									// Stops GitHub's JS interaction from messing us up
+									switch(e.keyCode) {
+										case 13:
+											e.preventDefault();
+											e.stopPropagation();
+											
+											var name = $div.find(".navigation-focus .select-menu-item-heading").html() || "";
+											setMilestone(name);
+											break;
+										case 40:
+											e.stopPropagation();
+											
+											var $items = $(e.target).closest(".js-menu-container").find(".js-navigation-item");
+											
+											if ($items.length) {
+												var index = $items.index($(".js-navigation-item.navigation-focus"));
+												$items.eq(index).removeClass("navigation-focus");
+												var $select = $items.eq(Math.min($items.length - 1, index + 1));
+												$select.addClass("navigation-focus");
+											}
+											
+											break;
+										case 38:
+											e.stopPropagation();
+											
+											var $items = $(e.target).closest(".js-menu-container").find(".js-navigation-item");
+											
+											if ($items.length) {
+												var index = $items.index($(".js-navigation-item.navigation-focus"));
+												$items.eq(index).removeClass("navigation-focus");
+												var $select = $items.eq(Math.max(0, index - 1));
+												$select.addClass("navigation-focus");
+											}
+											
+											break;
+									}
+								})
+						)
+				)
+				.before(
+					$("<div>")
+						.addClass("select-menu-clear-item select-menu-item js-navigation-item")
+						.attr({
+							"data-clear-milestones": ""
+						})
+						.data({
+							"clear-milestones": ""
+						})
+						.html('<svg aria-hidden="true" class="octicon octicon-x select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path d="M7.48 8l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75-1.48-1.48 3.75-3.75L0.77 4.25l1.48-1.48 3.75 3.75 3.75-3.75 1.48 1.48-3.75 3.75z"></path></svg>')
+						.append(
+							$("<div>")
+								.addClass("select-menu-item-text")
+								.html("Clear milestone")
+						)
+						.click(function(e) {
+							e.stopPropagation();
+							
+							setMilestone("");
+						})
+				);
+
+			$("input#milestone-filter-field").focus();
+			$div = $div.children("div").last();
+			$div.html("");
+			
+			var values = $.map(milestones, function(milestone) {
+				if ($.inArray(productMap[repo].name, milestone.visibility_values) < 0) {
+					return;
+				}
+				else {
+					return {name: milestone.name, sortkey: milestone.sortkey};
+				}
+			});
+			
+			values.sort(function(a, b) {
+				return (a.sortkey < b.sortkey ? -1 : (a.sortkey > b.sortkey ? 1 : 0));
+			});
+			
+			$.each(values, function(i, el) {
+				var selected = $("input#milestone_title").val() === el.name;
+				
+				$div.append(
+					$("<div>")
+						.addClass("select-menu-item js-navigation-item" + (selected ? " selected" : ""))
+						.html('<svg aria-hidden="true" class="octicon octicon-check select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path d="M12 5L4 13 0 9l1.5-1.5 2.5 2.5 6.5-6.5 1.5 1.5z"></path></svg>')
+						.append(
+							$("<div>")
+								.addClass("select-menu-item-text")
+								.html(
+									$("<span>")
+										.addClass("select-menu-item-heading")
+										.html(el.name)
+								)
+						)
+						.click(function(e) {
+							e.stopPropagation();
+							
+							setMilestone(el.name);
+						})
+				);
+			});
+		};
+		
+		if (milestones.length === 0) {
+			bugzilla.getFieldInfo(["target_milestone"])
+				.error(function(response) {
+					var faultString = getFaultString(response);
+					
+					if (faultString === "You must log in before using this part of DER.") {
+						showLoginForm(function() {
+							showMilestoneForm(repo);
+						});
+					}
+				})
+				.success(function(response) {					
+					milestones = response[0].fields[0].values;
+	
+					populateMilestoneList();
+				});
+		}
+		else {
+			populateMilestoneList();
 		}
 	}
 	

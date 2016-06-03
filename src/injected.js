@@ -20,6 +20,8 @@ var DITBugzillaGitHub = function() {
 		injectNewPullRequestOptions(contents);
 		injectResolveBugCheckbox(contents);
 		injectReleaseOptions(contents);
+		injectMilestoneActions(contents);
+		injectNewMilestoneSelect(contents);
 		syncLabels(contents);
 	};
 	
@@ -433,7 +435,7 @@ var DITBugzillaGitHub = function() {
 											.html(
 												$("<div>")
 													.addClass("select-menu-filters")
-													.append("<div class='loading select-menu-item'>Loading...</div>")
+													.append("<div class='is-loading select-menu-item'>Loading...</div>")
 													.append(
 														$("<div>")
 															.addClass("select-menu-list")
@@ -966,6 +968,160 @@ var DITBugzillaGitHub = function() {
 		}
 	}
 	
+	var injectMilestoneActions = function(contents) {
+		// Don't continue if we aren't mapped to a product
+		if (!product) { 
+			$("div.bzButtons").remove();
+			return;
+		}
+		var selector = 'ul.table-list-milestones';
+		var $ul;
+
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$ul = $(contents);
+		}
+		else {
+			try {
+				$ul = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+
+		$ul.find("div.bzButtons").remove();
+
+		if ($ul.length) {
+			$ul.find("div.milestone-title").each(function() {
+				var $this = $(this);
+				var milestone = $this.find("h2 a").text();
+				
+				$this.append(
+					$("<span>")
+						.addClass("bzButtons")
+						.html(
+							$("<a>")
+								.addClass("btn btn-sm")
+								.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+								.append(" View in Bugzilla")
+								.attr({
+									href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+									target: "_blank"
+								})
+						)
+				);
+			});
+		}
+		else if ($ul.length) {
+			// Need this line or else we lose previously applied changes.
+			$ul.html($ul.html());
+		}
+	};
+	
+	var injectNewMilestoneSelect = function(contents) {
+		// Don't continue if we aren't mapped to a product
+		if (!product) { 
+			$("h6.milestone-select-menu").remove();
+			return;
+		}
+		var selector = 'form.new_milestone, form.js-milestone-edit-form';
+		var $el;
+
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$el = $(contents);
+		}
+		else {
+			try {
+				$el = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+
+		$el.find("h6.milestone-select-menu").remove();
+
+		if ($el.length) {
+			var $input = $el.find("input#milestone_title");
+			$input.after(
+				$("<h6>")
+					.addClass("select-menu js-menu-container js-select-menu milestone-select-menu")
+					.attr({
+						id: "bzMilestone"
+					})
+					.append(
+						$("<a>")
+							.attr({
+								href: "#",
+								tabindex: $input.attr("tabindex")
+							})
+							.css({
+								fill: "currentColor",
+								color: "#666"
+							})
+							.html("Use Bugzilla milestone...")
+							.append('<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>')
+							.click(function(e){
+								e.preventDefault();
+								$(this).parent().find(".select-menu-modal-holder").show();
+								window.postMessage({method: "showMilestoneForm"}, '*');
+							})
+					)
+					.append(
+						$("<div>")
+							.addClass("select-menu-modal-holder js-menu-content js-navigation-container js-active-navigation-container")
+							.html(
+								$("<div>")
+									.addClass("select-menu-modal")
+									.html(
+							 			$("<div>")
+											.addClass("select-menu-header")
+											.append('<svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path d="M7.48 8l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75-1.48-1.48 3.75-3.75L0.77 4.25l1.48-1.48 3.75 3.75 3.75-3.75 1.48 1.48-3.75 3.75z"></path></svg>')
+											.append(
+												$("<span>")
+													.addClass("select-menu-title")
+													.html("Select Bugzilla milestone")
+											)
+											.click(function(e) {
+												e.stopPropagation();
+												
+												$(this).closest(".select-menu-modal-holder").hide();
+											})
+									)
+									.append(
+										$("<div>")
+											.addClass("js-select-menu-deferred-content")
+											.html(
+												$("<div>")
+													.addClass("select-menu-filters")
+													.append("<div class='is-loading select-menu-item'>Loading...</div>")
+													.append(
+														$("<div>")
+															.addClass("select-menu-list")
+															.append(
+																$("<div>")
+																	.attr({
+																		"data-filterable-for": "milestones-filter-field",
+																		"data-filterable-type": "substring"
+																	})
+																	.data({
+																		"filterable-for": "milestones-filter-field",
+																		"filterable-type": "substring"
+																	})
+															)
+													)
+											)
+									)
+							)
+					)
+			);
+		}
+		else if ($el.length) {
+			// Need this line or else we lose previously applied changes.
+			$el.html($el.html());
+		}
+	};
+	
 	var syncLabels = function(contents) {
 		if (!bugId || !doLabelSync) { return; } // Don't continue if we aren't mapped to a bug or aren't syncing labels
 	
@@ -1015,6 +1171,8 @@ var DITBugzillaGitHub = function() {
 				
 				injectProductName(document);
 				injectPageHeadActions(document);
+				injectMilestoneActions(document);
+				injectNewMilestoneSelect(document);
 				break;
 		}
 	})

@@ -175,6 +175,21 @@ Bugzilla.prototype.searchBugs = function(searchCriteria) {
 }
 
 /**
+ * Gets a promise that will return info for the given fields.
+ * @param {Array} fieldNames - The field names.
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
+Bugzilla.prototype.getFieldInfo = function(fieldNames) {
+	"use strict";
+
+	return $.xmlrpc({
+		url: this.xmlrpcUrl,
+		methodName: 'Bug.fields',
+		params: [{names: fieldNames}]
+	});
+}
+
+/**
  * Gets a promise that will return all products.
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
