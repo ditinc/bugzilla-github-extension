@@ -54,18 +54,19 @@ var DITBugzillaGitHub = function() {
 				var $form = $(this).closest("form");
 				var syncComment = $form.find(".syncComment").prop("checked");
 				var resolveBug = $form.find(".resolveBug").prop("checked");
+				var reopenBug = $form.find(".reopenBug").prop("checked");
 				var comment = (syncComment ? $("#new_comment_field").val() : "");
 				var hoursWorked = $("#workTime").val();
 				
-				if (syncComment && !resolveBug) {
+				if (syncComment && !resolveBug && !reopenBug) {
 					if ($.trim(comment).length) {
 						window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: hoursWorked}, '*');
 					}
 				}
-				else if (resolveBug) {
+				else if (resolveBug || reopenBug) {
 					var params = {
-						status: "RESOLVED",
-						resolution: "FIXED",
+						status: (resolveBug ? "RESOLVED" : "REOPENED"),
+						resolution: (resolveBug ? "FIXED" : ""),
 						"work_time": hoursWorked
 					};
 					
@@ -73,7 +74,7 @@ var DITBugzillaGitHub = function() {
 						comment += "\r\n\r\n";
 					}
 					
-					comment += "Marking as FIXED.";
+					comment += (resolveBug ? "Marking as FIXED." : "Setting to REOPENED.");
 					
 					params["comment"] = {"body": $.trim(comment)};
 				
@@ -567,12 +568,49 @@ var DITBugzillaGitHub = function() {
 															type: "checkbox"
 														})
 														.prop('checked', false)
+														.change(function() {
+															var checked = $(this).prop("checked");
+															if (checked) {
+																$(this.form).find(".reopenBug").prop("checked", false);
+															}
+														})
 												)
 										)
 										.append(
 											$("<p>")
 												.addClass("note")
 												.html("Set the bug to <strong>RESOLVED FIXED</strong> in Bugzilla.")
+										)
+								)
+						)
+						.before(
+							$("<div>")
+								.addClass("pl-3")
+								.html(
+									$("<div>")
+										.addClass("form-checkbox")
+										.append(
+											$("<label>")
+												.text("Reopen bug " + bugId)
+												.append(
+													$("<input>")
+														.addClass("reopenBug")
+														.attr({
+															type: "checkbox"
+														})
+														.prop('checked', false)
+														.change(function() {
+															var checked = $(this).prop("checked");
+															if (checked) {
+																$(this.form).find(".resolveBug").prop("checked", false);
+															}
+														})
+												)
+										)
+										.append(
+											$("<p>")
+												.addClass("note")
+												.html("Set the bug to <strong>REOPENED</strong> in Bugzilla.")
 										)
 								)
 						);
