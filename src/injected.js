@@ -321,13 +321,13 @@ var DITBugzillaGitHub = function() {
 		}
 		
 		if ($sidebar.length && $sidebar.find("div.sidebar-dit-bugzilla").length === 0) {
-			$sidebar.prepend(
+			$sidebar.find(".sidebar-notifications").before(
 				$("<div>")
 					.addClass("discussion-sidebar-item sidebar-dit-bugzilla")
 					.append(
 						$("<h3>")
 							.addClass("discussion-sidebar-heading")
-							.html("Bugzilla ")
+							.html("Bugzilla Info ")
 							.append(
 								$("<a>")
 									.attr("href", getBugUrl())
