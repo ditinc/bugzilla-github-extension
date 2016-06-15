@@ -267,6 +267,9 @@ var DITBugzillaGitHub = function() {
 					window.localStorage.setItem("DIT-updateBug", updateBug);
 					window.localStorage.setItem("DIT-bugId", bugId);
 					window.localStorage.setItem("DIT-comment", comment);
+					
+					var labels = $("a.label").map(function() { return $(this).html(); }).toArray().join(' ');
+					window.localStorage.setItem("DIT-labels", labels);
 				}
 			})
 			
@@ -986,6 +989,7 @@ var DITBugzillaGitHub = function() {
 			var updateBug = window.localStorage.getItem("DIT-updateBug") === "true";
 			var bugId = window.localStorage.getItem("DIT-bugId");
 			var comment = window.localStorage.getItem("DIT-comment");
+			var labels = window.localStorage.getItem("DIT-labels");
 			var pr = window.location.href.split('/').pop();
 			var params = {};
 			
@@ -995,6 +999,7 @@ var DITBugzillaGitHub = function() {
 
 			if (updateBug) {
 				params["cf_pull_request_number"] = window.location.href;
+				params["cf_github_labels"] = labels;
 			}
 
 			window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
@@ -1003,6 +1008,7 @@ var DITBugzillaGitHub = function() {
 			window.localStorage.removeItem("DIT-updateBug");
 			window.localStorage.removeItem("DIT-bugId");
 			window.localStorage.removeItem("DIT-comment");
+			window.localStorage.removeItem("DIT-labels");
 		}
 	}
 	
