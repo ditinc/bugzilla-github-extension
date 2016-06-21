@@ -67,6 +67,11 @@ else if (location.href.indexOf("github.com") > -1) {
 		}
 	
 		switch (message.method) {
+			/* Let's us know the injected script is done loading */
+			case "pluginLoaded":
+				syncProductMap();
+				break;
+			
 			/* Puts Bugzilla bug info into our sidebar section */
 			case "loadBugDetails":
 				loadBugDetails(message);
@@ -102,18 +107,20 @@ else if (location.href.indexOf("github.com") > -1) {
 		}
 	});
 	
-	// Here, we're setting up a map between Bugzilla product and GitHub repo in the user's storage.
-	chrome.storage.sync.get('productMap', function (obj) {
-		if (obj && obj.productMap) {
-			productMap = obj.productMap;
-			
-			var repo = location.href.replace(/.*.com\//, '').split('/')[1];
-			
-			if (repo && repo.length > 0 && productMap[repo]) {
-				window.postMessage({method: "setProduct", product: productMap[repo]}, '*');
+	function syncProductMap() {
+		// Here, we're setting up a map between Bugzilla product and GitHub repo in the user's storage.
+		chrome.storage.sync.get('productMap', function (obj) {
+			if (obj && obj.productMap) {
+				productMap = obj.productMap;
+				
+				var repo = location.href.replace(/.*.com\//, '').split('/')[1];
+				
+				if (repo && repo.length > 0 && productMap[repo]) {
+					window.postMessage({method: "setProduct", product: productMap[repo]}, '*');
+				}
 			}
-		}
-	});
+		});
+	}
 	
 	function getFaultString(response) {
 		return $(response.responseXML).find("fault").find("member").first().find("string").html();

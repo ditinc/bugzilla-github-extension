@@ -1224,6 +1224,9 @@ var DITBugzillaGitHub = function() {
 	createListeners();
 	applyExtension(document);
 	updateBugForNewPullRequest();
+	
+	// Plugin is loaded!
+	window.postMessage({method: "pluginLoaded"}, '*');
 };
 
 new DITBugzillaGitHub();
