@@ -25,8 +25,9 @@ var DITBugzillaGitHub = function() {
 		syncLabels(contents);
 	};
 	
-	var getBugUrl = function() {
-		return bugUrl + bugId;
+	var getBugUrl = function(theBugId) {
+		theBugId = theBugId || bugId;
+		return bugUrl + theBugId;
 	}
 
 	var createListeners = function() {
@@ -286,9 +287,11 @@ var DITBugzillaGitHub = function() {
 
 	var linkifyBugNumber = function(contents) {
 		var $issueTitle = $(contents).find('.js-issue-title');
-		var newHtml = $issueTitle.html();
-
+		var $comments = $(contents).find('.markdown-body p, .markdown-body li');
+		
+		// Issue titles need changing
 		if ($issueTitle.length && $issueTitle.children('a').length === 0) {
+			var newHtml = $issueTitle.html();
 			var matches = $issueTitle.html().match(BUG_REGEX);
 			
 			if (matches && matches.length) {
@@ -300,9 +303,26 @@ var DITBugzillaGitHub = function() {
 			else {
 				bugId = null;
 			}
-		}
 
-		$issueTitle.html(newHtml);
+			$issueTitle.html(newHtml);
+		}
+		if ($comments.length) {
+			$comments.each(function() {
+				var $this = $(this);
+				var newHtml = $this.html();
+				var regex = /(\[(\d+)\]|Bug\s*(\d+))|\n(\[(\d+)\]|Bug\s*(\d+))/ig;
+				var matches = $this.html().match(regex);
+
+				if (matches && matches.length) {
+					var theBugId = matches[0].match(/\d+/)[0];
+					
+					/* This will turn the bug number into a link to the bug */
+					newHtml = $this.html().replace(regex, '<a href="' + getBugUrl(theBugId) + '">[' + theBugId + ']</a>');
+				}
+				
+				$this.html(newHtml);
+			});
+		}
 	};
 	
 	var showBugDetailsInSidebar = function(contents) {
