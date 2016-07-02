@@ -3,10 +3,7 @@
 chrome.storage.sync.get(
 	STORAGE_DEFAULTS, 
 	function(settings) {
-		if (settings.bugzillaURL.length === 0 || settings.gitHubURL.length === 0) {
-			chrome.runtime.sendMessage({method: "options"}, function(response) {});
-		}
-		else {
+		if (settings.bugzillaURL.length > 0 && settings.gitHubURL.length > 0) {
 			run(settings);
 		}
 	}
