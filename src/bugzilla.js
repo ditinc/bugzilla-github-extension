@@ -3,15 +3,15 @@
  * @class
  * @classdesc An object that communicates with Bugzilla via XML-RPC.
  */
-var Bugzilla = function() {
+var Bugzilla = function(settings) {
 	"use strict";
 	
 	/**
-	 * The URL of the Bugzilla server.  TODO: make as an option when creating the class.
+	 * The URL of the Bugzilla server.
 	 * @private
 	 * @type {String}
 	 */
-	this.url = 'https://bugzilla.dtec.com';
+	this.url = settings.bugzillaURL;
 	
 	/**
 	 * The URL of the Bugzilla server's XMLRPC interface.
@@ -181,11 +181,15 @@ Bugzilla.prototype.searchBugs = function(searchCriteria) {
  */
 Bugzilla.prototype.getFieldInfo = function(fieldNames) {
 	"use strict";
+	var params = [];
+	if (fieldNames) {
+		params.push({names: fieldNames});
+	}
 
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
 		methodName: 'Bug.fields',
-		params: [{names: fieldNames}]
+		params: params
 	});
 }
 

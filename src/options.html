@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>DITBugzillaGitHub Options</title>
+		<style>
+			body {
+				padding: 10px;
+			}
+			label {
+				font-weight: bold;
+				display: inline-block;
+				width: 30em;
+				margin-bottom: 0.5em;
+			}
+			div.options {
+				margin-bottom: 2em;
+			}
+			div.optionsButtons {
+				position: fixed;
+				bottom: 0;
+				background: white;
+				border-top: 1px solid lightgray;
+				width: 100%;
+				margin: 0 -3em;
+				padding: 0.5em 3em;
+			}
+			.options input {
+				width: 30em;
+				margin-bottom: 1em;
+			}
+			fieldset {
+				padding-top: 1em;
+			}
+			.options fieldset input {
+				width: 25em;
+			}
+			legend {
+				font-weight: bold;
+			}
+			span.help {
+				cursor: help;
+				color: lightblue;
+			}
+			.options select {
+				width: 15em;
+				float: left;
+			}
+			.options select[multiple] {
+				width: 15em;
+				height: 10em;
+			}
+			div.selectButtons {
+				display: inline-block;
+				height: 10em;
+				float: left;
+				width: 10em;
+				text-align: center;
+			}
+			div.selectButtons.thin {
+				width: 3em;
+				height: auto;
+			}
+			.selectButtons button {
+				width: 8em;
+			}
+			.selectButtons.thin button {
+				width: 2em;
+			}
+			.modalBackground {
+				position: fixed;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				background-color: rgba(255, 255, 255, 0.75);
+			}
+			.modal {
+				position: fixed;
+				top: 2em;
+				left: 2em;
+				right: 2em;
+				border: 1px solid black;
+				background-color: white;
+				padding: 2em;
+			}
+			textarea#optionsJSON {
+				width: 100%;
+				height: 15em;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="options">
+			<div>
+				<label for="bugzillaURL">
+					Bugzilla URL
+					<span class="help" title="The URL of your bugzilla server.">[?]</span>
+				</label>
+				<input type="url" id="bugzillaURL" name="bugzillaURL" placeholder="ex: http://bugzilla.mycompany.com" required />
+			</div>
+
+			<div>
+				<label for="gitHubURL">
+					GitHub URL
+					<span class="help" title="The URL of your GitHub profile.">[?]</span>
+				</label>
+				<input type="url" id="gitHubURL" name="gitHubURL" placeholder="ex: http://github.com/mycompany" required />
+			</div>
+
+			<fieldset>
+				<legend>
+					Bugzilla Custom Fields
+					<span class="help" title="For better integration, these custom fields are recommended.">[?]</span>
+				</legend>
+
+				<div>
+					<label for="gitHubPullRequestURL">
+						GitHub Pull Request URL
+						<span class="help" title="When this field is populated, bugs will have the pull request number as a link in the title.">[?]</span>
+					</label>
+					<input type="text" id="gitHubPullRequestURL" name="gitHubPullRequestURL" placeholder="ex: cf_pull_request_number" />
+					<button type="button" class="fieldSelect" data-target="gitHubPullRequestURL">Select</button>
+				</div>
+
+				<div>
+					<label for="gitHubLabels">
+						GitHub Labels
+						<span class="help" title="When you add labels to the pull request, this field will list them.">[?]</span>
+					</label>
+					<input type="text" id="gitHubLabels" name="gitHubLabels" placeholder="ex: cf_github_labels" />
+					<button type="button" class="fieldSelect" data-target="gitHubLabels">Select</button>
+				</div>
+
+				<div>
+					<label for="revision">
+						Release
+						<span class="help" title="When bugs are referenced in GitHub release comments, this field is populated on the bugs.">[?]</span>
+					</label>
+					<input type="text" id="revision" name="revision" placeholder="ex: cf_revision" />
+					<button type="button" class="fieldSelect" data-target="revision">Select</button>
+				</div>
+
+				<div>
+					<label for="codestatus">
+						Code Status
+						<span class="help" title="This field is updated when merging pull requests and when referencing bugs in a release.">[?]</span>
+					</label>
+					<input type="text" id="codestatus" name="codestatus" placeholder="ex: cf_codestatus" />
+					<button type="button" class="fieldSelect" data-target="codestatus">Select</button>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>
+					Code Status Values
+					<span class="help" title="Choose the Code Status value to use when performing different actions.">[?]</span>
+				</legend>
+
+				<div>
+					<label for="codestatusMerge">
+						When merging to master
+						<span class="help" title="The Code Status to use when merging pull requests to master.">[?]</span>
+					</label>
+					<input type="text" id="codestatusMerge" name="codestatusMerge" placeholder="ex: Merged to master" />
+					<button type="button" class="valueSelect" data-target="codestatusMerge" data-field="">Select</button>
+				</div>
+
+				<div>
+					<label for="codestatusMergeParent">
+						When merging to parent branch
+						<span class="help" title="The Code Status to use when merging pull requests to a parent branch other than master.">[?]</span>
+					</label>
+					<input type="text" id="codestatusMergeParent" name="codestatusMergeParent" placeholder="ex: Merged to parent branch" />
+					<button type="button" class="valueSelect" data-target="codestatusMergeParent" data-field="">Select</button>
+				</div>
+
+				<div>
+					<label for="codestatusRelease">
+						When referencing bugs in a release
+						<span class="help" title="The Code Status to use when referencing bugs in a release.">[?]</span>
+					</label>
+					<input type="text" id="codestatusRelease" name="codestatusRelease" placeholder="ex: In Production" />
+					<button type="button" class="valueSelect" data-target="codestatusRelease" data-field="">Select</button>
+				</div>
+
+				<div>
+					<label for="codestatusPreRelease">
+						When referencing bugs in a release marked pre-production
+						<span class="help" title="The Code Status to use when referencing bugs in a pre-release.">[?]</span>
+					</label>
+					<input type="text" id="codestatusPreRelease" name="codestatusPreRelease" placeholder="ex: In Staging" />
+					<button type="button" class="valueSelect" data-target="codestatusPreRelease" data-field="">Select</button>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>
+					Bug Info Sidebar
+					<span class="help" title="Choose which Bugzilla fields you want to display in the pull request.">[?]</span>
+				</legend>
+
+				<div>
+					<select id="bugInfoFields" name="bugInfoFields" multiple></select>
+					<div class="selectButtons">
+						<button class="moveTop" data-select="bugInfoFields">Move Top</button>
+						<button class="moveUp" data-select="bugInfoFields">Move Up</button>
+						<button class="moveDown" data-select="bugInfoFields">Move Down</button>
+						<button class="moveBottom" data-select="bugInfoFields">Move Bottom</button>
+						<button class="remove" data-select="bugInfoFields">Remove</button>
+					</div>
+					<div class="selectButtons thin">
+						<button class="add" data-select="bugInfoFields">Add</button>
+					</div>
+				</div>
+			</fieldset>
+
+			<fieldset>
+				<legend>
+					Bugzilla Bug Lists
+					<span class="help" title="Choose how you want bug lists created by the extension to display.">[?]</span>
+				</legend>
+
+				<div>
+					<label for="bugListFields">
+						Fields
+						<span class="help" title="The fields displayed in the bug list.">[?]</span>
+					</label>
+					<select id="bugListFields" name="bugListFields" multiple></select>
+					<div class="selectButtons">
+						<button class="moveTop" data-select="bugListFields">Move Top</button>
+						<button class="moveUp" data-select="bugListFields">Move Up</button>
+						<button class="moveDown" data-select="bugListFields">Move Down</button>
+						<button class="moveBottom" data-select="bugListFields">Move Bottom</button>
+						<button class="remove" data-select="bugListFields">Remove</button>
+					</div>
+					<div class="selectButtons thin">
+						<button class="add" data-select="bugListFields">Add</button>
+					</div>
+				</div>
+
+				<div>
+					<label for="bugListSortOrder">
+						Sort Order
+						<span class="help" title="The sort order of the bug list.">[?]</span>
+					</label>
+					<select id="bugListSortOrder" name="bugListSortOrder" multiple></select>
+					<div class="selectButtons">
+						<button class="moveTop" data-select="bugListSortOrder">Move Top</button>
+						<button class="moveUp" data-select="bugListSortOrder">Move Up</button>
+						<button class="moveDown" data-select="bugListSortOrder">Move Down</button>
+						<button class="moveBottom" data-select="bugListSortOrder">Move Bottom</button>
+						<button class="remove" data-select="bugListSortOrder">Remove</button>
+					</div>
+					<div class="selectButtons thin">
+						<button class="add" data-select="bugListSortOrder">Add</button>
+					</div>
+				</div>
+			</fieldset>
+		</div>
+
+		<div class="optionsButtons">
+			<div>
+				<button id="save">Save</button>
+				<button id="defaults">Reset to Defaults</button>
+				<button id="imexport">Import/Export</button>
+				<span id="status"></span>
+			</div>
+		</div>
+
+		<script src="../lib/jquery-2.2.2.min.js"></script>
+		<script src="../lib/jquery.xmlrpc.min.js"></script>
+		<script src="globals.js"></script>
+		<script src="bugzilla.js"></script>
+		<script src="options.js"></script>
+	</body>
+</html>
