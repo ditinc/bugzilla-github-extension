@@ -1,14 +1,13 @@
 'use strict';
 
-var DITBugzillaGitHub = function() {
-	var bzUrl = "https://bugzilla.dtec.com"; // TODO: make this dynamic
+var DITBugzillaGitHub = function(settings, product) {
+	var $ = require('github/jquery').default;
+	var bzUrl = settings.bugzillaURL;
 	var bugUrl = bzUrl + "/show_bug.cgi?id=";
-	var bugListUrl = bzUrl + "/buglist.cgi?columnlist=bug_id%2Cbug_severity%2Cpriority%2Cassigned_to%2Cbug_status%2Cresolution%2Ctarget_milestone%2Ccf_codestatus%2Cqa_contact%2Cshort_desc%2Cestimated_time%2Cactual_time&query_format=advanced&order=bug_status%2Cresolution%2Cbug_id";
+	var bugListUrl = bzUrl + "/buglist.cgi?human=1&columnlist=" + getFieldListForUrl(settings.bugList.fields) + "&query_format=advanced&order=" + getFieldListForUrl(settings.bugList.sortOrder) + "&list_id=" + Math.floor(Math.random() * 1E10);
 	var bugId;
 	var BUG_REGEX = /^\[(\d+)\]|^(\d+)|^Bug\s*(\d+)/i; // for example, matches [83508], 83508, Bug83508 or Bug 83508
-	var $ = require('github/jquery').default;
 	var doLabelSync = false;
-	var product;
 	
 	var applyExtension = function(contents) {
 		linkifyBugNumber(contents);
@@ -24,6 +23,17 @@ var DITBugzillaGitHub = function() {
 		injectNewMilestoneSelect(contents);
 		syncLabels(contents);
 	};
+	
+	function getFieldListForUrl(fields) {
+		return encodeURIComponent($.map(fields, function(el) {
+			var field = el.field;
+			
+			// work_time is actual_time here
+			field = field.replace(/^work_time$/, "actual_time");
+			
+			return field;
+		}));
+	}
 	
 	var getBugUrl = function(theBugId) {
 		theBugId = theBugId || bugId;
@@ -118,10 +128,10 @@ var DITBugzillaGitHub = function() {
 				var newCodeStatus;
 				
 				if (mergeTarget === "master") {
-					newCodeStatus = "Merged to master/trunk";
+					newCodeStatus = settings.values.codestatusMerge;
 				}
 				else {
-					newCodeStatus = "Merged to parent branch";
+					newCodeStatus = settings.values.codestatusMergeParent;
 				}
 
 				$("#newCodeStatus").html(newCodeStatus);
@@ -135,10 +145,10 @@ var DITBugzillaGitHub = function() {
 				var newCodeStatus;
 				
 				if (!isPreRelease && mergeTarget === "master") {
-					newCodeStatus = "In Production";
+					newCodeStatus = settings.values.codestatusRelease;
 				}
 				else {
-					newCodeStatus = "In Staging";
+					newCodeStatus = settings.values.codestatusPreRelease;
 				}
 
 				$(".newCodeStatus").html(newCodeStatus);
@@ -152,16 +162,16 @@ var DITBugzillaGitHub = function() {
 				var newCodeStatus;
 				
 				if (!isPreRelease && mergeTarget === "master") {
-					newCodeStatus = "In Production";
+					newCodeStatus = settings.values.codestatusRelease;
 				}
 				else {
-					newCodeStatus = "In Staging";
+					newCodeStatus = settings.values.codestatusPreRelease;
 				}
 
 				$(".newCodeStatus").html(newCodeStatus);
 			})
 			
-			/* Update bugs in release to In Staging or In Production */
+			/* Update bugs in release to new code status */
 			.off("click.DITBugzillaGitHub", "button.js-publish-release")
 			.on("click.DITBugzillaGitHub", "button.js-publish-release", function(e) {
 				var $form = $(e.currentTarget).closest("form");
@@ -184,20 +194,22 @@ var DITBugzillaGitHub = function() {
 						var comment = "";
 						
 						if (updateRevision) {
-							params["cf_revision"] = tag;
+							if (settings.fields.revision.length > 0) {
+								params[settings.fields.revision] = tag;
+							}
 							comment += "Bug added to new release: \r\n" + tag + " - " + title;
 						}
 						
 						if (updateCodeStatus) {
 							var newCodeStatus = $form.find(".newCodeStatus").html();
-							var pushedTo = "Staging.";
 							
-							if (newCodeStatus === "In Production") {
-								pushedTo = "Production.";
+							if (newCodeStatus.indexOf("In ") === 0) {
+								comment += (comment.length ? "\r\n\r\n" : "") + "Pushed to " + newCodeStatus.replace(/^In\s/, "") + ".";
 							}
 							
-							comment += (comment.length ? "\r\n\r\n" : "") + "Pushed to " + pushedTo;
-							params["cf_codestatus"] = newCodeStatus;
+							if (settings.fields.codestatus.length > 0) {
+								params[settings.fields.codestatus] = newCodeStatus;
+							}
 						}
 						
 						params["comment"] = {"body": comment};
@@ -230,18 +242,18 @@ var DITBugzillaGitHub = function() {
 				comment += "Merged pull request " + $(".gh-header-number").html();
 				
 				if (mergeTarget === "master") {
-					newCodeStatus = "Merged to master/trunk";
+					newCodeStatus = settings.values.codestatusMerge;
 					comment += " to master.";
 				}
 				else {
-					newCodeStatus = "Merged to parent branch";
-					comment += " to parent branch.";
+					newCodeStatus = settings.values.codestatusMergeParent;
+					comment += " to parent branch " + mergeTarget + ".";
 				}
 				comment += " (" + window.location.href + ")";
 					
 				/* Update code status is we chose to */
-				if (updateBugCodeStatus) {
-					params["cf_codestatus"] = newCodeStatus;
+				if (updateBugCodeStatus && settings.fields.codestatus.length > 0) {
+					params[settings.fields.codestatus] = newCodeStatus;
 				}
 				
 				params["comment"] = {"body": $.trim(comment)};
@@ -279,8 +291,8 @@ var DITBugzillaGitHub = function() {
 				var $labels = $("div.label-select-menu");
 				
 				if (!$labels.is(".active")) {
-					// Opened the label menu, so turn on label syncing
-					doLabelSync = true;
+					// Opened the label menu, so turn on label syncing (if there is a Bugzilla field defined)
+					doLabelSync = true && (settings.fields.gitHubLabels.length > 0);
 				}
 			});
 	};
@@ -761,8 +773,10 @@ var DITBugzillaGitHub = function() {
 					$form.find(".bugId").html(bugId);
 				}
 				else {
-					$form.find("div.toolbar-help")
-						.before(
+					var $div = $form.find("div.toolbar-help");
+					
+					if (settings.fields.gitHubPullRequestURL.length > 0) {
+						$div.before(
 							$("<div>")
 								.addClass("bugOptions pl-3")
 								.html(
@@ -787,33 +801,35 @@ var DITBugzillaGitHub = function() {
 												.html("Set the pull request URL of the bug in Bugzilla.")
 										)
 								)
-						)
-						.before(
-							$("<div>")
-								.addClass("bugOptions pl-3")
-								.html(
-									$("<div>")
-										.addClass("form-checkbox")
-										.append(
-											$("<label>")
-												.html("Post comment to bug <span class='bugId'>" + bugId + "</span>")
-												.append(
-													$("<input>")
-														.addClass("syncComment")
-														.attr({
-															type: "checkbox",
-															checked: "checked"
-														})
-														.prop('checked', true)
-												)
-										)
-										.append(
-											$("<p>")
-												.addClass("note")
-												.html("Add the comment to the bug in Bugzilla.")
-										)
-								)
 						);
+					}
+					
+					$div.before(
+						$("<div>")
+							.addClass("bugOptions pl-3")
+							.html(
+								$("<div>")
+									.addClass("form-checkbox")
+									.append(
+										$("<label>")
+											.html("Post comment to bug <span class='bugId'>" + bugId + "</span>")
+											.append(
+												$("<input>")
+													.addClass("syncComment")
+													.attr({
+														type: "checkbox",
+														checked: "checked"
+													})
+													.prop('checked', true)
+											)
+									)
+									.append(
+										$("<p>")
+											.addClass("note")
+											.html("Add the comment to the bug in Bugzilla.")
+									)
+							)
+					);
 				}
 			}
 			else {
@@ -846,44 +862,44 @@ var DITBugzillaGitHub = function() {
 		
 		if ($div.length && $div.find("input#resolveBug").length === 0) {
 			var $buttons = $div.find("div.js-merge-methods");
-			var newCodeStatus = "Merged to ";
 			var mergeTarget = $(".current-branch").eq(0).children().html();
 			
 			if (mergeTarget === "master") {
-				newCodeStatus += "master/trunk";
+				var newCodeStatus = settings.values.codestatusMerge;
 			}
 			else {
-				newCodeStatus += "parent branch";
+				var newCodeStatus = settings.values.codestatusMergeParent;
 			}
 			
-			$buttons
-				.append(
-					$("<div>")
-						.addClass("form-checkbox")
-						.append(
-							$("<label>")
-								.text("Resolve bug " + bugId)
-								.attr({
-									for: "resolveBug"
-								})
-								.append(
-									$("<input>")
-										.attr({
-											name: "resolveBug",
-											id: "resolveBug",
-											type: "checkbox",
-											checked: "checked"
-										})
-										.prop('checked', true)
-								)
-						)
-						.append(
-							$("<p>")
-								.addClass("note")
-								.html("Set the bug to <strong>RESOLVED TESTED</strong> in Bugzilla.")
-						)
-				)
-				.append(
+			$buttons.append(
+				$("<div>")
+					.addClass("form-checkbox")
+					.append(
+						$("<label>")
+							.text("Resolve bug " + bugId)
+							.attr({
+								for: "resolveBug"
+							})
+							.append(
+								$("<input>")
+									.attr({
+										name: "resolveBug",
+										id: "resolveBug",
+										type: "checkbox",
+										checked: "checked"
+									})
+									.prop('checked', true)
+							)
+					)
+					.append(
+						$("<p>")
+							.addClass("note")
+							.html("Set the bug to <strong>RESOLVED TESTED</strong> in Bugzilla.")
+					)
+			);
+			
+			if (settings.fields.codestatus.length > 0) {
+				$buttons.append(
 					$("<div>")
 						.addClass("form-checkbox")
 						.append(
@@ -909,6 +925,7 @@ var DITBugzillaGitHub = function() {
 								.html("Set the bug's code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
 						)
 				);
+			}
 		}
 		else if ($div.length) {
 			// Need this line or else we lose previously applied changes.
@@ -935,40 +952,42 @@ var DITBugzillaGitHub = function() {
 		if ($div.length && $div.find("input#updateRevision").length === 0) {
 			var mergeTarget = $div.find(".releases-target-menu span.js-select-button").html();
 			var $preRelease = $div.find("input#release_prerelease");
-			var newCodeStatus = "In Production";
+			var newCodeStatus = settings.values.codestatusRelease;
 
 			if ($preRelease.prop("checked") || mergeTarget !== "master") {
-				newCodeStatus = "In Staging";
+				newCodeStatus = settings.values.codestatusPreRelease;
 			}
 			
-			$preRelease.closest("div")
-				.after(
-					$("<div>")
-						.addClass("form-checkbox")
-						.append(
-							$("<label>")
-								.html("Update bugs with release/tag")
-								.attr({
-									for: "updateRevision"
-								})
-								.append(
-									$("<input>")
-										.attr({
-											name: "updateRevision",
-											id: "updateRevision",
-											type: "checkbox",
-											checked: "checked"
-										})
-										.prop('checked', true)
-								)
-						)
-						.append(
-							$("<p>")
-								.addClass("note")
-								.html("Update the bugs referenced in the comments with this release/tag in Bugzilla.")
-						)
-				)
-				.after(
+			var $div = $preRelease.closest("div");
+			$div.after(
+				$("<div>")
+					.addClass("form-checkbox")
+					.append(
+						$("<label>")
+							.html("Update bugs with release/tag")
+							.attr({
+								for: "updateRevision"
+							})
+							.append(
+								$("<input>")
+									.attr({
+										name: "updateRevision",
+										id: "updateRevision",
+										type: "checkbox",
+										checked: "checked"
+									})
+									.prop('checked', true)
+							)
+					)
+					.append(
+						$("<p>")
+							.addClass("note")
+							.html("Update the bugs referenced in the comments with this release/tag in Bugzilla.")
+					)
+			);
+				
+			if (settings.fields.codestatus.length > 0) {
+				$div.after(
 					$("<div>")
 						.addClass("form-checkbox")
 						.append(
@@ -994,6 +1013,7 @@ var DITBugzillaGitHub = function() {
 								.html("Set the bugs referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
 						)
 				);
+			}
 		}
 		else if ($div.length) {
 			// Need this line or else we lose previously applied changes.
@@ -1018,8 +1038,12 @@ var DITBugzillaGitHub = function() {
 			params["comment"] = {"body": $.trim(comment)};
 
 			if (updateBug) {
-				params["cf_pull_request_number"] = window.location.href;
-				params["cf_github_labels"] = labels;
+				if (settings.fields.gitHubPullRequestURL.length > 0) {
+					params[settings.fields.gitHubPullRequestURL] = window.location.href;
+				}
+				if (settings.fields.gitHubLabels.length > 0) {
+					params[settings.fields.gitHubLabels] = labels;
+				}
 			}
 
 			window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
@@ -1208,8 +1232,10 @@ var DITBugzillaGitHub = function() {
 			doLabelSync = false;
 			
 			var labels = $div.find(".labels .label").map(function() { return $(this).html(); });
+			var params = {};
+			params[settings.fields.gitHubLabels] = labels.toArray().join(' ');
 			
-			window.postMessage({method: "updateBug", bugId: bugId, params: {"cf_github_labels": labels.toArray().join(' ')}}, '*');
+			window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
 		}
 	};
 	
@@ -1244,9 +1270,24 @@ var DITBugzillaGitHub = function() {
 	createListeners();
 	applyExtension(document);
 	updateBugForNewPullRequest();
-	
-	// Plugin is loaded!
-	window.postMessage({method: "pluginLoaded"}, '*');
 };
 
-new DITBugzillaGitHub();
+window.addEventListener('message', function(event) {
+	// Only accept messages from same frame
+	if (event.source !== window) {
+		return;
+	}
+
+	var message = event.data;
+
+	// Only accept messages that we know are ours
+	if (typeof message !== 'object' || message === null || !message.method) {
+		return;
+	}
+
+	switch (message.method) {
+		case "init":
+			new DITBugzillaGitHub(message.settings, message.product);
+			break;
+	}
+});
