@@ -1,14 +1,8 @@
 {
-	// This makes it "work" in Firefox, but CSP is preventing calls to Bugzilla. See Issue #31.
-	"applications": {
-		"gecko": {
-			"id": "DIT-Bugzilla-GitHub@dtec.com"
-		}
-	},
-	
 	"manifest_version": 2,
 
 	"name": "DIT-Bugzilla-GitHub",
+	"short_name": "DIT BZ<->GH",
 	"description": "This extension integrates GitHub and Bugzilla",
 	"version": "1.0",
 	"background": {
