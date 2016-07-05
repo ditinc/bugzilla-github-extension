@@ -323,13 +323,15 @@ var DITBugzillaGitHub = function(settings, product) {
 				var $this = $(this);
 				var newHtml = $this.html();
 				var regex = /(\[(\d+)\]|Bug\s*(\d+))|\n(\[(\d+)\]|Bug\s*(\d+))/ig;
-				var matches = $this.html().match(regex);
+				var matches = newHtml.match(regex);
 
 				if (matches && matches.length) {
-					var theBugId = matches[0].match(/\d+/)[0];
-					
-					/* This will turn the bug number into a link to the bug */
-					newHtml = $this.html().replace(regex, '<a href="' + getBugUrl(theBugId) + '">[' + theBugId + ']</a>');
+					for (var i = 0; i < matches.length; i++) {
+						var theBugId = matches[i].match(/\d+/)[0];
+
+						/* This will turn the bug number into a link to the bug */
+						newHtml = newHtml.replace(matches[i], '<a href="' + getBugUrl(theBugId) + '">[' + theBugId + ']</a>');
+					}
 				}
 				
 				$this.html(newHtml);
