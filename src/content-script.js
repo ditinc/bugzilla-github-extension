@@ -98,6 +98,11 @@ function run(settings) {
 				case "loadBugDetails":
 					loadBugDetails(message);
 					break;
+						
+				/* Sets the pull request title to the bug title */
+				case "setPullRequestTitleToBugTitle":
+					setPullRequestTitleToBugTitle(message);
+					break;
 				
 				/* Shows a select control for Bugzilla product */
 				case "showProductForm":
@@ -607,6 +612,27 @@ function run(settings) {
 							);
 						}
 					});
+				});
+		}
+		
+		function setPullRequestTitleToBugTitle(message) {
+			var bugInfoPromise = bugzilla.getBug(message.bugId, ["summary"]);
+	
+			bugInfoPromise
+				.error(function(response) {
+					var faultString = getFaultString(response);
+					
+					if (faultString.indexOf("You must log in") > -1) {
+						showLoginForm(function() {
+							setPullRequestTitleToBugTitle(message);
+						});
+					}
+				})
+				.success(function(response) {
+					var bugInfo = response[0].bugs[0];
+					var $title = $('#pull_request_title');
+
+					$title.val("[" + message.bugId + "] " + bugInfo.summary);
 				});
 		}
 	}
