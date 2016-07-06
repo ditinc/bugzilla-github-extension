@@ -740,7 +740,7 @@ var DITBugzillaGitHub = function(settings, product) {
 		}
 	};
 	
-	var injectNewPullRequestOptions = function(contents) {
+	var injectNewPullRequestOptions = function(contents, ignoreBranch) {
 		var selector = 'form#new_pull_request';
 		var $form;
 		
@@ -759,13 +759,26 @@ var DITBugzillaGitHub = function(settings, product) {
 		if ($form.length) {
 			// Figure out the bug number
 			var $title = $form.find("input#pull_request_title");
-			var matches = $title.val().match(BUG_REGEX);
+			var matches;
 			
-			// Update things if title changes
+			if (!ignoreBranch) {
+				var branch = $form.find("[name='head']").val().split(":")[1];
+				matches = branch.match(/^bug[-|_]?\d+/i);
+				
+				if (matches && matches.length) {
+					bugId = matches[0].match(/\d+/)[0];
+					$title.val("[" + bugId + "] Getting bug title from Bugzilla...");
+					window.postMessage({method: "setPullRequestTitleToBugTitle", bugId: bugId}, '*');
+				}	
+			}
+			
+			matches = $title.val().match(BUG_REGEX);
+			
+			// Update things if title changes, and stop trying to use the branch to get the bug number
 			$title.off("change.DITBugzillaGitHub");
 			$title.on("change.DITBugzillaGitHub", function() {
 				$title.off("change.DITBugzillaGitHub");
-				injectNewPullRequestOptions(contents);
+				injectNewPullRequestOptions(contents, true);
 			});
 
 			if (matches && matches.length) {
