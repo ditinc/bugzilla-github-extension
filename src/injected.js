@@ -313,7 +313,18 @@ var DITBugzillaGitHub = function(settings, product) {
 				newHtml = $issueTitle.html().replace(BUG_REGEX, '<a href="' + getBugUrl() + '">[' + bugId + ']</a>');
 			}
 			else {
-				bugId = null;
+				var branch = $(contents).find(".current-branch").eq(1).children().html();
+				matches = branch.match(/^bug[-|_]?\d+/i);
+				
+				if (matches && matches.length) {
+					bugId = matches[0].match(/\d+/)[0];
+				
+					/* This will add the bug number as a link to the bug */
+					newHtml = '<a href="' + getBugUrl() + '">[' + bugId + ']</a> ' + $issueTitle.html();
+				}
+				else {
+					bugId = null;
+				}
 			}
 
 			$issueTitle.html(newHtml);
