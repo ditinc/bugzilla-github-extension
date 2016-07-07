@@ -1,0 +1,22 @@
+apply plugin: 'java'
+
+task zip(type: Zip) {
+	from('images/') {
+		include '*'
+		exclude 'store/'
+		into('images')
+	}
+	from('lib/') {
+		into('lib')
+	}
+	from('src/') {
+		into('src')
+	}
+	from('/') {
+		include 'manifest.json'
+	}
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '2.14'
+}
