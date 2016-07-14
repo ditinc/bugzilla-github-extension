@@ -870,7 +870,7 @@ var DITBugzillaGitHub = function(settings, product) {
 	
 	var injectResolveBugCheckbox = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
-	
+
 		var selector = '#partial-pull-merging';
 		var $div;
 
@@ -887,7 +887,7 @@ var DITBugzillaGitHub = function(settings, product) {
 		}
 		
 		if ($div.length && $div.find("input#resolveBug").length === 0) {
-			var $buttons = $div.find("div.js-merge-methods");
+			var $buttons = $div.find("div.commit-form-actions");
 			var mergeTarget = $(".current-branch").eq(0).children().html();
 			
 			if (mergeTarget === "master") {
