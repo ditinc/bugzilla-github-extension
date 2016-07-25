@@ -303,14 +303,14 @@ var DITBugzillaGitHub = function(settings, product) {
 		
 		// Issue titles need changing
 		if ($issueTitle.length && $issueTitle.children('a').length === 0) {
-			var newHtml = $issueTitle.html();
-			var matches = $issueTitle.html().match(BUG_REGEX);
-			
+			var newHtml = $.trim($issueTitle.html());
+			var matches = newHtml.match(BUG_REGEX);
+
 			if (matches && matches.length) {
 				bugId = matches[0].match(/\d+/)[0];
 				
 				/* This will turn the bug number into a link to the bug */
-				newHtml = $issueTitle.html().replace(BUG_REGEX, '<a href="' + getBugUrl() + '">[' + bugId + ']</a>');
+				newHtml = newHtml.replace(BUG_REGEX, '<a href="' + getBugUrl() + '">[' + bugId + ']</a>');
 			}
 			else {
 				var branch = $(contents).find(".current-branch").eq(1).children().html();
@@ -320,7 +320,7 @@ var DITBugzillaGitHub = function(settings, product) {
 					bugId = matches[0].match(/\d+/)[0];
 				
 					/* This will add the bug number as a link to the bug */
-					newHtml = '<a href="' + getBugUrl() + '">[' + bugId + ']</a> ' + $issueTitle.html();
+					newHtml = '<a href="' + getBugUrl() + '">[' + bugId + ']</a> ' + newHtml;
 				}
 				else {
 					bugId = null;
