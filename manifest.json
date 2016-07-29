@@ -4,7 +4,7 @@
 	"name": "DIT-Bugzilla-GitHub",
 	"short_name": "DIT BZ<->GH",
 	"description": "This extension integrates GitHub and Bugzilla",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"background": {
 		"scripts": ["src/background.js"]
 	},

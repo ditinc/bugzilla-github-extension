@@ -322,28 +322,31 @@ var DITBugzillaGitHub = function(settings, product) {
 		var $comments = $(contents).find('.markdown-body p, .markdown-body li');
 		
 		// Issue titles need changing
-		if ($issueTitle.length && $issueTitle.children('a').length === 0) {
+		if ($issueTitle.length) {
 			var newHtml = $.trim($issueTitle.html());
-			var matches = newHtml.match(BUG_REGEX);
+			
+			if ($issueTitle.children('a').length === 0) {
+				var matches = newHtml.match(BUG_REGEX);
 
-			if (matches && matches.length) {
-				bugId = matches[0].match(/\d+/)[0];
-				
-				/* This will turn the bug number into a link to the bug */
-				newHtml = newHtml.replace(BUG_REGEX, '<a href="' + getBugUrl() + '">[' + bugId + ']</a>');
-			}
-			else {
-				var branch = $(contents).find(".current-branch").eq(1).children().html();
-				matches = branch.match(/^bug[-|_]?\d+/i);
-				
 				if (matches && matches.length) {
 					bugId = matches[0].match(/\d+/)[0];
-				
-					/* This will add the bug number as a link to the bug */
-					newHtml = '<a href="' + getBugUrl() + '">[' + bugId + ']</a> ' + newHtml;
+					
+					/* This will turn the bug number into a link to the bug */
+					newHtml = newHtml.replace(BUG_REGEX, '<a href="' + getBugUrl() + '">[' + bugId + ']</a>');
 				}
 				else {
-					bugId = null;
+					var branch = $(contents).find(".current-branch").eq(1).children().html();
+					matches = branch.match(/^bug[-|_]?\d+/i);
+					
+					if (matches && matches.length) {
+						bugId = matches[0].match(/\d+/)[0];
+					
+						/* This will add the bug number as a link to the bug */
+						newHtml = '<a href="' + getBugUrl() + '">[' + bugId + ']</a> ' + newHtml;
+					}
+					else {
+						bugId = null;
+					}
 				}
 			}
 
@@ -410,6 +413,10 @@ var DITBugzillaGitHub = function(settings, product) {
 				);
 				
 				window.postMessage({method: "loadBugDetails", bugId: bugId}, '*');
+			}
+			else {
+				// Need this line or else we lose previously applied changes.
+				$sidebar.html($sidebar.html());
 			}
 		});
 	};
@@ -678,6 +685,10 @@ var DITBugzillaGitHub = function(settings, product) {
 							})
 					);
 			}
+			else {
+				// Need this line or else we lose previously applied changes.
+				$buttons.html($buttons.html());
+			}
 		});
 	};
 	
@@ -850,6 +861,10 @@ var DITBugzillaGitHub = function(settings, product) {
 					);
 				}
 			}
+			else {
+				// Need this line or else we lose previously applied changes.
+				$div.html($div.html());
+			}
 		});
 	};
 	
@@ -920,6 +935,10 @@ var DITBugzillaGitHub = function(settings, product) {
 							)
 					);
 				}
+			}
+			else {
+				// Need this line or else we lose previously applied changes.
+				$div.html($div.html());
 			}
 		});
 	};
