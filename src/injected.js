@@ -985,6 +985,7 @@ var DITBugzillaGitHub = function(settings, product) {
 			return;
 		}
 		
+		/* Add button to milestone when viewing milestones */
 		editSection(contents, 'ul.table-list-milestones', function($ul) {
 			$ul.find("span.bzButtons").remove();
 
@@ -1009,6 +1010,7 @@ var DITBugzillaGitHub = function(settings, product) {
 			});
 		});
 		
+		/* Add button to milestone in sidebar */
 		editSection(contents, '#partial-discussion-sidebar', function($sidebar) {
 			$sidebar.find("#bzButtonMilestone").remove();
 			var $a = $sidebar.find("a.milestone-name");
@@ -1024,6 +1026,27 @@ var DITBugzillaGitHub = function(settings, product) {
 						"text-align": "center",
 						"margin-top": "5px"
 					})
+					.attr({
+						id: "bzButtonMilestone",
+						href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+						target: "_blank"
+					})
+			);
+		});
+		
+		/* Add button to milestone when viewing milestone */
+		editSection(contents, '.flex-table-item .d-block', function($buttons) {
+			$buttons.find("#bzButtonMilestone").remove();
+			var $a = $buttons.find("a").filter(function() {
+				return $(this).html() === "Edit milestone";
+			});
+			var milestone = $buttons.closest(".flex-table").find(".text-normal").first().text();
+				
+			$a.before(
+				$("<a>")
+					.addClass("btn btn-sm mr-2")
+					.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+					.append(" View in Bugzilla")
 					.attr({
 						id: "bzButtonMilestone",
 						href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
