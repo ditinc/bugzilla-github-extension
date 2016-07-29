@@ -35,6 +35,26 @@ var DITBugzillaGitHub = function(settings, product) {
 		}));
 	}
 	
+	function editSection(contents, selector, callback) {
+		var $el;
+		
+		if ($(contents).length === 1 && $(contents).is(selector)) {
+			$el = $(contents);
+		}
+		else {
+			try {
+				$el = $(contents).find(selector);
+			}
+			catch(e) {
+				// I don't know why but sometimes .find() fails if there are nulls
+			}
+		}
+		
+		if ($el.length) {
+			callback($el);
+		}
+	};
+	
 	var getBugUrl = function(theBugId) {
 		theBugId = theBugId || bugId;
 		return bugUrl + theBugId;
@@ -353,83 +373,51 @@ var DITBugzillaGitHub = function(settings, product) {
 	var showBugDetailsInSidebar = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
-		var selector = '#partial-discussion-sidebar';
-		var $sidebar;
-		
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$sidebar = $(contents);
-		}
-		else {
-			try {
-				$sidebar = $(contents).find(selector);
+		editSection(contents, '#partial-discussion-sidebar', function($sidebar) {
+			if ($sidebar.find("div.sidebar-dit-bugzilla").length === 0) {
+				$sidebar.find(".sidebar-notifications").before(
+					$("<div>")
+						.addClass("discussion-sidebar-item sidebar-dit-bugzilla")
+						.append(
+							$("<h3>")
+								.addClass("discussion-sidebar-heading")
+								.html("Bugzilla Info ")
+								.append(
+									$("<a>")
+										.attr("href", getBugUrl())
+										.html("[" + bugId + "]")
+								)
+						)
+						.append(
+							$("<div>")
+								.addClass("sidebar-dit-bugzilla-details")
+								.html(
+									$('<p class="reason text-small text-muted">')
+										.html("Loading...")
+								)
+						)
+						.append(
+							'<h3 class="discussion-sidebar-heading">Attachments</h3>'
+						)
+						.append(
+							$("<div>")
+								.addClass("sidebar-dit-bugzilla-attachments")
+								.html(
+									$('<p class="reason text-small text-muted">')
+										.html("Loading...")
+								)
+						)
+				);
+				
+				window.postMessage({method: "loadBugDetails", bugId: bugId}, '*');
 			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		if ($sidebar.length && $sidebar.find("div.sidebar-dit-bugzilla").length === 0) {
-			$sidebar.find(".sidebar-notifications").before(
-				$("<div>")
-					.addClass("discussion-sidebar-item sidebar-dit-bugzilla")
-					.append(
-						$("<h3>")
-							.addClass("discussion-sidebar-heading")
-							.html("Bugzilla Info ")
-							.append(
-								$("<a>")
-									.attr("href", getBugUrl())
-									.html("[" + bugId + "]")
-							)
-					)
-					.append(
-						$("<div>")
-							.addClass("sidebar-dit-bugzilla-details")
-							.html(
-								$('<p class="reason text-small text-muted">')
-									.html("Loading...")
-							)
-					)
-					.append(
-						'<h3 class="discussion-sidebar-heading">Attachments</h3>'
-					)
-					.append(
-						$("<div>")
-							.addClass("sidebar-dit-bugzilla-attachments")
-							.html(
-								$('<p class="reason text-small text-muted">')
-									.html("Loading...")
-							)
-					)
-			);
-			
-			window.postMessage({method: "loadBugDetails", bugId: bugId}, '*');
-		}
-		else if ($sidebar.length) {
-			// Need this line or else we lose previously applied changes.
-			$sidebar.html($sidebar.html());
-		}
+		});
 	};
 	
 	var injectProductName = function(contents) {
-		var selector = 'div.repohead-details-container';
-		var $el;
-		
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$el = $(contents);
-		}
-		else {
-			try {
-				$el = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		$el.find("h6#bzProduct").remove();
+		editSection(contents, 'div.repohead-details-container', function($el) {
+			$el.find("h6#bzProduct").remove();
 
-		if ($el.length) {
 			$el.append(
 				$("<h6>")
 					.addClass("select-menu js-menu-container js-select-menu product-select-menu")
@@ -505,11 +493,7 @@ var DITBugzillaGitHub = function(settings, product) {
 							)
 					)
 			);
-		}
-		else if ($el.length) {
-			// Need this line or else we lose previously applied changes.
-			$el.html($el.html());
-		}
+		});
 	};
 	
 	var injectPageHeadActions = function(contents) {
@@ -518,24 +502,10 @@ var DITBugzillaGitHub = function(settings, product) {
 			$("li#bzButtons").remove();
 			return;
 		}
-		var selector = 'ul.pagehead-actions';
-		var $ul;
 		
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$ul = $(contents);
-		}
-		else {
-			try {
-				$ul = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		$ul.find("li#bzButtons").remove();
+		editSection(contents, 'ul.pagehead-actions', function($ul) {
+			$ul.find("li#bzButtons").remove();
 
-		if ($ul.length) {
 			$ul.prepend(
 				$("<li>")
 					.attr({
@@ -563,32 +533,13 @@ var DITBugzillaGitHub = function(settings, product) {
 							})
 					)
 			);
-		}
-		else if ($ul.length) {
-			// Need this line or else we lose previously applied changes.
-			$ul.html($ul.html());
-		}
+		});
 	};
 	
 	var injectCommentOptions = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
-	
-		var selector = '.js-previewable-comment-form';
-		var $div;
-		
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$div = $(contents);
-		}
-		else {
-			try {
-				$div = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		if ($div.length) {
+
+		editSection(contents, '.js-previewable-comment-form', function($div) {
 			$div.each(function(i) {
 				var $this = $(this);
 				var $form = $this.closest("form"); 
@@ -692,82 +643,46 @@ var DITBugzillaGitHub = function(settings, product) {
 							)
 					);
 			});
-		}
-		else if ($div.length) {
-			// Need this line or else we lose previously applied changes.
-			$div.html($div.html());
-		}
+		});
 	};
 	
 	var injectHoursWorkedInput = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
-	
-		var selector = '#partial-new-comment-form-actions';
-		var $buttons;
-		
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$buttons = $(contents);
-		}
-		else {
-			try {
-				$buttons = $(contents).find(selector);
+
+		editSection(contents, '#partial-new-comment-form-actions', function($buttons) {
+			if ($buttons.find("input#workTime").length === 0) {
+				$buttons
+					.append(
+						$("<input>")
+							.attr({
+								name: "workTime",
+								id: "workTime",
+								type: "number",
+								step: "0.5"
+							})
+							.css({
+								width: "2.5em",
+								float: "right",
+								margin: "5px"
+							})
+					)
+					.append(
+						$("<label>")
+							.text("Hours Worked")
+							.attr({
+								for: "workTime"
+							})
+							.css({
+								float: "right",
+								padding: "7px 0"
+							})
+					);
 			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		if ($buttons.length && $buttons.find("input#workTime").length === 0) {
-			$buttons
-				.append(
-					$("<input>")
-						.attr({
-							name: "workTime",
-							id: "workTime",
-							type: "number",
-							step: "0.5"
-						})
-						.css({
-							width: "2.5em",
-							float: "right",
-							margin: "5px"
-						})
-				)
-				.append(
-					$("<label>")
-						.text("Hours Worked")
-						.attr({
-							for: "workTime"
-						})
-						.css({
-							float: "right",
-							padding: "7px 0"
-						})
-				);
-		}
-		else if ($buttons.length) {
-			// Need this line or else we lose previously applied changes.
-			$buttons.html($buttons.html());
-		}
+		});
 	};
 	
 	var injectNewPullRequestOptions = function(contents, ignoreBranch) {
-		var selector = 'form#new_pull_request';
-		var $form;
-		
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$form = $(contents);
-		}
-		else {
-			try {
-				$form = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		if ($form.length) {
+		editSection(contents, 'form#new_pull_request', function($form) {
 			// Figure out the bug number
 			var $title = $form.find("input#pull_request_title");
 			var matches;
@@ -861,84 +776,38 @@ var DITBugzillaGitHub = function(settings, product) {
 			else {
 				$form.find(".bugOptions").remove();
 			}
-		}
-		else if ($form.length) {
-			// Need this line or else we lose previously applied changes.
-			$form.html($form.html());
-		}
+		});
 	};
 	
 	var injectResolveBugCheckbox = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 
-		var selector = '#partial-pull-merging';
-		var $div;
-
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$div = $(contents);
-		}
-		else {
-			try {
-				$div = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		if ($div.length && $div.find("input#resolveBug").length === 0) {
-			var $buttons = $div.find("div.commit-form-actions");
-			var mergeTarget = $(".current-branch").eq(0).children().html();
-			
-			if (mergeTarget === "master") {
-				var newCodeStatus = settings.values.codestatusMerge;
-			}
-			else {
-				var newCodeStatus = settings.values.codestatusMergeParent;
-			}
-			
-			$buttons.append(
-				$("<div>")
-					.addClass("form-checkbox")
-					.append(
-						$("<label>")
-							.text("Resolve bug " + bugId)
-							.attr({
-								for: "resolveBug"
-							})
-							.append(
-								$("<input>")
-									.attr({
-										name: "resolveBug",
-										id: "resolveBug",
-										type: "checkbox",
-										checked: "checked"
-									})
-									.prop('checked', true)
-							)
-					)
-					.append(
-						$("<p>")
-							.addClass("note")
-							.html("Set the bug to <strong>RESOLVED TESTED</strong> in Bugzilla.")
-					)
-			);
-			
-			if (settings.fields.codestatus.length > 0) {
+		editSection(contents, '#partial-pull-merging', function($div) {
+			if ($div.find("input#resolveBug").length === 0) {
+				var $buttons = $div.find("div.commit-form-actions");
+				var mergeTarget = $(".current-branch").eq(0).children().html();
+				
+				if (mergeTarget === "master") {
+					var newCodeStatus = settings.values.codestatusMerge;
+				}
+				else {
+					var newCodeStatus = settings.values.codestatusMergeParent;
+				}
+				
 				$buttons.append(
 					$("<div>")
 						.addClass("form-checkbox")
 						.append(
 							$("<label>")
-								.text("Update code status of bug " + bugId)
+								.text("Resolve bug " + bugId)
 								.attr({
-									for: "updateBugCodeStatus"
+									for: "resolveBug"
 								})
 								.append(
 									$("<input>")
 										.attr({
-											name: "updateBugCodeStatus",
-											id: "updateBugCodeStatus",
+											name: "resolveBug",
+											id: "resolveBug",
 											type: "checkbox",
 											checked: "checked"
 										})
@@ -948,85 +817,68 @@ var DITBugzillaGitHub = function(settings, product) {
 						.append(
 							$("<p>")
 								.addClass("note")
-								.html("Set the bug's code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
+								.html("Set the bug to <strong>RESOLVED TESTED</strong> in Bugzilla.")
 						)
 				);
+				
+				if (settings.fields.codestatus.length > 0) {
+					$buttons.append(
+						$("<div>")
+							.addClass("form-checkbox")
+							.append(
+								$("<label>")
+									.text("Update code status of bug " + bugId)
+									.attr({
+										for: "updateBugCodeStatus"
+									})
+									.append(
+										$("<input>")
+											.attr({
+												name: "updateBugCodeStatus",
+												id: "updateBugCodeStatus",
+												type: "checkbox",
+												checked: "checked"
+											})
+											.prop('checked', true)
+									)
+							)
+							.append(
+								$("<p>")
+									.addClass("note")
+									.html("Set the bug's code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
+							)
+					);
+				}
 			}
-		}
-		else if ($div.length) {
-			// Need this line or else we lose previously applied changes.
-			$div.html($div.html());
-		}
+		});
 	};
 	
 	var injectReleaseOptions = function(contents) {
-		var selector = 'div.new-release';
-		var $div;
-
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$div = $(contents);
-		}
-		else {
-			try {
-				$div = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		if ($div.length && $div.find("input#updateRevision").length === 0) {
-			var mergeTarget = $div.find(".releases-target-menu span.js-select-button").html();
-			var $preRelease = $div.find("input#release_prerelease");
-			var newCodeStatus = settings.values.codestatusRelease;
-
-			if ($preRelease.prop("checked") || mergeTarget !== "master") {
-				newCodeStatus = settings.values.codestatusPreRelease;
-			}
-			
-			var $div = $preRelease.closest("div");
-			$div.after(
-				$("<div>")
-					.addClass("form-checkbox")
-					.append(
-						$("<label>")
-							.html("Update bugs with release/tag")
-							.attr({
-								for: "updateRevision"
-							})
-							.append(
-								$("<input>")
-									.attr({
-										name: "updateRevision",
-										id: "updateRevision",
-										type: "checkbox",
-										checked: "checked"
-									})
-									.prop('checked', true)
-							)
-					)
-					.append(
-						$("<p>")
-							.addClass("note")
-							.html("Update the bugs referenced in the comments with this release/tag in Bugzilla.")
-					)
-			);
+		editSection(contents, 'div.new-release', function($div) {
+			if ($div.find("input#updateRevision").length === 0) {
+				var mergeTarget = $div.find(".releases-target-menu span.js-select-button").html();
+				var $preRelease = $div.find("input#release_prerelease");
+				var newCodeStatus = settings.values.codestatusRelease;
+	
+				if ($preRelease.prop("checked") || mergeTarget !== "master") {
+					newCodeStatus = settings.values.codestatusPreRelease;
+				}
 				
-			if (settings.fields.codestatus.length > 0) {
+				var $div = $preRelease.closest("div");
 				$div.after(
 					$("<div>")
 						.addClass("form-checkbox")
 						.append(
 							$("<label>")
-								.html("Update bugs to <span  class='newCodeStatus'>" + newCodeStatus + "</span>")
+								.html("Update bugs with release/tag")
 								.attr({
-									for: "updateCodeStatus"
+									for: "updateRevision"
 								})
 								.append(
 									$("<input>")
 										.attr({
-											name: "updateCodeStatus",
-											id: "updateCodeStatus",
+											name: "updateRevision",
+											id: "updateRevision",
 											type: "checkbox",
 											checked: "checked"
 										})
@@ -1036,15 +888,40 @@ var DITBugzillaGitHub = function(settings, product) {
 						.append(
 							$("<p>")
 								.addClass("note")
-								.html("Set the bugs referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
+								.html("Update the bugs referenced in the comments with this release/tag in Bugzilla.")
 						)
 				);
+					
+				if (settings.fields.codestatus.length > 0) {
+					$div.after(
+						$("<div>")
+							.addClass("form-checkbox")
+							.append(
+								$("<label>")
+									.html("Update bugs to <span  class='newCodeStatus'>" + newCodeStatus + "</span>")
+									.attr({
+										for: "updateCodeStatus"
+									})
+									.append(
+										$("<input>")
+											.attr({
+												name: "updateCodeStatus",
+												id: "updateCodeStatus",
+												type: "checkbox",
+												checked: "checked"
+											})
+											.prop('checked', true)
+									)
+							)
+							.append(
+								$("<p>")
+									.addClass("note")
+									.html("Set the bugs referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
+							)
+					);
+				}
 			}
-		}
-		else if ($div.length) {
-			// Need this line or else we lose previously applied changes.
-			$div.html($div.html());
-		}
+		});
 	};
 	
 	/* This will send the bug update to Buzilla after the page loads */
@@ -1088,24 +965,10 @@ var DITBugzillaGitHub = function(settings, product) {
 			$("div.bzButtons").remove();
 			return;
 		}
-		var selector = 'ul.table-list-milestones';
-		var $ul;
+		
+		editSection(contents, 'ul.table-list-milestones', function($ul) {
+			$ul.find("span.bzButtons").remove();
 
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$ul = $(contents);
-		}
-		else {
-			try {
-				$ul = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-
-		$ul.find("div.bzButtons").remove();
-
-		if ($ul.length) {
 			$ul.find("div.milestone-title").each(function() {
 				var $this = $(this);
 				var milestone = $this.find("h2 a").text();
@@ -1125,11 +988,30 @@ var DITBugzillaGitHub = function(settings, product) {
 						)
 				);
 			});
-		}
-		else if ($ul.length) {
-			// Need this line or else we lose previously applied changes.
-			$ul.html($ul.html());
-		}
+		});
+		
+		editSection(contents, '#partial-discussion-sidebar', function($sidebar) {
+			$sidebar.find("#bzButtonMilestone").remove();
+			var $a = $sidebar.find("a.milestone-name");
+			var milestone = $a.attr("title");
+				
+			$a.after(
+				$("<a>")
+					.addClass("btn btn-sm")
+					.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+					.append(" View in Bugzilla")
+					.css({
+						width: "100%",
+						"text-align": "center",
+						"margin-top": "5px"
+					})
+					.attr({
+						id: "bzButtonMilestone",
+						href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+						target: "_blank"
+					})
+			);
+		});
 	};
 	
 	var injectNewMilestoneSelect = function(contents) {
@@ -1138,24 +1020,10 @@ var DITBugzillaGitHub = function(settings, product) {
 			$("h6.milestone-select-menu").remove();
 			return;
 		}
-		var selector = 'form.new_milestone, form.js-milestone-edit-form';
-		var $el;
+		
+		editSection(contents, 'form.new_milestone, form.js-milestone-edit-form', function($el) {
+			$el.find("h6.milestone-select-menu").remove();
 
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$el = $(contents);
-		}
-		else {
-			try {
-				$el = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-
-		$el.find("h6.milestone-select-menu").remove();
-
-		if ($el.length) {
 			var $input = $el.find("input#milestone_title");
 			$input.after(
 				$("<h6>")
@@ -1229,32 +1097,13 @@ var DITBugzillaGitHub = function(settings, product) {
 							)
 					)
 			);
-		}
-		else if ($el.length) {
-			// Need this line or else we lose previously applied changes.
-			$el.html($el.html());
-		}
+		});
 	};
 	
 	var syncLabels = function(contents) {
 		if (!bugId || !doLabelSync) { return; } // Don't continue if we aren't mapped to a bug or aren't syncing labels
-	
-		var selector = '.discussion-sidebar-item.sidebar-labels';
-		var $div;
-		
-		if ($(contents).length === 1 && $(contents).is(selector)) {
-			$div = $(contents);
-		}
-		else {
-			try {
-				$div = $(contents).find(selector);
-			}
-			catch(e) {
-				// I don't know why but sometimes .find() fails if there are nulls
-			}
-		}
-		
-		if ($div.length && $div.find("input#workTime").length === 0) {
+
+		editSection(contents, '.discussion-sidebar-item.sidebar-labels', function($div) {
 			doLabelSync = false;
 			
 			var labels = $div.find(".labels .label").map(function() { return $(this).html(); });
@@ -1262,7 +1111,7 @@ var DITBugzillaGitHub = function(settings, product) {
 			params[settings.fields.gitHubLabels] = labels.toArray().join(' ');
 			
 			window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
-		}
+		});
 	};
 	
 	// We'll accept messages from the content script here
