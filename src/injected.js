@@ -200,8 +200,9 @@ var DITBugzillaGitHub = function(settings, product) {
 				var comments = $form.find("textarea").val();
 				var updateCodeStatus = $form.find("input#updateCodeStatus").prop("checked");
 				var updateRevision = $form.find("input#updateRevision").prop("checked");
+				var closeBugs = $form.find("input#closeBugs").prop("checked");
 
-				if (comments.length && tag.length && title.length && (updateCodeStatus || updateRevision)) {
+				if (comments.length && tag.length && title.length && (updateCodeStatus || updateRevision || closeBugs)) {
 					var matches = comments.match(/^(\[(\d+)\]|(\d+)|Bug\s*(\d+))|\n(\[(\d+)\]|(\d+)|Bug\s*(\d+))/ig);
 					
 					var bugIds = [];
@@ -230,6 +231,11 @@ var DITBugzillaGitHub = function(settings, product) {
 							if (settings.fields.codestatus.length > 0) {
 								params[settings.fields.codestatus] = newCodeStatus;
 							}
+						}
+						
+						if (closeBugs) {
+							params["status"] = "CLOSED";
+							comment += (comment.length ? "\r\n\r\n" : "") + "Marking as CLOSED.";
 						}
 						
 						params["comment"] = {"body": comment};
@@ -874,9 +880,13 @@ var DITBugzillaGitHub = function(settings, product) {
 				var mergeTarget = $div.find(".releases-target-menu span.js-select-button").html();
 				var $preRelease = $div.find("input#release_prerelease");
 				var newCodeStatus = settings.values.codestatusRelease;
+				var showCloseOption = false;
 	
 				if ($preRelease.prop("checked") || mergeTarget !== "master") {
 					newCodeStatus = settings.values.codestatusPreRelease;
+				}
+				else {
+					showCloseOption = true;
 				}
 				
 				var $div = $preRelease.closest("div");
@@ -932,6 +942,33 @@ var DITBugzillaGitHub = function(settings, product) {
 								$("<p>")
 									.addClass("note")
 									.html("Set the bugs referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
+							)
+					);
+				}
+					
+				if (showCloseOption) {
+					$div.after(
+						$("<div>")
+							.addClass("form-checkbox")
+							.append(
+								$("<label>")
+									.html("Close bugs")
+									.attr({
+										for: "closeBugs"
+									})
+									.append(
+										$("<input>")
+											.attr({
+												name: "closeBugs",
+												id: "closeBugs",
+												type: "checkbox"
+											})
+									)
+							)
+							.append(
+								$("<p>")
+									.addClass("note")
+									.html("Set the bugs referenced in the comments to <strong>CLOSED</strong> in Bugzilla.")
 							)
 					);
 				}
