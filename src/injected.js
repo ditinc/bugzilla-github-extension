@@ -17,7 +17,7 @@ var DITBugzillaGitHub = function(settings, product) {
 		injectHoursWorkedInput(contents);
 		injectCommentOptions(contents);
 		injectNewPullRequestOptions(contents);
-		injectResolveBugCheckbox(contents);
+		injectMergeOptions(contents);
 		injectReleaseOptions(contents);
 		injectMilestoneActions(contents);
 		injectNewMilestoneSelect(contents);
@@ -252,6 +252,7 @@ var DITBugzillaGitHub = function(settings, product) {
 			
 				var resolveBug = $("#resolveBug").prop("checked");
 				var updateBugCodeStatus = $("#updateBugCodeStatus").prop("checked");
+				var hoursWorked = $("#workTimeMerge").val();
 				var mergeTarget = $(".current-branch").eq(0).children().html();
 				var params = {};
 				var comment = "";
@@ -283,6 +284,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				}
 				
 				params["comment"] = {"body": $.trim(comment)};
+				params["work_time"] = hoursWorked;
 				
 				window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
 			})
@@ -796,7 +798,7 @@ var DITBugzillaGitHub = function(settings, product) {
 		});
 	};
 	
-	var injectResolveBugCheckbox = function(contents) {
+	var injectMergeOptions = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 
 		editSection(contents, '#partial-pull-merging', function($div) {
@@ -811,32 +813,58 @@ var DITBugzillaGitHub = function(settings, product) {
 					var newCodeStatus = settings.values.codestatusMergeParent;
 				}
 				
-				$buttons.append(
-					$("<div>")
-						.addClass("form-checkbox")
-						.append(
-							$("<label>")
-								.text("Resolve bug " + bugId)
-								.attr({
-									for: "resolveBug"
-								})
-								.append(
-									$("<input>")
-										.attr({
-											name: "resolveBug",
-											id: "resolveBug",
-											type: "checkbox",
-											checked: "checked"
-										})
-										.prop('checked', true)
-								)
-						)
-						.append(
-							$("<p>")
-								.addClass("note")
-								.html("Set the bug to <strong>RESOLVED TESTED</strong> in Bugzilla.")
-						)
-				);
+				$buttons
+					.append(
+						$("<label>")
+							.addClass("ml-2")
+							.text("Hours Worked")
+							.attr({
+								for: "workTimeMerge"
+							})
+							.css({
+								"vertical-align": "middle"
+							})
+					)
+					.append(
+						$("<input>")
+							.addClass("ml-1")
+							.attr({
+								name: "workTimeMerge",
+								id: "workTimeMerge",
+								type: "number",
+								step: "0.5"
+							})
+							.css({
+								width: "2.5em",
+								"vertical-align": "middle"
+							})
+					)
+					.append(
+						$("<div>")
+							.addClass("form-checkbox")
+							.append(
+								$("<label>")
+									.text("Resolve bug " + bugId)
+									.attr({
+										for: "resolveBug"
+									})
+									.append(
+										$("<input>")
+											.attr({
+												name: "resolveBug",
+												id: "resolveBug",
+												type: "checkbox",
+												checked: "checked"
+											})
+											.prop('checked', true)
+									)
+							)
+							.append(
+								$("<p>")
+									.addClass("note")
+									.html("Set the bug to <strong>RESOLVED TESTED</strong> in Bugzilla.")
+							)
+					);
 				
 				if (settings.fields.codestatus.length > 0) {
 					$buttons.append(
