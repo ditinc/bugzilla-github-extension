@@ -343,7 +343,7 @@ var DITBugzillaGitHub = function(settings, product) {
 					newHtml = newHtml.replace(BUG_REGEX, '<a href="' + getBugUrl() + '">[' + bugId + ']</a>');
 				}
 				else {
-					var branch = $(contents).find(".current-branch").eq(1).children().html();
+					var branch = $(contents).find(".current-branch").eq(1).children().html() || "";
 					matches = branch.match(/^bug[-|_]?\d+/i);
 					
 					if (matches && matches.length) {
