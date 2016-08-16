@@ -14,6 +14,7 @@ var DITBugzillaGitHub = function(settings, product) {
 		showBugDetailsInSidebar(contents);
 		injectProductName(contents);
 		injectPageHeadActions(contents);
+		injectPullRequestTitleOptions(contents);
 		injectHoursWorkedInput(contents);
 		injectCommentOptions(contents);
 		injectNewPullRequestOptions(contents);
@@ -137,6 +138,28 @@ var DITBugzillaGitHub = function(settings, product) {
 						window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: 0}, '*');
 					}
 				}
+			})
+			
+			/* Updates the bug title in Bugzilla with the pull request title */
+			.off("click.DITBugzillaGitHub", ".js-issue-update button[type='submit']")
+			.on("click.DITBugzillaGitHub", ".js-issue-update button[type='submit']", function() {
+				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+
+				var $container = $(this).closest(".gh-header-edit");
+				var syncTitle = $container.find("input.syncTitle").prop("checked");
+
+				if (syncTitle) {
+					var summary = $container.find("#issue_title").val();
+					
+					// Need to remove any reference to the bug number
+					summary = $.trim(summary.replace(BUG_REGEX, ""));
+					
+					if ($.trim(summary).length) {
+						window.postMessage({method: "updateBug", bugId: bugId, params: {"summary": summary}}, '*');
+					}
+				}
+				
+				$container.find("div.syncTitle").remove();
 			})
 			
 			/* Make sure we display correct mergeTarget */
@@ -548,6 +571,49 @@ var DITBugzillaGitHub = function(settings, product) {
 							})
 					)
 			);
+		});
+	};
+	
+	var injectPullRequestTitleOptions = function(contents) {
+		// Don't continue if we aren't mapped to a bug
+		if (!bugId) { 
+			$("div.syncTitle").remove();
+			return;
+		}
+		
+		editSection(contents, 'div.gh-header-edit', function($div) {
+			if ($div.find("div.syncTitle").length === 0) {
+				$div.append(
+					$("<div>")
+						.addClass("pl-3 d-inline-block syncTitle")
+						.html(
+							$("<div>")
+								.addClass("form-checkbox")
+								.append(
+									$("<label>")
+										.text("Update title for bug " + bugId)
+										.append(
+											$("<input>")
+												.addClass("syncTitle")
+												.attr({
+													type: "checkbox",
+													checked: "checked"
+												})
+												.prop('checked', true)
+										)
+								)
+								.append(
+									$("<p>")
+										.addClass("note")
+										.html("Update the title of the bug in Bugzilla.")
+								)
+						)
+				);
+			}
+			else {
+				// Need this line or else we lose previously applied changes.
+				$div.html($div.html());
+			}
 		});
 	};
 	
