@@ -186,12 +186,18 @@ var DITBugzillaGitHub = function(settings, product) {
 				var isPreRelease = $("input#release_prerelease").prop("checked");
 				var mergeTarget = $(".releases-target-menu span.js-select-button").html();
 				var newCodeStatus;
-				
+
 				if (!isPreRelease && mergeTarget === "master") {
 					newCodeStatus = settings.values.codestatusRelease;
+					
+					// Also make sure the close option is shown
+					$("div.closeBugsDiv").removeClass("hidden").find("#closeBugs").prop("disabled", false);
 				}
 				else {
 					newCodeStatus = settings.values.codestatusPreRelease;
+					
+					// Also make sure the close option is hidden
+					$("div.closeBugsDiv").addClass("hidden").find("#closeBugs").prop("disabled", true);
 				}
 
 				$(".newCodeStatus").html(newCodeStatus);
@@ -203,12 +209,18 @@ var DITBugzillaGitHub = function(settings, product) {
 				var isPreRelease = $("input#release_prerelease").prop("checked");
 				var mergeTarget = $(e.currentTarget).find("div").html();
 				var newCodeStatus;
-				
+
 				if (!isPreRelease && mergeTarget === "master") {
 					newCodeStatus = settings.values.codestatusRelease;
+					
+					// Also make sure the close option is shown
+					$("div.closeBugsDiv").removeClass("hidden").find("#closeBugs").prop("disabled", false);
 				}
 				else {
 					newCodeStatus = settings.values.codestatusPreRelease;
+					
+					// Also make sure the close option is hidden
+					$("div.closeBugsDiv").addClass("hidden").find("#closeBugs").prop("disabled", true);
 				}
 
 				$(".newCodeStatus").html(newCodeStatus);
@@ -223,7 +235,8 @@ var DITBugzillaGitHub = function(settings, product) {
 				var comments = $form.find("textarea").val();
 				var updateCodeStatus = $form.find("input#updateCodeStatus").prop("checked");
 				var updateRevision = $form.find("input#updateRevision").prop("checked");
-				var closeBugs = $form.find("input#closeBugs").prop("checked");
+				var $closeBugs = $form.find("input#closeBugs");
+				var closeBugs = $closeBugs.prop("checked") && !$closeBugs.prop("disabled");
 
 				if (comments.length && tag.length && title.length && (updateCodeStatus || updateRevision || closeBugs)) {
 					var matches = comments.match(/^(\[(\d+)\]|(\d+)|Bug\s*(\d+))|\n(\[(\d+)\]|(\d+)|Bug\s*(\d+))/ig);
@@ -982,7 +995,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				else {
 					showCloseOption = true;
 				}
-				
+
 				var $div = $preRelease.closest("div");
 				$div.after(
 					$("<div>")
@@ -1040,32 +1053,31 @@ var DITBugzillaGitHub = function(settings, product) {
 					);
 				}
 					
-				if (showCloseOption) {
-					$div.after(
-						$("<div>")
-							.addClass("form-checkbox")
-							.append(
-								$("<label>")
-									.html("Close bugs")
-									.attr({
-										for: "closeBugs"
-									})
-									.append(
-										$("<input>")
-											.attr({
-												name: "closeBugs",
-												id: "closeBugs",
-												type: "checkbox"
-											})
-									)
-							)
-							.append(
-								$("<p>")
-									.addClass("note")
-									.html("Set the bugs referenced in the comments to <strong>CLOSED</strong> in Bugzilla.")
-							)
-					);
-				}
+				$div.after(
+					$("<div>")
+						.addClass("form-checkbox closeBugsDiv" + (showCloseOption ? "" : " hidden"))
+						.append(
+							$("<label>")
+								.html("Close bugs")
+								.attr({
+									for: "closeBugs"
+								})
+								.append(
+									$("<input>")
+										.attr({
+											name: "closeBugs",
+											id: "closeBugs",
+											type: "checkbox"
+										})
+										.prop("disabled", !showCloseOption)
+								)
+						)
+						.append(
+							$("<p>")
+								.addClass("note")
+								.html("Set the bugs referenced in the comments to <strong>CLOSED</strong> in Bugzilla.")
+						)
+				);
 			}
 			else {
 				// Need this line or else we lose previously applied changes.
