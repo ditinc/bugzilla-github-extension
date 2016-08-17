@@ -1,16 +1,16 @@
 {
 	"manifest_version": 2,
 
-	"name": "DIT-Bugzilla-GitHub",
-	"short_name": "DIT BZ<->GH",
+	"name": "bugzilla-github-extension",
+	"short_name": "BZ<->GH",
 	"description": "This extension integrates GitHub and Bugzilla",
-	"version": "1.8.1",
+	"version": "1.9.0",
 	"background": {
 		"scripts": ["src/background.js"]
 	},
 	"page_action": {
 		"default_icon": "images/icon48.png",
-		"default_title": "DIT-Bugzilla-Github"
+		"default_title": "bugzilla-github-extension"
 	},
 	"content_scripts": [
 		{
