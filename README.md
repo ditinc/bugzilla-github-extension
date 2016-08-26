@@ -37,7 +37,7 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
 
 ## Install
 #### Chrome Web Store
-This plugin will be made available in the Chrome Web Store soon.  The link will appear here.
+https://chrome.google.com/webstore/detail/bugzilla-github-extension/ofkjoeocpbkpamfhbfmgglkhhincgbdj
 
 #### Local Install
 Here's how you load an extension in Chrome when developing, taken from https://developer.chrome.com/extensions/getstarted#unpacked:

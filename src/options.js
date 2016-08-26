@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		var modal = newModal();
 		modal.getBody()
 			.html(
-				"<p>All options can exported and imported as JSON. "
+				"<p>All options can be exported and imported as JSON. "
 				+ "Below, the current options are displayed by default or by clicking Reset to Current. "
 				+ "Make any changes and click Import to import the settings.</p>"
 			)
