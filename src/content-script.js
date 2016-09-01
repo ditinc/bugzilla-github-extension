@@ -29,7 +29,7 @@ function run(settings) {
 				
 				/* This will put the pull request # as a link next to the bug title */
 				if (url) {
-					var $bugTitle = $('#summary_alias_container');
+					var $bugTitle = $('#summary_alias_container, #summary_container');
 					
 					if ($($bugTitle[0].previousSibling).is("A")) {
 						$($bugTitle[0].previousSibling).remove();
@@ -553,9 +553,13 @@ function run(settings) {
 			var fieldsToShow = $.map(settings.bugInfoFields, function(el) {
 				var field = el.field;
 				
-				// We need to remove anything with "bug_" as the prefix so that we get the correct field
-				field = field.replace(/^bug_/, "");
+				field = field
+					// We need to remove anything with "bug_" as the prefix so that we get the correct field
+					.replace(/^bug_/, "")
 				
+					// Hours Worked (work_time) is actually actual_time
+					.replace("work_time", "actual_time");
+
 				return field;
 			});
 			var bugInfoPromise = bugzilla.getBug(message.bugId, fieldsToShow);
