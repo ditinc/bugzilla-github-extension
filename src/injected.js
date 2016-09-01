@@ -6,7 +6,7 @@ var DITBugzillaGitHub = function(settings, product) {
 	var bugUrl = bzUrl + "/show_bug.cgi?id=";
 	var bugListUrl = bzUrl + "/buglist.cgi?human=1&columnlist=" + getFieldListForUrl(settings.bugList.fields) + "&query_format=advanced&order=" + getFieldListForUrl(settings.bugList.sortOrder) + "&list_id=" + Math.floor(Math.random() * 1E10);
 	var bugId;
-	var BUG_REGEX = /^\[(\d+)\]|^(\d+)|^Bug\s*(\d+)/i; // for example, matches [83508], 83508, Bug83508 or Bug 83508
+	var BUG_REGEX = new RegExp("^\\[(\\d+)\\]|^(\\d+)|^(Bug|" + settings.terms.bug + ")\\s*(\\d+)", "i"); // for example, matches [83508], 83508, Bug83508 or Bug 83508
 	var doLabelSync = false;
 	
 	var applyExtension = function(contents) {
@@ -239,7 +239,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				var closeBugs = $closeBugs.prop("checked") && !$closeBugs.prop("disabled");
 
 				if (comments.length && tag.length && title.length && (updateCodeStatus || updateRevision || closeBugs)) {
-					var matches = comments.match(/^(\[(\d+)\]|(\d+)|Bug\s*(\d+))|\n(\[(\d+)\]|(\d+)|Bug\s*(\d+))/ig);
+					var matches = comments.match(new RegExp("^(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))|\\n(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))", "ig"));
 					
 					var bugIds = [];
 					for (var i = 0; i < matches.length; i++) {
@@ -254,7 +254,7 @@ var DITBugzillaGitHub = function(settings, product) {
 							if (settings.fields.revision.length > 0) {
 								params[settings.fields.revision] = tag;
 							}
-							comment += "Bug added to new release: \r\n" + tag + " - " + title;
+							comment += "Added to new release: \r\n" + tag + " - " + title;
 						}
 						
 						if (updateCodeStatus) {
@@ -380,7 +380,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				}
 				else {
 					var branch = $(contents).find(".current-branch").eq(1).children().html() || "";
-					matches = branch.match(/^bug[-|_]?\d+/i);
+					matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + ")[-|_]?\\d+", "i"));
 					
 					if (matches && matches.length) {
 						bugId = matches[0].match(/\d+/)[0];
@@ -400,7 +400,7 @@ var DITBugzillaGitHub = function(settings, product) {
 			$comments.each(function() {
 				var $this = $(this);
 				var newHtml = $this.html();
-				var regex = /(\[(\d+)\]|Bug\s*(\d+))|\n(\[(\d+)\]|Bug\s*(\d+))/ig;
+				var regex = new RegExp("(\\[(\\d+)\\]|(Bug|" + settings.terms.bug + ")\\s*(\\d+))|\\n(\\[(\\d+)\\]|(Bug|" + settings.terms.bug + ")\\s*(\\d+))", "ig");
 				var matches = newHtml.match(regex);
 
 				if (matches && matches.length) {
@@ -428,7 +428,7 @@ var DITBugzillaGitHub = function(settings, product) {
 						.append(
 							$("<h3>")
 								.addClass("discussion-sidebar-heading")
-								.html("Bugzilla Info ")
+								.html(settings.terms.bugzilla + " Info ")
 								.append(
 									$("<a>")
 										.attr("href", getBugUrl())
@@ -488,7 +488,7 @@ var DITBugzillaGitHub = function(settings, product) {
 								fill: "currentColor",
 								color: "#666"
 							})
-							.html(product ? product.name : "[Bugzilla product not set]")
+							.html(product ? product.name : "[" + settings.terms.bugzilla + " product not set]")
 							.append('<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>')
 							.click(function(e){
 								e.preventDefault();
@@ -509,7 +509,7 @@ var DITBugzillaGitHub = function(settings, product) {
 											.append(
 												$("<span>")
 													.addClass("select-menu-title")
-													.html("Select Bugzilla product for this repo")
+													.html("Select " + settings.terms.bugzilla + " product for this repo")
 											)
 											.click(function(e) {
 												e.stopPropagation();
@@ -604,7 +604,7 @@ var DITBugzillaGitHub = function(settings, product) {
 								.addClass("form-checkbox")
 								.append(
 									$("<label>")
-										.text("Update title for bug " + bugId)
+										.text("Update title for " + settings.terms.bug + " " + bugId)
 										.append(
 											$("<input>")
 												.addClass("syncTitle")
@@ -618,7 +618,7 @@ var DITBugzillaGitHub = function(settings, product) {
 								.append(
 									$("<p>")
 										.addClass("note")
-										.html("Update the title of the bug in Bugzilla.")
+										.html("Update the title of the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
 								)
 						)
 				);
@@ -653,7 +653,7 @@ var DITBugzillaGitHub = function(settings, product) {
 										.addClass("form-checkbox")
 										.append(
 											$("<label>")
-												.text("Resolve bug " + bugId)
+												.text("Resolve " + settings.terms.bug + " " + bugId)
 												.append(
 													$("<input>")
 														.addClass("resolveBug")
@@ -672,7 +672,7 @@ var DITBugzillaGitHub = function(settings, product) {
 										.append(
 											$("<p>")
 												.addClass("note")
-												.html("Set the bug to <strong>RESOLVED FIXED</strong> in Bugzilla.")
+												.html("Set the " + settings.terms.bug + " to <strong>RESOLVED FIXED</strong> in " + settings.terms.bugzilla + ".")
 										)
 								)
 						)
@@ -684,7 +684,7 @@ var DITBugzillaGitHub = function(settings, product) {
 										.addClass("form-checkbox")
 										.append(
 											$("<label>")
-												.text("Reopen bug " + bugId)
+												.text("Reopen " + settings.terms.bug + " " + bugId)
 												.append(
 													$("<input>")
 														.addClass("reopenBug")
@@ -703,7 +703,7 @@ var DITBugzillaGitHub = function(settings, product) {
 										.append(
 											$("<p>")
 												.addClass("note")
-												.html("Set the bug to <strong>REOPENED</strong> in Bugzilla.")
+												.html("Set the " + settings.terms.bug + " to <strong>REOPENED</strong> in " + settings.terms.bugzilla + ".")
 										)
 								)
 						);
@@ -718,7 +718,7 @@ var DITBugzillaGitHub = function(settings, product) {
 									.addClass("form-checkbox")
 									.append(
 										$("<label>")
-											.text("Post comment to bug " + bugId)
+											.text("Post comment to " + settings.terms.bug + " " + bugId)
 											.append(
 												$("<input>")
 													.addClass("syncComment")
@@ -732,7 +732,7 @@ var DITBugzillaGitHub = function(settings, product) {
 									.append(
 										$("<p>")
 											.addClass("note")
-											.html("Add the comment to the bug in Bugzilla.")
+											.html("Add the comment to the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
 									)
 							)
 					);
@@ -787,11 +787,11 @@ var DITBugzillaGitHub = function(settings, product) {
 			
 			if (!ignoreBranch) {
 				var branch = $form.find("[name='head']").val().split(":")[1];
-				matches = branch.match(/^bug[-|_]?\d+/i);
+				matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + ")[-|_]?\\d+", "i"));
 				
 				if (matches && matches.length) {
 					bugId = matches[0].match(/\d+/)[0];
-					$title.val("[" + bugId + "] Getting bug title from Bugzilla...");
+					$title.val("[" + bugId + "] Getting " + settings.terms.bug + " title from " + settings.terms.bugzilla + "...");
 					window.postMessage({method: "setPullRequestTitleToBugTitle", bugId: bugId}, '*');
 				}	
 			}
@@ -823,7 +823,7 @@ var DITBugzillaGitHub = function(settings, product) {
 										.addClass("form-checkbox")
 										.append(
 											$("<label>")
-												.html("Update bug <span class='bugId'>" + bugId + "</span> with pull request URL")
+												.html("Update " + settings.terms.bug + " <span class='bugId'>" + bugId + "</span> with pull request URL")
 												.append(
 													$("<input>")
 														.addClass("updateBug")
@@ -837,7 +837,7 @@ var DITBugzillaGitHub = function(settings, product) {
 										.append(
 											$("<p>")
 												.addClass("note")
-												.html("Set the pull request URL of the bug in Bugzilla.")
+												.html("Set the pull request URL of the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
 										)
 								)
 						);
@@ -851,7 +851,7 @@ var DITBugzillaGitHub = function(settings, product) {
 									.addClass("form-checkbox")
 									.append(
 										$("<label>")
-											.html("Post comment to bug <span class='bugId'>" + bugId + "</span>")
+											.html("Post comment to " + settings.terms.bug + " <span class='bugId'>" + bugId + "</span>")
 											.append(
 												$("<input>")
 													.addClass("syncComment")
@@ -865,7 +865,7 @@ var DITBugzillaGitHub = function(settings, product) {
 									.append(
 										$("<p>")
 											.addClass("note")
-											.html("Add the comment to the bug in Bugzilla.")
+											.html("Add the comment to the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
 									)
 							)
 					);
@@ -923,7 +923,7 @@ var DITBugzillaGitHub = function(settings, product) {
 							.addClass("form-checkbox")
 							.append(
 								$("<label>")
-									.text("Resolve bug " + bugId)
+									.text("Resolve " + settings.terms.bug + " " + bugId)
 									.attr({
 										for: "resolveBug"
 									})
@@ -941,7 +941,7 @@ var DITBugzillaGitHub = function(settings, product) {
 							.append(
 								$("<p>")
 									.addClass("note")
-									.html("Set the bug to <strong>RESOLVED TESTED</strong> in Bugzilla.")
+									.html("Set the " + settings.terms.bug + " to <strong>RESOLVED TESTED</strong> in " + settings.terms.bugzilla + ".")
 							)
 					);
 				
@@ -951,7 +951,7 @@ var DITBugzillaGitHub = function(settings, product) {
 							.addClass("form-checkbox")
 							.append(
 								$("<label>")
-									.text("Update code status of bug " + bugId)
+									.text("Update code status of " + settings.terms.bug + " " + bugId)
 									.attr({
 										for: "updateBugCodeStatus"
 									})
@@ -969,7 +969,7 @@ var DITBugzillaGitHub = function(settings, product) {
 							.append(
 								$("<p>")
 									.addClass("note")
-									.html("Set the bug's code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
+									.html("Set the " + settings.terms.bug + "'s code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in " + settings.terms.bugzilla + ".")
 							)
 					);
 				}
@@ -1020,7 +1020,7 @@ var DITBugzillaGitHub = function(settings, product) {
 						.append(
 							$("<p>")
 								.addClass("note")
-								.html("Update the bugs referenced in the comments with this release/tag in Bugzilla.")
+								.html("Update the bugs referenced in the comments with this release/tag in " + settings.terms.bugzilla + ".")
 						)
 				);
 					
@@ -1048,7 +1048,7 @@ var DITBugzillaGitHub = function(settings, product) {
 							.append(
 								$("<p>")
 									.addClass("note")
-									.html("Set the bugs referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in Bugzilla.")
+									.html("Set the bugs referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in " + settings.terms.bugzilla + ".")
 							)
 					);
 				}
@@ -1075,7 +1075,7 @@ var DITBugzillaGitHub = function(settings, product) {
 						.append(
 							$("<p>")
 								.addClass("note")
-								.html("Set the bugs referenced in the comments to <strong>CLOSED</strong> in Bugzilla.")
+								.html("Set the bugs referenced in the comments to <strong>CLOSED</strong> in " + settings.terms.bugzilla + ".")
 						)
 				);
 			}
@@ -1084,6 +1084,34 @@ var DITBugzillaGitHub = function(settings, product) {
 				$div.html($div.html());
 			}
 		});
+		
+		/* Add button to bugs in release when viewing releases */
+		if (settings.fields.revision.length) {
+			editSection(contents, 'div.release-timeline, div.release-show', function($div) {
+				$div.find("span.bzButtons").remove();
+	
+				$div.find("div.release-header").each(function() {
+					var $this = $(this);
+					var release = $this.closest("div.release").find("ul.tag-references li a span").text();
+					
+					$this.prepend(
+						$("<span>")
+							.addClass("bzButtons")
+							.css("float", "right")
+							.html(
+								$("<a>")
+									.addClass("btn btn-sm")
+									.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+									.append(" View in " + settings.terms.bugzilla + "")
+									.attr({
+										href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&" + settings.fields.revision + "=" + encodeURIComponent(release),
+										target: "_blank"
+									})
+							)
+					);
+				});
+			});
+		}
 	};
 	
 	/* This will send the bug update to Buzilla after the page loads */
@@ -1143,7 +1171,7 @@ var DITBugzillaGitHub = function(settings, product) {
 							$("<a>")
 								.addClass("btn btn-sm")
 								.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-								.append(" View in Bugzilla")
+								.append(" View in " + settings.terms.bugzilla + "")
 								.attr({
 									href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
 									target: "_blank"
@@ -1163,7 +1191,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				$("<a>")
 					.addClass("btn btn-sm")
 					.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-					.append(" View in Bugzilla")
+					.append(" View in " + settings.terms.bugzilla + "")
 					.css({
 						width: "100%",
 						"text-align": "center",
@@ -1189,7 +1217,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				$("<a>")
 					.addClass("btn btn-sm mr-2")
 					.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-					.append(" View in Bugzilla")
+					.append(" View in " + settings.terms.bugzilla + "")
 					.attr({
 						id: "bzButtonMilestone",
 						href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
@@ -1226,7 +1254,7 @@ var DITBugzillaGitHub = function(settings, product) {
 								fill: "currentColor",
 								color: "#666"
 							})
-							.html("Use Bugzilla milestone...")
+							.html("Use " + settings.terms.bugzilla + " milestone...")
 							.append('<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>')
 							.click(function(e){
 								e.preventDefault();
@@ -1247,7 +1275,7 @@ var DITBugzillaGitHub = function(settings, product) {
 											.append(
 												$("<span>")
 													.addClass("select-menu-title")
-													.html("Select Bugzilla milestone")
+													.html("Select " + settings.terms.bugzilla + " milestone")
 											)
 											.click(function(e) {
 												e.stopPropagation();

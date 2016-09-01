@@ -55,6 +55,8 @@ document.addEventListener('DOMContentLoaded', function () {
 		document.getElementById('codestatusMergeParent').value = items.values.codestatusMergeParent;
 		document.getElementById('codestatusRelease').value = items.values.codestatusRelease;
 		document.getElementById('codestatusPreRelease').value = items.values.codestatusPreRelease;
+		document.getElementById('termBugzilla').value = items.terms.bugzilla;
+		document.getElementById('termBug').value = items.terms.bug;
 		updateCodeStatusSelects();
 		
 		addOptions(document.getElementById('bugInfoFields'), items.bugInfoFields, true);
@@ -86,7 +88,8 @@ document.addEventListener('DOMContentLoaded', function () {
 		var codestatusMerge = document.getElementById('codestatusMerge').value;
 		var codestatusMergeParent = document.getElementById('codestatusMergeParent').value;
 		var codestatusRelease = document.getElementById('codestatusRelease').value;
-		var codestatusPreRelease = document.getElementById('codestatusPreRelease').value;
+		var termBugzilla = document.getElementById('termBugzilla').value;
+		var termBug = document.getElementById('termBug').value;
 		
 		var bugInfoFields = $.map(document.getElementById('bugInfoFields').options, function(el) { return {field: el.value, label: el.text}; });
 		var bugListFields = $.map(document.getElementById('bugListFields').options, function(el) { return {field: el.value, label: el.text}; });
@@ -106,6 +109,10 @@ document.addEventListener('DOMContentLoaded', function () {
 				bugList: {
 					fields: bugListFields,
 					sortOrder: bugListSortOrder
+				},
+				terms: {
+					bug: termBug,
+					bugzilla: termBugzilla
 				},
 				values: {
 					codestatusMerge: codestatusMerge,

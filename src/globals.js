@@ -35,6 +35,10 @@ var STORAGE_DEFAULTS = {
 	},
 	gitHubURL: "",
 	productMap: {},
+	terms: {
+		bug: "bug",
+		bugzilla: "Bugzilla"
+	},
 	values: {
 		codestatusMerge: "",
 		codestatusMergeParent: "",

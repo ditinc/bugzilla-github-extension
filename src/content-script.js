@@ -487,7 +487,7 @@ function run(settings) {
 										.attr({src: chrome.extension.getURL("images/icon48.png")})
 										.css({height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom'})
 								)
-								.append("You are not logged into Bugzilla.  Please login:")
+								.append("You are not logged into " + settings.terms.bugzilla + ".  Please login:")
 								.append(
 									$("<input>")
 										.addClass("form-control input-sm ml-3")
