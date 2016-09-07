@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		var codestatusMerge = document.getElementById('codestatusMerge').value;
 		var codestatusMergeParent = document.getElementById('codestatusMergeParent').value;
 		var codestatusRelease = document.getElementById('codestatusRelease').value;
+		var codestatusPreRelease = document.getElementById('codestatusPreRelease').value;
 		var termBugzilla = document.getElementById('termBugzilla').value;
 		var termBug = document.getElementById('termBug').value;
 		
