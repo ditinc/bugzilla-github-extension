@@ -31,22 +31,79 @@ function run(settings) {
 				if (url) {
 					var $bugTitle = $('#summary_alias_container, #summary_container');
 					
-					if ($($bugTitle[0].previousSibling).is("A")) {
-						$($bugTitle[0].previousSibling).remove();
+					if ($bugTitle[0]) {
+						if ($($bugTitle[0].previousSibling).is("A")) {
+							$($bugTitle[0].previousSibling).remove();
+						}
+						
+						$bugTitle[0].previousSibling.textContent = " - ";
+						
+						$bugTitle.before(
+							$("<a>")
+								.attr({
+									"href": url
+								})
+								.html('[#' + pr + ']')
+						);
 					}
-					
-					$bugTitle[0].previousSibling.textContent = " - ";
-					
-					$bugTitle.before(
-						$("<a>")
-							.attr({
-								"href": url
-							})
-							.html('[#' + pr + ']')
-					);
 				}
 			}
 		}
+		
+		// This object will be used to interact with Bugzilla.
+		var bugzilla = new Bugzilla(settings);
+		
+		var $form = $('form[name="changeform"]');
+
+		$form.find('input#check_all').after(
+			$("<input>")
+				.attr({
+					type: "button",
+					id: "dupe_selected",
+					value: "Mark as Duplicate"
+				})
+				.css("margin-left", "4px")
+				.click(function() {
+					var dupes = $('.bz_checkbox_column :checked').map(function() {
+						return this.name.replace("id_", "");
+					}).toArray();
+					
+					if (dupes.length) {
+						var dupeOf = prompt("Please enter the " + settings.terms.bug + " to mark the selected " + settings.terms.bug + "s as duplicates of.");
+						
+						if (dupeOf) {
+							$(this).prop("disabled", true).val("Marking as duplicate of " + dupeOf + "...");
+							
+							// Have to mark each one as a dupe individually
+							var dupeBug = function(i) {
+								bugzilla
+									.updateBugs(dupes[i], {"dupe_of": dupeOf, "comment": {"body": "Marking as duplicate."}})
+									.success(function(response) {
+										// Dupe the next bug, if there is one to dupe
+										if (dupes[i+1]) {
+											dupeBug(i+1);
+										}
+									
+										// Close this bug now that it's duped
+										bugzilla
+											.updateBugs(dupes[i], {"status": "CLOSED", "comment": {"body": "Closing duplicate."}})
+											.success(function() {
+												// Go to the real bug if there is nothing left to update
+												if (!dupes[i+1]) {
+													window.location.href = settings.bugzillaURL + "/show_bug.cgi?id=" + dupeOf;
+												}
+											});
+									});
+							};
+							
+							dupeBug(0);
+						}
+					}
+					else {
+						alert("You must select at least one " + settings.terms.bug + " to mark as duplicate.");
+					}
+				})
+		);
 	}
 	else if (location.href.indexOf(settings.gitHubURL) > -1) {
 		// We're in GitHub

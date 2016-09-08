@@ -4,6 +4,7 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
 ## Features
 #### Bugzilla
 - If GitHub Pull Request URL is populated with the pull request's URL, then a link will be added to the bug's title
+- There is a button for marking selected bugs as duplicates when changing several bugs at once
 
 ###### TODOs:
 - Open to suggestions... add an issue!
