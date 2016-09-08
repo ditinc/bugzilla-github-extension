@@ -537,6 +537,9 @@ function run(settings) {
 								})
 								.success(function(response) {
 									var $form = $("#bzLoginForm");
+									if (response[0].token) {
+										bugzilla.setToken(response[0].token);
+									}
 									$form.prev(".is-placeholder").remove();
 									$form.remove();
 									callback();

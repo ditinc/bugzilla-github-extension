@@ -26,6 +26,13 @@ var Bugzilla = function(settings) {
 	 * @type {String}
 	 */
 	this.attachmentUrl = this.url + '/attachment.cgi';
+	
+	/**
+	 * The token used for logging in in newer versions of Bugzilla.
+	 * @private
+	 * @type {String}
+	 */
+	this.token;
 }
 
 /**
@@ -59,7 +66,7 @@ Bugzilla.prototype.getBug = function(bugId, includeFields) {
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
 		methodName: 'Bug.get',
-		params: [{"ids": [bugId], "include_fields": includeFields}]
+		params: [{"Bugzilla_token": this.token, "ids": [bugId], "include_fields": includeFields}]
 	});
 }
 
@@ -77,7 +84,7 @@ Bugzilla.prototype.addComment = function(bugId, comment, hoursWorked) {
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
 		methodName: 'Bug.add_comment',
-		params: [{"id": bugId, "comment": comment, "work_time": hoursWorked}]
+		params: [{"Bugzilla_token": this.token, "id": bugId, "comment": comment, "work_time": hoursWorked}]
 	});
 }
 
@@ -89,6 +96,7 @@ Bugzilla.prototype.addComment = function(bugId, comment, hoursWorked) {
  */
 Bugzilla.prototype.updateBugs = function(bugIds, params) {
 	"use strict";
+	params.Bugzilla_token = this.token;
 	params.ids = bugIds;
 	
 	return $.xmlrpc({
@@ -106,6 +114,7 @@ Bugzilla.prototype.updateBugs = function(bugIds, params) {
  */
 Bugzilla.prototype.updateBug = function(bugId, params) {
 	"use strict";
+	params.Bugzilla_token = this.token;
 	params.ids = [bugId];
 	
 	return $.xmlrpc({
@@ -126,7 +135,7 @@ Bugzilla.prototype.getAttachments = function(bugId) {
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
 		methodName: 'Bug.attachments',
-		params: [{"ids": [bugId], "exclude_fields": ["data"]}]
+		params: [{"Bugzilla_token": this.token, "ids": [bugId], "exclude_fields": ["data"]}]
 	});
 }
 
@@ -155,8 +164,19 @@ Bugzilla.prototype.logout = function(username, password) {
 
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
-		methodName: 'User.logout'
+		methodName: 'User.logout',
+		params: [{"Bugzilla_token": this.token}]
 	});
+}
+
+/**
+ * Sets the token to be used for future calls to Bugzilla.
+ * @param {string} token - The token of the user used to log in.
+ */
+Bugzilla.prototype.setToken = function(token) {
+	"use strict";
+
+	this.token = token;
 }
 
 /**
@@ -166,6 +186,7 @@ Bugzilla.prototype.logout = function(username, password) {
  */
 Bugzilla.prototype.searchBugs = function(searchCriteria) {
 	"use strict";
+	searchCriteria.Bugzilla_token = this.token;
 
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
@@ -185,6 +206,7 @@ Bugzilla.prototype.getFieldInfo = function(fieldNames) {
 	if (fieldNames) {
 		params.push({names: fieldNames});
 	}
+	params[0].Bugzilla_token = this.token;
 
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
@@ -203,7 +225,8 @@ Bugzilla.prototype.getProducts = function() {
 	
 	return $.xmlrpc({
 		url: xmlrpcUrl,
-		methodName: 'Product.get_enterable_products'
+		methodName: 'Product.get_enterable_products',
+		params: [{"Bugzilla_token": this.token}]
 	})
 	.error(function(response) {
 		return response;
@@ -212,7 +235,7 @@ Bugzilla.prototype.getProducts = function() {
 		return $.xmlrpc({
 			url: xmlrpcUrl,
 			methodName: 'Product.get',
-			params: [{ids: response[0].ids}],
+			params: [{"Bugzilla_token": this.token, ids: response[0].ids}],
 			dataFilter: function(data, type) {
 				// this fixes a problem where Bugzilla sends malformed XML
 				return data.replace(/<\/methodR.*/, '</methodResponse>');
