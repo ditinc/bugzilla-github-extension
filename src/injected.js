@@ -88,7 +88,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				var resolveBug = $form.find(".resolveBug").prop("checked");
 				var reopenBug = $form.find(".reopenBug").prop("checked");
 				var comment = (syncComment ? $("#new_comment_field").val() : "");
-				var hoursWorked = $("#workTime").val();
+				var hoursWorked = $form.find(".workTime").val();
 				
 				if (syncComment && !resolveBug && !reopenBug) {
 					if ($.trim(comment).length) {
@@ -115,8 +115,8 @@ var DITBugzillaGitHub = function(settings, product) {
 			})
 			
 			/* Syncs line comments with the bug in Bugzilla */
-			.off("click.DITBugzillaGitHub", ".js-inline-comment-form button[type='submit']")
-			.on("click.DITBugzillaGitHub", ".js-inline-comment-form button[type='submit']", function() {
+			.off("click.DITBugzillaGitHub", ".js-inline-comment-form button[name='single_comment']")
+			.on("click.DITBugzillaGitHub", ".js-inline-comment-form button[name='single_comment']", function() {
 				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 
 				var $form = $(this).closest("form");
@@ -132,10 +132,77 @@ var DITBugzillaGitHub = function(settings, product) {
 							comment = path + ": " + comment;
 						}
 						else {
-							comment = path + " line " + line + ": " + comment
+							comment = path + " line " + line + ": " + comment;
 						}
 						
 						window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: 0}, '*');
+					}
+				}
+			})
+
+			/* Syncs pull request review comments with the bug in Bugzilla */
+			.off("click.DITBugzillaGitHub", ".pull-request-review-menu form button.btn-primary[type='submit'], .review-summary-form-wrapper form button.btn-primary[type='submit']")
+			.on("click.DITBugzillaGitHub", ".pull-request-review-menu form button.btn-primary[type='submit'], .review-summary-form-wrapper form button.btn-primary[type='submit']", function() {
+				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+
+				var isFilesTab = $(this).is(".pull-request-review-menu form button.btn-primary[type='submit']");
+				var $form = $(this).closest("form");
+				var syncComment = $form.find(".syncComment").prop("checked");
+				var syncPendingComments = $form.find(".syncPendingComments").prop("checked");
+				
+				if (syncComment || syncPendingComments) {
+					var summary = $.trim($form.find("textarea").val());
+					var reviewType = $form.find("[type='radio']:selected").val();
+					var hoursWorked = $form.find(".workTime").val();
+					var comment = "Reviewed";
+					
+					if (reviewType === "approve") {
+						comment += " and the changes are approved.";
+					}
+					else if (reviewType === "reject") {
+						comment += " and some changes are required.";
+					}
+					else {
+						comment += " and have some comments.";
+					}
+					
+					if (syncComment && summary.length > 0) {
+						comment += "\r\n\r\nReview Summary:\r\n\r\n" + summary;
+					}
+					
+					if (syncPendingComments) {
+						var $pendingComments = $("div.is-pending").not(".is-writer");
+						
+						if ($pendingComments.length > 0) {
+							comment += "\r\n\r\nLine Comments:";
+							
+							$pendingComments.each(function() {
+								var $form = $(this);
+								var pendingComment = $form.find("textarea").val();
+								var line = (
+									isFilesTab ? 
+										$form.closest(".line-comments.js-addition, .line-comments.js-deletion").parent().prev("tr").children("td").data("line-number")
+									:
+										$form.closest(".file").find(".blob-num-deletion.js-linkable-line-number:last(), .blob-num-addition.js-linkable-line-number:last()").data("line-number")
+								);
+								var path = $.trim($form.closest(".file").find(".file-info .user-select-contain, a.file-info").html());
+								
+								if ($.trim(pendingComment).length) {
+									if (!line || line === "false") {
+										pendingComment = path + ": " + pendingComment;
+									}
+									else {
+										pendingComment = path + " line " + line + ": " + pendingComment;
+									}
+								}
+								
+								comment += "\r\n\r\n" + pendingComment;
+							});
+						}
+					}
+					
+					if ((syncComment && summary.length > 0) || (syncPendingComments && $pendingComments.length > 0)) {					
+						window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: hoursWorked}, '*');
 					}
 				}
 			})
@@ -633,7 +700,7 @@ var DITBugzillaGitHub = function(settings, product) {
 	var injectCommentOptions = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 
-		editSection(contents, '.js-previewable-comment-form', function($div) {
+		editSection(contents, '.js-previewable-comment-form, .pull-request-review-menu, .review-summary-form-wrapper', function($div) {
 			$div.each(function(i) {
 				var $this = $(this);
 				var $form = $this.closest("form"); 
@@ -708,8 +775,11 @@ var DITBugzillaGitHub = function(settings, product) {
 								)
 						);
 				}
+				
+				var isReview = $this.is(".pull-request-review-menu") || $this.is(".review-summary-form-wrapper");
+				var toFind = (isReview ? "div.form-checkbox:first" : "div.toolbar-help");
 			
-				$this.find("div.toolbar-help")
+				$this.find(toFind)
 					.before(
 						$("<div>")
 							.addClass("pl-3")
@@ -718,7 +788,7 @@ var DITBugzillaGitHub = function(settings, product) {
 									.addClass("form-checkbox")
 									.append(
 										$("<label>")
-											.text("Post comment to " + settings.terms.bug + " " + bugId)
+											.text("Post "+ (isReview ? "summary" : "comment") + " to " + settings.terms.bug + " " + bugId)
 											.append(
 												$("<input>")
 													.addClass("syncComment")
@@ -732,9 +802,35 @@ var DITBugzillaGitHub = function(settings, product) {
 									.append(
 										$("<p>")
 											.addClass("note")
-											.html("Add the comment to the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
+											.html("Add the "+ (isReview ? "summary" : "comment") + " to the " + settings.terms.bug + " in " + settings.terms.bugzilla + (isReview ? "." : " when you click Add Single Comment."))
 									)
-							)
+							),
+						(isReview ? 
+							$("<div>")
+								.addClass("pl-3")
+								.html(
+									$("<div>")
+										.addClass("form-checkbox")
+										.append(
+											$("<label>")
+												.text("Post all pending comments to " + settings.terms.bug + " " + bugId)
+												.append(
+													$("<input>")
+														.addClass("syncPendingComments")
+														.attr({
+															type: "checkbox",
+															checked: "checked"
+														})
+														.prop('checked', true)
+												)
+										)
+										.append(
+											$("<p>")
+												.addClass("note")
+												.html("Add the pending comments to the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
+										)
+								)
+							: null)
 					);
 			});
 		});
@@ -742,40 +838,46 @@ var DITBugzillaGitHub = function(settings, product) {
 	
 	var injectHoursWorkedInput = function(contents) {
 		if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
-
-		editSection(contents, '#partial-new-comment-form-actions', function($buttons) {
-			if ($buttons.find("input#workTime").length === 0) {
-				$buttons
-					.append(
-						$("<input>")
-							.attr({
-								name: "workTime",
-								id: "workTime",
-								type: "number",
-								step: "0.5"
-							})
-							.css({
-								width: "2.5em",
-								float: "right",
-								margin: "5px"
-							})
-					)
-					.append(
-						$("<label>")
-							.text("Hours Worked")
-							.attr({
-								for: "workTime"
-							})
-							.css({
-								float: "right",
-								padding: "7px 0"
-							})
-					);
-			}
-			else {
-				// Need this line or else we lose previously applied changes.
-				$buttons.html($buttons.html());
-			}
+		
+		editSection(contents, '#partial-new-comment-form-actions, .pull-request-review-menu .form-actions, .review-summary-form-wrapper .form-actions', function($buttonsArray) {
+			$buttonsArray.each(function() {
+				var $buttons = $(this);
+				if ($buttons.find("input.workTime").length === 0) {
+					var isPRComment = $buttons.is('#partial-new-comment-form-actions');
+					var id = "workTime" + (new Date()).getTime();
+					$buttons
+						.append(
+							$("<input>")
+								.addClass("workTime")
+								.attr({
+									id: id,
+									name: id,
+									type: "number",
+									step: "0.5"
+								})
+								.css({
+									width: "2.5em",
+									float: "right",
+									margin: (isPRComment ? "5px" : "3px 5px")
+								})
+						)
+						.append(
+							$("<label>")
+								.text("Hours Worked")
+								.attr({
+									for: id
+								})
+								.css({
+									float: "right",
+									padding: (isPRComment ? "7px 0" : "6px 0")
+								})
+						);
+				}
+				else if (isPRComment) {
+					// Need this line or else we lose previously applied changes.
+					$buttons.html($buttons.html());
+				}
+			});
 		});
 	};
 	
