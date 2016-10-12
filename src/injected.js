@@ -152,7 +152,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				
 				if (syncComment || syncPendingComments) {
 					var summary = $.trim($form.find("textarea").val());
-					var reviewType = $form.find("[type='radio']:selected").val();
+					var reviewType = $form.find("[type='radio']:checked").val();
 					var hoursWorked = $form.find(".workTime").val();
 					var comment = "Reviewed";
 					
