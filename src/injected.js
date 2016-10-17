@@ -443,7 +443,7 @@ var DITBugzillaGitHub = function(settings, product) {
 					bugId = matches[0].match(/\d+/)[0];
 					
 					/* This will turn the bug number into a link to the bug */
-					newHtml = newHtml.replace(BUG_REGEX, '<a href="' + getBugUrl() + '">[' + bugId + ']</a>');
+					newHtml = newHtml.replace(BUG_REGEX, '<a class="bzLink" name="' + bugId + '" href="' + getBugUrl() + '">[' + bugId + ']</a>');
 				}
 				else {
 					var branch = $(contents).find(".current-branch").eq(1).children().html() || "";
@@ -453,7 +453,7 @@ var DITBugzillaGitHub = function(settings, product) {
 						bugId = matches[0].match(/\d+/)[0];
 					
 						/* This will add the bug number as a link to the bug */
-						newHtml = '<a href="' + getBugUrl() + '">[' + bugId + ']</a> ' + newHtml;
+						newHtml = '<a class="bzLink" name="' + bugId + '" href="' + getBugUrl() + '">[' + bugId + ']</a> ' + newHtml;
 					}
 					else {
 						bugId = null;
@@ -475,13 +475,22 @@ var DITBugzillaGitHub = function(settings, product) {
 						var theBugId = matches[i].match(/\d+/)[0];
 
 						/* This will turn the bug number into a link to the bug */
-						newHtml = newHtml.replace(matches[i], '<a href="' + getBugUrl(theBugId) + '">[' + theBugId + ']</a>');
+						newHtml = newHtml.replace(matches[i], '<a class="bzLink" name="' + theBugId + '" href="' + getBugUrl(theBugId) + '">[' + theBugId + ']</a>');
 					}
 				}
 				
 				$this.html(newHtml);
 			});
 		}
+		
+		var bugIds = $(contents).find("a.bzLink").map(function() {
+			return this.name;
+		});
+		// Remove duplicates
+		bugIds = new Set(bugIds);
+		bugIds = [...bugIds];
+		
+		window.postMessage({method: "loadBugLinkTitles", bugIds: bugIds}, '*');
 	};
 	
 	var showBugDetailsInSidebar = function(contents) {
@@ -498,7 +507,11 @@ var DITBugzillaGitHub = function(settings, product) {
 								.html(settings.terms.bugzilla + " Info ")
 								.append(
 									$("<a>")
-										.attr("href", getBugUrl())
+										.addClass("bzLink")
+										.attr({
+											href: getBugUrl(),
+											name: bugId
+										})
 										.html("[" + bugId + "]")
 								)
 						)

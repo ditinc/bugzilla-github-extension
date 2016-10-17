@@ -155,6 +155,11 @@ function run(settings) {
 				case "loadBugDetails":
 					loadBugDetails(message);
 					break;
+				
+				/* Puts Bugzilla bug titles into bug number links */
+				case "loadBugLinkTitles":
+					loadBugLinkTitles(message);
+					break;
 						
 				/* Sets the pull request title to the bug title */
 				case "setPullRequestTitleToBugTitle":
@@ -676,6 +681,30 @@ function run(settings) {
 							);
 						}
 					});
+				});
+		}
+		
+		function loadBugLinkTitles(message) {
+			bugzilla.getBugs(message.bugIds, ["summary", "id"])
+				.error(function(response) {
+					var faultString = getFaultString(response);
+					
+					if (faultString.indexOf("You must log in") > -1) {
+						showLoginForm(function() {
+							loadBugDetails(message);
+						});
+					}
+				})
+				.success(function(response) {
+					var bugInfo = response[0].bugs;
+
+					for (var i = 0; i < bugInfo.length; i++) {
+						var bugId = bugInfo[i].id;
+						var title = bugInfo[i].summary;
+						$("a.bzLink[name='" + bugId + "']")
+							.addClass("tooltipped tooltipped-s")
+							.attr("aria-label", title);
+					}
 				});
 		}
 		

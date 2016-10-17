@@ -71,6 +71,22 @@ Bugzilla.prototype.getBug = function(bugId, includeFields) {
 }
 
 /**
+ * Gets a promise that will return bug info for the passed in bug numbers.
+ * @param {Array} bugIds - The bug numbers.
+ * @param {Array} includeFields - An optional array of fields to include.
+ * @return {Promise} On success, will return the response object from Bugzilla.
+ */
+Bugzilla.prototype.getBugs = function(bugIds, includeFields) {
+	"use strict";
+
+	return $.xmlrpc({
+		url: this.xmlrpcUrl,
+		methodName: 'Bug.get',
+		params: [{"Bugzilla_token": this.token, "ids": bugIds, "include_fields": includeFields}]
+	});
+}
+
+/**
  * Adds a comment to the bug passed in.
  * @param {number} bugId - The bug number.
  * @param {String} comment - The comment.
