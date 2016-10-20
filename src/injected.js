@@ -603,7 +603,18 @@ var DITBugzillaGitHub = function(settings, product) {
 											.html(
 												$("<div>")
 													.addClass("select-menu-filters")
-													.append("<div class='is-loading select-menu-item'>Loading...</div>")
+													.append(
+														$("<div>")
+															.addClass("is-loading p-5")
+															.append(
+																$("<img>")
+																	.addClass("column centered")
+																	.attr({
+																		"src": "https://assets-cdn.github.com/images/spinners/octocat-spinner-128.gif",
+																		"width": "64px"
+																	})
+															)
+													)
 													.append(
 														$("<div>")
 															.addClass("select-menu-list")
@@ -1404,7 +1415,18 @@ var DITBugzillaGitHub = function(settings, product) {
 											.html(
 												$("<div>")
 													.addClass("select-menu-filters")
-													.append("<div class='is-loading select-menu-item'>Loading...</div>")
+													.append(
+														$("<div>")
+															.addClass("is-loading p-5")
+															.append(
+																$("<img>")
+																	.addClass("column centered")
+																	.attr({
+																		"src": "https://assets-cdn.github.com/images/spinners/octocat-spinner-128.gif",
+																		"width": "64px"
+																	})
+															)
+													)
 													.append(
 														$("<div>")
 															.addClass("select-menu-list")
