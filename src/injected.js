@@ -45,6 +45,9 @@ var DITBugzillaGitHub = function(settings, product) {
 		else {
 			try {
 				$el = $(contents).find(selector);
+				if (selector.indexOf(",") < 0) {
+					$el = $el.last(); // if we're trying to return only one element, let's just return the last one
+				}
 			}
 			catch(e) {
 				// I don't know why but sometimes .find() fails if there are nulls
@@ -429,7 +432,7 @@ var DITBugzillaGitHub = function(settings, product) {
 	};
 
 	var linkifyBugNumber = function(contents) {
-		var $issueTitle = $(contents).find('.js-issue-title');
+		var $issueTitle = $(contents).find('.js-issue-title').last();
 		var $comments = $(contents).find('.markdown-body p, .markdown-body li');
 		
 		// Issue titles need changing
