@@ -219,10 +219,10 @@ Bugzilla.prototype.searchBugs = function(searchCriteria) {
 Bugzilla.prototype.getFieldInfo = function(fieldNames) {
 	"use strict";
 	var params = [];
+	params.push({Bugzilla_token: this.token});
 	if (fieldNames) {
-		params.push({names: fieldNames});
+		params[0].names = fieldNames;
 	}
-	params[0].Bugzilla_token = this.token;
 
 	return $.xmlrpc({
 		url: this.xmlrpcUrl,
