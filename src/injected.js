@@ -738,7 +738,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				var showResolveInput = $form.is(".js-new-comment-form");
 				
 				if (showResolveInput) {
-					$this.find("div.toolbar-help")
+					$this.find("div.preview-content").next()
 						.before(
 							$("<div>")
 								.addClass("pl-3")
@@ -804,7 +804,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				}
 				
 				var isReview = $this.is(".pull-request-review-menu") || $this.is(".review-summary-form-wrapper");
-				var toFind = (isReview ? "div.form-checkbox:first" : "div.toolbar-help");
+				var toFind = (isReview ? "div.form-checkbox:first" : "div.float-left");
 			
 				$this.find(toFind)
 					.before(
