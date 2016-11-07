@@ -941,7 +941,7 @@ var DITBugzillaGitHub = function(settings, product) {
 					$form.find(".bugId").html(bugId);
 				}
 				else {
-					var $div = $form.find("div.toolbar-help");
+					var $div = $form.find("div.preview-content").next();
 					
 					if (settings.fields.gitHubPullRequestURL.length > 0) {
 						$div.before(
