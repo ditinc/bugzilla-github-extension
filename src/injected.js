@@ -184,11 +184,11 @@ var DITBugzillaGitHub = function(settings, product) {
 								var pendingComment = $form.find("textarea").val();
 								var line = (
 									isFilesTab ? 
-										$form.closest(".line-comments.js-addition, .line-comments.js-deletion").parent().prev("tr").children("td").data("line-number")
+										$form.closest(".line-comments.js-addition, .line-comments.js-deletion").parent().prev("tr").children("td[data-line-number]").data("line-number")
 									:
 										$form.closest(".file").find(".blob-num-deletion.js-linkable-line-number:last(), .blob-num-addition.js-linkable-line-number:last()").data("line-number")
 								);
-								var path = $.trim($form.closest(".file").find(".file-info .user-select-contain, a.file-info").html());
+								var path = $.trim($form.closest(".file").find(".file-info a, a.file-info").html());
 								
 								if ($.trim(pendingComment).length) {
 									if (!line || line === "false") {
