@@ -1335,12 +1335,12 @@ var DITBugzillaGitHub = function(settings, product) {
 		});
 		
 		/* Add button to milestone when viewing milestone */
-		editSection(contents, '.flex-table-item .d-block', function($buttons) {
+		editSection(contents, '.TableObject-item .d-block', function($buttons) {
 			$buttons.find("#bzButtonMilestone").remove();
 			var $a = $buttons.find("a").filter(function() {
 				return $(this).html() === "Edit milestone";
 			});
-			var milestone = $buttons.closest(".flex-table").find(".text-normal").first().text();
+			var milestone = $buttons.closest(".TableObject").find(".text-normal").first().text();
 				
 			$a.before(
 				$("<a>")
