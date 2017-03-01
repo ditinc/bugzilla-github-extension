@@ -233,11 +233,11 @@ var DITBugzillaGitHub = function(settings, product) {
 			})
 			
 			/* Make sure we display correct mergeTarget */
-			.off("click.DITBugzillaGitHub", "button.js-merge-branch-action")
-			.on("click.DITBugzillaGitHub", "button.js-merge-branch-action", function() {
+			.off("click.DITBugzillaGitHub", ".btn-group-merge button[type='submit']")
+			.on("click.DITBugzillaGitHub", ".btn-group-merge button[type='submit']", function() {
 				if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 
-				var mergeTarget = $(".current-branch").eq(0).children().html();
+				var mergeTarget = $(".commit-ref").eq(0).children().html();
 				var newCodeStatus;
 				
 				if (mergeTarget === "master") {
@@ -359,7 +359,7 @@ var DITBugzillaGitHub = function(settings, product) {
 				var resolveBug = $("#resolveBug").prop("checked");
 				var updateBugCodeStatus = $("#updateBugCodeStatus").prop("checked");
 				var hoursWorked = $("#workTimeMerge").val();
-				var mergeTarget = $(".current-branch").eq(0).children().html();
+				var mergeTarget = $(".commit-ref").eq(0).children().html();
 				var params = {};
 				var comment = "";
 				var newCodeStatus;
@@ -449,7 +449,7 @@ var DITBugzillaGitHub = function(settings, product) {
 					newHtml = newHtml.replace(BUG_REGEX, '<a class="bzLink" name="' + bugId + '" href="' + getBugUrl() + '">[' + bugId + ']</a>');
 				}
 				else {
-					var branch = $(contents).find(".current-branch").eq(1).children().html() || "";
+					var branch = $(contents).find(".commit-ref").eq(1).children().html() || "";
 					matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + ")[-|_]?\\d+", "i"));
 					
 					if (matches && matches.length) {
@@ -915,8 +915,9 @@ var DITBugzillaGitHub = function(settings, product) {
 			var matches;
 			
 			if (!ignoreBranch) {
-				var branch = $form.find("[name='head']").val().split(":")[1];
-				matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + ")[-|_]?\\d+", "i"));
+				var action = $form.get(0).action;
+				var branch = action.substr(action.lastIndexOf("%3A") + 3);
+				matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + "|" + settings.terms.bug.charAt(0) + ")[-|_]?\\d+", "i"));
 				
 				if (matches && matches.length) {
 					bugId = matches[0].match(/\d+/)[0];
@@ -1012,8 +1013,8 @@ var DITBugzillaGitHub = function(settings, product) {
 		editSection(contents, '#partial-pull-merging', function($div) {
 			if ($div.find("input#resolveBug").length === 0) {
 				var $buttons = $div.find("div.commit-form-actions");
-				var mergeTarget = $(".current-branch").eq(0).children().html();
-				
+				var mergeTarget = $(".commit-ref").eq(0).children().html();
+
 				if (mergeTarget === "master") {
 					var newCodeStatus = settings.values.codestatusMerge;
 				}
