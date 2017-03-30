@@ -692,7 +692,9 @@ ghImport('jquery').then(function($) {
 				
 				// Remove the selected styling from the Issues link when Milestones is selected
 				var $issuesLink = $nav.find("a[data-selected-links*=repo_milestones]");
-				$issuesLink.attr('data-selected-links', $issuesLink.attr('data-selected-links').replace('repo_milestones', ''));
+				if ($issuesLink.length === 1) {
+					$issuesLink.attr('data-selected-links', $issuesLink.attr('data-selected-links').replace('repo_milestones', ''));
+				}
 	
 				$a.before(
 					$("<a>")
