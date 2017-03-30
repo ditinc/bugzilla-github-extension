@@ -14,6 +14,7 @@ ghImport('jquery').then(function($) {
 			showBugDetailsInSidebar(contents);
 			injectProductName(contents);
 			injectPageHeadActions(contents);
+			injectRepoNavLinks(contents);
 			injectPullRequestTitleOptions(contents);
 			injectHoursWorkedInput(contents);
 			injectCommentOptions(contents);
@@ -677,6 +678,29 @@ ghImport('jquery').then(function($) {
 									target: "_blank"
 								})
 						)
+				);
+			});
+		};
+		
+		var injectRepoNavLinks = function(contents) {
+			editSection(contents, 'nav.reponav', function($nav) {
+				$nav.find("a#bzMilestonesButton").remove();
+				
+				var $a = $nav.children("a").first();
+				var href = $a.attr('href');
+				href = href.substr(0, href.lastIndexOf('/')) + '/milestones';
+	
+				$a.before(
+					$("<a>")
+						.attr({
+							id: 'bzMilestonesButton',
+							href: href,
+							'data-selected-links': 'repo_milestones new_repo_milestone repo_milestone ' + href,
+							'data-hotkey': 'g m'
+						})
+						.addClass('js-selected-navigation-item reponav-item')
+						.html('<svg aria-hidden="true" class="octicon octicon-milestone" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>')
+						.append(" Milestones")
 				);
 			});
 		};
