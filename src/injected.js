@@ -255,20 +255,20 @@ ghImport('jquery').then(function($) {
 				.off("change.DITBugzillaGitHub", "input#release_prerelease")
 				.on("change.DITBugzillaGitHub", "input#release_prerelease", function() {
 					var isPreRelease = $("input#release_prerelease").prop("checked");
-					var mergeTarget = $(".releases-target-menu span.js-select-button").html();
+					var mergeTarget = $(".release-target-wrapper .js-menu-target span").html();
 					var newCodeStatus;
 	
 					if (!isPreRelease && mergeTarget === "master") {
 						newCodeStatus = settings.values.codestatusRelease;
 						
 						// Also make sure the close option is shown
-						$("div.closeBugsDiv").removeClass("hidden").find("#closeBugs").prop("disabled", false);
+						$("div.closeBugsDiv").removeClass("d-none").find("#closeBugs").prop("disabled", false);
 					}
 					else {
 						newCodeStatus = settings.values.codestatusPreRelease;
 						
 						// Also make sure the close option is hidden
-						$("div.closeBugsDiv").addClass("hidden").find("#closeBugs").prop("disabled", true);
+						$("div.closeBugsDiv").addClass("d-none").find("#closeBugs").prop("disabled", true);
 					}
 	
 					$(".newCodeStatus").html(newCodeStatus);
@@ -285,13 +285,13 @@ ghImport('jquery').then(function($) {
 						newCodeStatus = settings.values.codestatusRelease;
 						
 						// Also make sure the close option is shown
-						$("div.closeBugsDiv").removeClass("hidden").find("#closeBugs").prop("disabled", false);
+						$("div.closeBugsDiv").removeClass("d-none").find("#closeBugs").prop("disabled", false);
 					}
 					else {
 						newCodeStatus = settings.values.codestatusPreRelease;
 						
 						// Also make sure the close option is hidden
-						$("div.closeBugsDiv").addClass("hidden").find("#closeBugs").prop("disabled", true);
+						$("div.closeBugsDiv").addClass("d-none").find("#closeBugs").prop("disabled", true);
 					}
 	
 					$(".newCodeStatus").html(newCodeStatus);
@@ -1144,7 +1144,7 @@ ghImport('jquery').then(function($) {
 		var injectReleaseOptions = function(contents) {
 			editSection(contents, 'div.new-release', function($div) {
 				if ($div.find("input#updateRevision").length === 0) {
-					var mergeTarget = $div.find(".releases-target-menu span.js-select-button").html();
+					var mergeTarget = $div.find(".release-target-wrapper .js-menu-target span").html();
 					var $preRelease = $div.find("input#release_prerelease");
 					var newCodeStatus = settings.values.codestatusRelease;
 					var showCloseOption = false;
@@ -1215,7 +1215,7 @@ ghImport('jquery').then(function($) {
 						
 					$div.after(
 						$("<div>")
-							.addClass("form-checkbox closeBugsDiv" + (showCloseOption ? "" : " hidden"))
+							.addClass("form-checkbox closeBugsDiv" + (showCloseOption ? "" : " d-none"))
 							.append(
 								$("<label>")
 									.html("Close bugs")
