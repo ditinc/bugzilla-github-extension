@@ -834,9 +834,9 @@ ghImport('jquery').then(function($) {
 					}
 					
 					var isReview = $this.is(".pull-request-review-menu") || $this.is(".review-summary-form-wrapper");
-					var toFind = (isReview ? "div.form-checkbox:first" : "div.float-left");
+					var toFind = (isReview ? "div.form-checkbox" : "div.float-left");
 				
-					$this.find(toFind)
+					$this.find(toFind).first()
 						.before(
 							$("<div>")
 								.addClass("pl-3")
