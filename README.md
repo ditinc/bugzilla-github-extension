@@ -1,5 +1,8 @@
 [![Build Status](https://travis-ci.org/ditinc/bugzilla-github-extension.svg?branch=master)](https://travis-ci.org/ditinc/bugzilla-github-extension)
 # bugzilla-github-extension
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b5e6c1b111d54d2bbb17334d0fac4737)](https://www.codacy.com/app/sjmatta/bugzilla-github-extension?utm_source=github.com&utm_medium=referral&utm_content=ditinc/bugzilla-github-extension&utm_campaign=badger)
+
 This Chrome extension integrates Bugzilla and GitHub to make your life easier.  It is a work in progress, so feel free to contribute!
 
 ## Features
