@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/ditinc/bugzilla-github-extension.svg?branch=master)](https://travis-ci.org/ditinc/bugzilla-github-extension)
 # bugzilla-github-extension
 This Chrome extension integrates Bugzilla and GitHub to make your life easier.  It is a work in progress, so feel free to contribute!
 
