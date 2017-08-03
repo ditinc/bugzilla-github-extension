@@ -434,7 +434,7 @@ ghImport('jquery').then(function($) {
 	
 		var linkifyBugNumber = function(contents) {
 			var $issueTitle = $(contents).find('.js-issue-title').last();
-			var $comments = $(contents).find('.markdown-body p, .markdown-body li');
+			var $comments = $(contents).find('.markdown-body p, .markdown-body li, .markdown-body table');
 			
 			// Issue titles need changing
 			if ($issueTitle.length) {
