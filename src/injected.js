@@ -910,7 +910,7 @@ ghImport('jquery').then(function($) {
 										id: id,
 										name: id,
 										type: "number",
-										step: "0.5"
+										step: "0.25"
 									})
 									.css({
 										width: "2.5em",
@@ -1071,7 +1071,7 @@ ghImport('jquery').then(function($) {
 									name: "workTimeMerge",
 									id: "workTimeMerge",
 									type: "number",
-									step: "0.5"
+									step: "0.25"
 								})
 								.css({
 									width: "2.5em",
