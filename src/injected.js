@@ -66,12 +66,6 @@ ghImport('jquery').then(function($) {
 		}
 	
 		var createListeners = function() {
-			// This handles partial updates
-			var proxied = $.fn.replaceWith;
-			$.fn.replaceWith = function(contents) {
-				applyExtension(contents);
-				return proxied.apply(this, arguments);
-			};
 			
 			var pjaxBeforeReplaceHandler = function(e) {
 				applyExtension(e.originalEvent.detail.contents);
@@ -1524,8 +1518,90 @@ ghImport('jquery').then(function($) {
 					injectNewMilestoneSelect(document);
 					break;
 			}
-		})
+		});
+
+		// apply updates to partial page update contents
+		var applyPartialUpdate = function(updateContent) {
+
+			for (var update in updateContent) {
+				
+				if (update == '#partial-new-comment-form-actions' || update == '#partial-discussion-sidebar') {
+					var $html = $(updateContent[update]);
+					applyExtension($html);
+					updateContent[update] = $html.html();
+				}
+			}
+			//updateContent['#partial-new-comment-form-actions'] = injectPartialHoursWorkedInput(updateContent['#partial-new-comment-form-actions']);
+		}
+
+		// proxy the page default ajaxSuccess handler and ajaxComplete handler
+		// must deep copy the lists!
+		var proxySuccessList = $.extend(true, {}, $._data(document, 'events')['ajaxSuccess']);
+		var proxyCompleteList = $.extend(true, {}, $._data(document, 'events')['ajaxComplete']);
+
+		// unbind the ajaxSuccess handlers
+		$(document).unbind('ajaxSuccess');
+		$(document).unbind('ajaxComplete');
+
+		// modify the returned xhr object
+		// and send the result on to the page
+		$(document).ajaxSuccess(function(event, xhr, settings) {
+
+			for (var proxied in proxySuccessList) {
+
+				if (proxySuccessList[proxied].handler) {
+				
+					// we have to switch the context of the event to the proxied handler
+					event.handleObj = proxySuccessList[proxied];
+
+					// try to modify the partial update
+					if (xhr.responseJSON && xhr.responseJSON.updateContent) {
+
+						applyPartialUpdate(xhr.responseJSON.updateContent);
+					}
+
+					// call the proxied handler. First case handles partials, second is page load
+					if (xhr.responseJSON) {
+						
+						proxySuccessList[proxied].handler(event, xhr, settings, xhr.responseJSON);
+					}
+					else {
+						
+						proxySuccessList[proxied].handler(event, xhr, settings);
+					}
+				}
+			}
+		});
 		
+		// same as above, but for ajaxComplete
+		$(document).ajaxComplete(function(event, xhr, settings) {
+
+			for (var proxied in proxyCompleteList) {
+				
+				if (proxyCompleteList[proxied].handler) {
+				
+					// we have to switch the context of the event to the proxied handler
+					event.handleObj = proxyCompleteList[proxied];
+
+					// try to modify the partial update
+					if (xhr.responseJSON && xhr.responseJSON.updateContent) {
+
+						applyPartialUpdate(xhr.responseJSON.updateContent);
+					}
+
+					// call the proxied handler. First case handles partials, second is page load
+					if (xhr.responseJSON) {
+						
+						proxyCompleteList[proxied].handler(event, xhr, settings, xhr.responseJSON);
+					}
+					else {
+						
+						proxyCompleteList[proxied].handler(event, xhr, settings);
+					}
+				}
+			}
+		});
+
 		createListeners();
 		applyExtension(document);
 		updateBugForNewPullRequest();
