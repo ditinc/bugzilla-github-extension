@@ -67,6 +67,15 @@ ghImport('jquery').then(function($) {
 	
 		var createListeners = function() {
 			
+			// proxy replaceWith
+			var proxied = $.fn.replaceWith;
+
+			$.fn.replaceWith = function(contents) {
+
+				applyExtension(contents);
+				proxied.apply(this, arguments);
+			}
+
 			var pjaxBeforeReplaceHandler = function(e) {
 				applyExtension(e.originalEvent.detail.contents);
 			};
@@ -1520,7 +1529,37 @@ ghImport('jquery').then(function($) {
 			}
 		});
 
+		var testfunct = function() {
+
+			if (this.responseText) {
+
+				var $html = $('<div />').append(this.responseText);
+				applyExtension($html);
+				this.responseText = $html.html();
+			}
+		}
+		// see if I can proxy .ajax successfully
+		var original_xhr = XMLHttpRequest;
+
+		window.XMLHttpRequest = function() {
+
+			//$.extend({ complete: function(xhr, status) { alert("Ajax complete..."); } }, settings);
+			var xmlRequest = new original_xhr();
+			var responseText;
+
+			Object.defineProperty(xmlRequest, 'responseText', {
+				get: function() { return responseText; },
+				set: function(newVal) { responseText = newVal; },
+				enumerable: true,
+				configurable: true
+			});
+			
+			xmlRequest.addEventListener("load", testfunct);
+			return xmlRequest;
+		};
+
 		// this function will be used in place of ajaxSuccess and ajaxComplete
+		/*
 		var ajaxFn = function (event,xhr,settings) {
 
 			for (var proxied in proxySuccessList) {
@@ -1533,11 +1572,11 @@ ghImport('jquery').then(function($) {
 					// try to modify the partial update
 					if (xhr.responseJSON && xhr.responseJSON.updateContent) {
 
-						for (var update in updateContent) {
+						for (var update in xhr.responseJSON.updateContent) {
 
-							var $html = $('<div />').append(updateContent[update]);
+							var $html = $('<div />').append(xhr.responseJSON.updateContent[update]);
 							applyExtension($html);
-							updateContent[update] = $html.html();
+							xhr.responseJSON.updateContent[update] = $html.html();
 						}
 					}
 
@@ -1567,6 +1606,7 @@ ghImport('jquery').then(function($) {
 		// and send the result on to the page
 		$(document).ajaxSuccess(ajaxFn);
 		$(document).ajaxComplete(ajaxFn);
+		*/
 
 		createListeners();
 		applyExtension(document);
