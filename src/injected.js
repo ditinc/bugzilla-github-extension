@@ -1533,9 +1533,33 @@ ghImport('jquery').then(function($) {
 
 			if (this.responseText) {
 
-				var $html = $('<div />').append(this.responseText);
-				applyExtension($html);
-				this.responseText = $html.html();
+				try {
+
+					var responseJSON = JSON.parse(this.responseText);
+
+					if (responseJSON.updateContent) {
+
+						for (var update in responseJSON.updateContent) {
+
+							var $html = $('<div />').append(responseJSON.updateContent[update]);
+							applyExtension($html);
+							responseJSON.updateContent[update] = $html.html();
+						}
+
+						var text = JSON.stringify(responseJSON);
+						Object.defineProperty(this, 'responseText', { writable: true });
+						this.responseText = text;
+					}
+				}
+
+				catch (e) {
+
+					var $html = $('<div />').append(this.responseText);
+					applyExtension($html);
+
+					Object.defineProperty(this, 'responseText', { writable: true });
+					this.responseText = $html.html();
+				}
 			}
 		}
 		// see if I can proxy .ajax successfully
@@ -1545,15 +1569,6 @@ ghImport('jquery').then(function($) {
 
 			//$.extend({ complete: function(xhr, status) { alert("Ajax complete..."); } }, settings);
 			var xmlRequest = new original_xhr();
-			var responseText;
-
-			Object.defineProperty(xmlRequest, 'responseText', {
-				get: function() { return responseText; },
-				set: function(newVal) { responseText = newVal; },
-				enumerable: true,
-				configurable: true
-			});
-			
 			xmlRequest.addEventListener("load", testfunct);
 			return xmlRequest;
 		};
