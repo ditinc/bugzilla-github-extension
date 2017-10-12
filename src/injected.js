@@ -1529,12 +1529,15 @@ ghImport('jquery').then(function($) {
 			}
 		});
 
-		var testfunct = function() {
+		// modify async XMLHttpRequest response strings
+		var modifyXMLHttpResponse = function() {
 
+			// if the response text exists, try to modify it
 			if (this.responseText) {
 
 				try {
 
+					// sometimes the string is a JSON object; handle that case
 					var responseJSON = JSON.parse(this.responseText);
 
 					if (responseJSON.updateContent) {
@@ -1554,6 +1557,7 @@ ghImport('jquery').then(function($) {
 
 				catch (e) {
 
+					// if the string couldn't be modified as JSON, modify it as plain HTML
 					var $html = $('<div />').append(this.responseText);
 					applyExtension($html);
 
@@ -1569,7 +1573,7 @@ ghImport('jquery').then(function($) {
 
 			//$.extend({ complete: function(xhr, status) { alert("Ajax complete..."); } }, settings);
 			var xmlRequest = new original_xhr();
-			xmlRequest.addEventListener("load", testfunct);
+			xmlRequest.addEventListener("load", modifyXMLHttpResponse);
 			return xmlRequest;
 		};
 
