@@ -66,13 +66,7 @@ ghImport('jquery').then(function($) {
 		}
 	
 		var createListeners = function() {
-			// This handles partial updates
-			var proxied = $.fn.replaceWith;
-			$.fn.replaceWith = function(contents) {
-				applyExtension(contents);
-				return proxied.apply(this, arguments);
-			};
-			
+
 			var pjaxBeforeReplaceHandler = function(e) {
 				applyExtension(e.originalEvent.detail.contents);
 			};
@@ -1524,8 +1518,54 @@ ghImport('jquery').then(function($) {
 					injectNewMilestoneSelect(document);
 					break;
 			}
-		})
-		
+		});
+
+		// modify async XMLHttpRequest response strings
+		var modifyXMLHttpResponse = function() {
+
+			// if the response text exists, try to modify it
+			if (this.responseText) {
+
+				try {
+
+					// sometimes the string is a JSON object; handle that case
+					var responseJSON = JSON.parse(this.responseText);
+
+					if (responseJSON.updateContent) {
+
+						for (var update in responseJSON.updateContent) {
+
+							var $html = $('<div />').append(responseJSON.updateContent[update]);
+							applyExtension($html);
+							responseJSON.updateContent[update] = $html.html();
+						}
+
+						var text = JSON.stringify(responseJSON);
+						Object.defineProperty(this, 'responseText', { writable: true });
+						this.responseText = text;
+					}
+				}
+
+				catch (e) {
+
+					// if the string couldn't be modified as JSON, modify it as plain HTML
+					var $html = $('<div />').append(this.responseText);
+					applyExtension($html);
+					Object.defineProperty(this, 'responseText', { writable: true });
+					this.responseText = $html.html();
+				}
+			}
+		}
+		// see if I can proxy .ajax successfully
+		var original_xhr = XMLHttpRequest;
+
+		window.XMLHttpRequest = function() {
+
+			var xmlRequest = new original_xhr();
+			xmlRequest.addEventListener("load", modifyXMLHttpResponse);
+			return xmlRequest;
+		};
+
 		createListeners();
 		applyExtension(document);
 		updateBugForNewPullRequest();
