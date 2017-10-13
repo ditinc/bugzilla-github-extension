@@ -66,15 +66,6 @@ ghImport('jquery').then(function($) {
 		}
 	
 		var createListeners = function() {
-			
-			// proxy replaceWith
-			var proxied = $.fn.replaceWith;
-
-			$.fn.replaceWith = function(contents) {
-
-				applyExtension(contents);
-				proxied.apply(this, arguments);
-			}
 
 			var pjaxBeforeReplaceHandler = function(e) {
 				applyExtension(e.originalEvent.detail.contents);
@@ -1560,7 +1551,6 @@ ghImport('jquery').then(function($) {
 					// if the string couldn't be modified as JSON, modify it as plain HTML
 					var $html = $('<div />').append(this.responseText);
 					applyExtension($html);
-
 					Object.defineProperty(this, 'responseText', { writable: true });
 					this.responseText = $html.html();
 				}
@@ -1576,56 +1566,6 @@ ghImport('jquery').then(function($) {
 			xmlRequest.addEventListener("load", modifyXMLHttpResponse);
 			return xmlRequest;
 		};
-
-		// this function will be used in place of ajaxSuccess and ajaxComplete
-		/*
-		var ajaxFn = function (event,xhr,settings) {
-
-			for (var proxied in proxySuccessList) {
-				
-				if (proxySuccessList[proxied].handler) {
-				
-					// we have to switch the context of the event to the proxied handler
-					event.handleObj = proxySuccessList[proxied];
-
-					// try to modify the partial update
-					if (xhr.responseJSON && xhr.responseJSON.updateContent) {
-
-						for (var update in xhr.responseJSON.updateContent) {
-
-							var $html = $('<div />').append(xhr.responseJSON.updateContent[update]);
-							applyExtension($html);
-							xhr.responseJSON.updateContent[update] = $html.html();
-						}
-					}
-
-					// call the proxied handler. First case handles partials, second is page load
-					if (xhr.responseJSON) {
-						
-						proxySuccessList[proxied].handler(event, xhr, settings, xhr.responseJSON);
-					}
-					else {
-						
-						proxySuccessList[proxied].handler(event, xhr, settings);
-					}
-				}
-			}
-		}
-
-		// proxy the page default ajaxSuccess handler and ajaxComplete handler
-		// must deep copy the lists!
-		var proxySuccessList = $.extend(true, {}, $._data(document, 'events')['ajaxSuccess']);
-		var proxyCompleteList = $.extend(true, {}, $._data(document, 'events')['ajaxComplete']);
-
-		// unbind the ajaxSuccess handlers
-		$(document).unbind('ajaxSuccess');
-		$(document).unbind('ajaxComplete');
-
-		// modify the returned xhr object
-		// and send the result on to the page
-		$(document).ajaxSuccess(ajaxFn);
-		$(document).ajaxComplete(ajaxFn);
-		*/
 
 		createListeners();
 		applyExtension(document);
