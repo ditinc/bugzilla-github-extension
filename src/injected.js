@@ -1561,7 +1561,6 @@ ghImport('jquery').then(function($) {
 
 		window.XMLHttpRequest = function() {
 
-			//$.extend({ complete: function(xhr, status) { alert("Ajax complete..."); } }, settings);
 			var xmlRequest = new original_xhr();
 			xmlRequest.addEventListener("load", modifyXMLHttpResponse);
 			return xmlRequest;

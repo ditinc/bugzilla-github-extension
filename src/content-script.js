@@ -153,7 +153,7 @@ function run(settings) {
 			switch (message.method) {				
 				/* Puts Bugzilla bug info into our sidebar section */
 				case "loadBugDetails":
-					setTimeout(loadBugDetails(message), 300);
+					setTimeout(loadBugDetails(message), 20);
 					break;
 				
 				/* Puts Bugzilla bug titles into bug number links */
