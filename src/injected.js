@@ -1165,7 +1165,7 @@ ghImport('jquery').then(function($) {
 							.addClass("form-checkbox")
 							.append(
 								$("<label>")
-									.html("Update bugs with release/tag")
+									.html("Update " + settings.terms.bugs + " with release/tag")
 									.attr({
 										for: "updateRevision"
 									})
@@ -1183,7 +1183,7 @@ ghImport('jquery').then(function($) {
 							.append(
 								$("<p>")
 									.addClass("note")
-									.html("Update the bugs referenced in the comments with this release/tag in " + settings.terms.bugzilla + ".")
+									.html("Update the " + settings.terms.bugs + " referenced in the comments with this release/tag in " + settings.terms.bugzilla + ".")
 							)
 					);
 						
@@ -1193,7 +1193,7 @@ ghImport('jquery').then(function($) {
 								.addClass("form-checkbox")
 								.append(
 									$("<label>")
-										.html("Update bugs to <span  class='newCodeStatus'>" + newCodeStatus + "</span>")
+										.html("Update " + settings.terms.bugs + " to <span  class='newCodeStatus'>" + newCodeStatus + "</span>")
 										.attr({
 											for: "updateCodeStatus"
 										})
@@ -1211,7 +1211,7 @@ ghImport('jquery').then(function($) {
 								.append(
 									$("<p>")
 										.addClass("note")
-										.html("Set the bugs referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in " + settings.terms.bugzilla + ".")
+										.html("Set the " + settings.terms.bugs + " referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in " + settings.terms.bugzilla + ".")
 								)
 						);
 					}
@@ -1221,7 +1221,7 @@ ghImport('jquery').then(function($) {
 							.addClass("form-checkbox closeBugsDiv" + (showCloseOption ? "" : " d-none"))
 							.append(
 								$("<label>")
-									.html("Close bugs")
+									.html("Close " + settings.terms.bugs)
 									.attr({
 										for: "closeBugs"
 									})
@@ -1238,7 +1238,7 @@ ghImport('jquery').then(function($) {
 							.append(
 								$("<p>")
 									.addClass("note")
-									.html("Set the bugs referenced in the comments to <strong>CLOSED</strong> in " + settings.terms.bugzilla + ".")
+									.html("Set the " + settings.terms.bugs + " referenced in the comments to <strong>CLOSED</strong> in " + settings.terms.bugzilla + ".")
 							)
 					);
 				}

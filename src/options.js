@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		document.getElementById('codestatusPreRelease').value = items.values.codestatusPreRelease;
 		document.getElementById('termBugzilla').value = items.terms.bugzilla;
 		document.getElementById('termBug').value = items.terms.bug;
+		document.getElementById('termBugs').value = items.terms.bugs;
 		updateCodeStatusSelects();
 		
 		addOptions(document.getElementById('bugInfoFields'), items.bugInfoFields, true);
@@ -91,6 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		var codestatusPreRelease = document.getElementById('codestatusPreRelease').value;
 		var termBugzilla = document.getElementById('termBugzilla').value;
 		var termBug = document.getElementById('termBug').value;
+		var termBugs = document.getElementById('termBugs').value;
 		
 		var bugInfoFields = $.map(document.getElementById('bugInfoFields').options, function(el) { return {field: el.value, label: el.text}; });
 		var bugListFields = $.map(document.getElementById('bugListFields').options, function(el) { return {field: el.value, label: el.text}; });
@@ -113,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				},
 				terms: {
 					bug: termBug,
+					bugs: termBugs,
 					bugzilla: termBugzilla
 				},
 				values: {

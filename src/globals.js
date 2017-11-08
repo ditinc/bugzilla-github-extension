@@ -37,6 +37,7 @@ var STORAGE_DEFAULTS = {
 	productMap: {},
 	terms: {
 		bug: "bug",
+		bugs: "bugs",
 		bugzilla: "Bugzilla"
 	},
 	values: {
