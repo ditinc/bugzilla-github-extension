@@ -1,6 +1,7 @@
 'use strict';
 
-ghImport('jquery').then(function($) {
+define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
+	var $ = github__jquery.default;
 	var DITBugzillaGitHub = function(settings, product) {
 		var bzUrl = settings.bugzillaURL;
 		var bugUrl = bzUrl + "/show_bug.cgi?id=";
