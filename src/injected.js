@@ -1327,67 +1327,113 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 				$ul.find("div.milestone-title").each(function() {
 					var $this = $(this);
 					var milestone = $this.find("h2 a").text();
-					
-					$this.append(
-						$("<span>")
-							.addClass("bzButtons")
-							.html(
-								$("<a>")
-									.addClass("btn btn-sm")
-									.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-									.append(" View in " + settings.terms.bugzilla + "")
-									.attr({
-										href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-										target: "_blank"
-									})
-							)
-					);
+
+					$this
+						.append(
+							$("<span>")
+								.addClass("bzButtons")
+								.html(
+									$("<a>")
+										.addClass("btn btn-sm")
+										.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+										.append(" View all in " + settings.terms.bugzilla + "")
+										.attr({
+											href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+											target: "_blank"
+										})
+								)
+						)
+						.append(
+							$("<span>")
+								.addClass("bzButtons")
+								.html(
+									$("<a>")
+										.addClass("btn btn-sm")
+										.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+										.append(" View unresolved only")
+										.attr({
+											href: bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+											target: "_blank"
+										})
+								)
+						);
 				});
 			});
 			
 			/* Add button to milestone in sidebar */
 			editSection(contents, '#partial-discussion-sidebar', function($sidebar) {
 				$sidebar.find("#bzButtonMilestone").remove();
+				$sidebar.find("#bzButtonMilestoneUnresolved").remove();
 				var $a = $sidebar.find("a.milestone-name");
 				var milestone = $a.attr("title");
 					
-				$a.after(
-					$("<a>")
-						.addClass("btn btn-sm")
-						.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-						.append(" View in " + settings.terms.bugzilla + "")
-						.css({
-							width: "100%",
-							"text-align": "center",
-							"margin-top": "5px"
-						})
-						.attr({
-							id: "bzButtonMilestone",
-							href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-							target: "_blank"
-						})
-				);
+				$a
+					.after(
+						$("<a>")
+							.addClass("btn btn-sm")
+							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+							.append(" View unresolved only")
+							.css({
+								width: "100%",
+								"text-align": "center",
+								"margin-top": "5px"
+							})
+							.attr({
+								id: "bzButtonMilestoneUnresolved",
+								href: bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+								target: "_blank"
+							})
+					)
+					.after(
+						$("<a>")
+							.addClass("btn btn-sm")
+							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+							.append(" View all in " + settings.terms.bugzilla + "")
+							.css({
+								width: "100%",
+								"text-align": "center",
+								"margin-top": "5px"
+							})
+							.attr({
+								id: "bzButtonMilestone",
+								href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+								target: "_blank"
+							})
+					);
 			});
 			
 			/* Add button to milestone when viewing milestone */
 			editSection(contents, '.TableObject-item .d-block', function($buttons) {
 				$buttons.find("#bzButtonMilestone").remove();
+				$buttons.find("#bzButtonMilestoneUnresolved").remove();
 				var $a = $buttons.find("a").filter(function() {
 					return $(this).html() === "Edit milestone";
 				});
 				var milestone = $buttons.closest(".TableObject").find(".text-normal").first().text();
 					
-				$a.before(
-					$("<a>")
-						.addClass("btn btn-sm mr-2")
-						.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-						.append(" View in " + settings.terms.bugzilla + "")
-						.attr({
-							id: "bzButtonMilestone",
-							href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-							target: "_blank"
-						})
-				);
+				$a
+					.before(
+						$("<a>")
+							.addClass("btn btn-sm mr-2")
+							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+							.append(" View all in " + settings.terms.bugzilla + "")
+							.attr({
+								id: "bzButtonMilestone",
+								href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+								target: "_blank"
+							})
+					)
+					.before(
+						$("<a>")
+							.addClass("btn btn-sm mr-2")
+							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
+							.append(" View unresolved only")
+							.attr({
+								id: "bzButtonMilestoneUnresolved",
+								href: bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
+								target: "_blank"
+							})
+					);
 			});
 		};
 		
