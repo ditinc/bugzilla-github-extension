@@ -305,14 +305,17 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 				.off("click.DITBugzillaGitHub", "button.js-publish-release")
 				.on("click.DITBugzillaGitHub", "button.js-publish-release", function(e) {
 					var $form = $(e.currentTarget).closest("form");
-					var tag = $form.find("input#release_tag_name").val();
+					var tag = $form.find("[name='release[tag_name]'].js-new-item-value").val();
+					if ($form.get(0).id !== 'new_release') {
+						tag = $form.get(0).action.split('/')[$form.get(0).action.split('/').length-1];
+					}
 					var title = $form.find("input#release_name").val();
 					var comments = $form.find("textarea").val();
 					var updateCodeStatus = $form.find("input#updateCodeStatus").prop("checked");
 					var updateRevision = $form.find("input#updateRevision").prop("checked");
 					var $closeBugs = $form.find("input#closeBugs");
 					var closeBugs = $closeBugs.prop("checked") && !$closeBugs.prop("disabled");
-	
+
 					if (comments.length && tag.length && title.length && (updateCodeStatus || updateRevision || closeBugs)) {
 						var matches = comments.match(new RegExp("^(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))|\\n(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))", "ig"));
 						
