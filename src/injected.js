@@ -282,38 +282,46 @@ define("github-rollup-bzgh", [], function() {
 						newCodeStatus = settings.values.codestatusRelease;
 						
 						// Also make sure the close option is shown
-						$("div.closeBugsDiv").removeClass("d-none").querySelectorAll("#closeBugs").prop("disabled", false);
+						var $closeBugsDiv = document.querySelectorAll("div.closeBugsDiv")[0]
+						$closeBugsDiv.classList.remove("d-none");
+						$closeBugsDiv.querySelectorAll("#closeBugs")[0].disabled = false;
 					}
 					else {
 						newCodeStatus = settings.values.codestatusPreRelease;
 						
 						// Also make sure the close option is hidden
-						$("div.closeBugsDiv").addClass("d-none").querySelectorAll("#closeBugs").prop("disabled", true);
+						var $closeBugsDiv = document.querySelectorAll("div.closeBugsDiv")[0]
+						$closeBugsDiv.classList.add("d-none");
+						$closeBugsDiv.querySelectorAll("#closeBugs")[0].disabled = true;
 					}
 	
-					$(".newCodeStatus").html(newCodeStatus);
+					document.querySelectorAll(".newCodeStatus")[0].innerHTML = newCodeStatus;
 				}
 				
 				/* Make sure we display correct new code status (new release) */
 				if (matches(event.target, "div.releases-target-menu .select-menu-item")) {
 					var isPreRelease = document.querySelectorAll("input#release_prerelease")[0].checked;
-					var mergeTarget = event.target.querySelectorAll("div").innerHTML;
+					var mergeTarget = event.target.querySelectorAll("div")[0].innerHTML;
 					var newCodeStatus;
 	
 					if (!isPreRelease && mergeTarget === "master") {
 						newCodeStatus = settings.values.codestatusRelease;
 						
 						// Also make sure the close option is shown
-						$("div.closeBugsDiv").removeClass("d-none").querySelectorAll("#closeBugs").prop("disabled", false);
+						var $closeBugsDiv = document.querySelectorAll("div.closeBugsDiv")[0]
+						$closeBugsDiv.classList.remove("d-none");
+						$closeBugsDiv.querySelectorAll("#closeBugs")[0].disabled = false;
 					}
 					else {
 						newCodeStatus = settings.values.codestatusPreRelease;
 						
 						// Also make sure the close option is hidden
-						$("div.closeBugsDiv").addClass("d-none").querySelectorAll("#closeBugs").prop("disabled", true);
+						var $closeBugsDiv = document.querySelectorAll("div.closeBugsDiv")[0]
+						$closeBugsDiv.classList.add("d-none");
+						$closeBugsDiv.querySelectorAll("#closeBugs")[0].disabled = true;
 					}
 	
-					$(".newCodeStatus").html(newCodeStatus);
+					document.querySelectorAll(".newCodeStatus")[0].innerHTML = newCodeStatus;
 				}
 				
 				/* Update bugs in release to new code status */
@@ -420,12 +428,12 @@ define("github-rollup-bzgh", [], function() {
 				if (matches(event.target, "#new_pull_request button[type='submit']")) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 				
-					var updateBug = $("#new_pull_request .updateBug").checked;
-					var syncComment = $("#new_pull_request .syncComment").checked;
+					var updateBug = document.querySelectorAll("#new_pull_request .updateBug")[0].checked;
+					var syncComment = document.querySelectorAll("#new_pull_request .syncComment")[0].checked;
 					var comment = "";
 					
 					if (syncComment) {	
-						comment = $("#pull_request_body").value;
+						comment = document.querySelectorAll("#pull_request_body")[0].value;
 					}
 					
 					if (updateBug || syncComment) {
@@ -435,7 +443,8 @@ define("github-rollup-bzgh", [], function() {
 						window.localStorage.setItem("DIT-bugId", bugId);
 						window.localStorage.setItem("DIT-comment", comment);
 						
-						var labels = $("a.label").map(function() { return $(this).html(); }).toArray().join(' ');
+						var labelArray = Array.prototype.slice.call(document.querySelectorAll("a.label"));
+						var labels = labelArray.map(function(label) { return label.innerHTML; }).join(' ');
 						window.localStorage.setItem("DIT-labels", labels);
 					}
 				}
@@ -801,17 +810,17 @@ define("github-rollup-bzgh", [], function() {
 		var injectNewPullRequestOptions = function(contents, ignoreBranch) {
 			editSection(contents, 'form#new_pull_request', function($form) {
 				// Figure out the bug number
-				var $title = $form.querySelectorAll("input#pull_request_title");
+				var $title = $form.querySelectorAll("input#pull_request_title")[0];
 				var matches;
 				
 				if (!ignoreBranch) {
-					var action = $form.get(0).action;
+					var action = $form.action;
 					var branch = action.substr(action.lastIndexOf("%3A") + 3);
 					matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + "|" + settings.terms.bug.charAt(0) + ")[-|_]?\\d+", "i"));
 					
 					if (matches && matches.length) {
 						bugId = matches[0].match(/\d+/)[0];
-						$title.val("[" + bugId + "] Getting " + settings.terms.bug + " title from " + settings.terms.bugzilla + "...");
+						$title.value = "[" + bugId + "] Getting " + settings.terms.bug + " title from " + settings.terms.bugzilla + "...";
 						window.postMessage({method: "setPullRequestTitleToBugTitle", bugId: bugId}, '*');
 					}	
 				}
@@ -819,80 +828,63 @@ define("github-rollup-bzgh", [], function() {
 				matches = $title.value.match(BUG_REGEX);
 				
 				// Update things if title changes, and stop trying to use the branch to get the bug number
-				$title.off("change.DITBugzillaGitHub");
-				$title.on("change.DITBugzillaGitHub", function() {
-					$title.off("change.DITBugzillaGitHub");
+				var titleChangeHandler = function() {
+					$title.removeEventListener("change.DITBugzillaGitHub", titleChangeHandler);
 					injectNewPullRequestOptions(contents, true);
-				});
+				};
+				$title.removeEventListener("change.DITBugzillaGitHub", titleChangeHandler);
+				$title.addEventListener("change.DITBugzillaGitHub", titleChangeHandler);
 	
 				if (matches && matches.length) {
 					bugId = matches[0].match(/\d+/)[0];
 					
 					if ($form.querySelectorAll(".bugOptions").length) {
-						$form.querySelectorAll(".bugId").html(bugId);
+						var $bugIds = $form.querySelectorAll(".bugId");
+						Array.prototype.forEach.call($bugIds, function(el, i) {
+							el.innerHTML = bugId;
+						});
 					}
 					else {
-						var $div = $form.querySelectorAll("div.preview-content").next();
+						var $div = $form.querySelectorAll("div.preview-content")[0];
+						
+						$div.insertAdjacentHTML("afterend",
+							`<div class="bugOptions pl-3">`
+								+ `<div class="form-checkbox">`
+									+ `<label>`
+										+ "Post comment to " + settings.terms.bug + " <span class='bugId'>" + bugId + "</span>"
+										+ `<input class="syncComment" type="checkbox" checked />`
+									+ `</label>`
+									+ `<p class="note">`
+										+ "Add the comment to the " + settings.terms.bug + " in " + settings.terms.bugzilla + "."
+									+ `</p>`
+								+ `</div>`
+							+ `</div>`
+						);
 						
 						if (settings.fields.gitHubPullRequestURL.length > 0) {
-							$div.before(
-								$("<div>")
-									.addClass("bugOptions pl-3")
-									.html(
-										$("<div>")
-											.addClass("form-checkbox")
-											.append(
-												$("<label>")
-													.html("Update " + settings.terms.bug + " <span class='bugId'>" + bugId + "</span> with pull request URL")
-													.append(
-														$("<input>")
-															.addClass("updateBug")
-															.attr({
-																type: "checkbox",
-																checked: "checked"
-															})
-															.prop('checked', true)
-													)
-											)
-											.append(
-												$("<p>")
-													.addClass("note")
-													.html("Set the pull request URL of the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
-											)
-									)
+							$div.insertAdjacentHTML("afterend",
+								`<div class="bugOptions pl-3">`
+									+ `<div class="form-checkbox">`
+										+ `<label>`
+											+ "Update " + settings.terms.bug + " <span class='bugId'>" + bugId + "</span> with pull request URL"
+											+ `<input class="updateBug" type="checkbox" checked />`
+										+ `</label>`
+										+ `<p class="note">`
+											+ "Set the pull request URL of the " + settings.terms.bug + " in " + settings.terms.bugzilla + "."
+										+ `</p>`
+									+ `</div>`
+								+ `</div>`
 							);
 						}
-						
-						$div.before(
-							$("<div>")
-								.addClass("bugOptions pl-3")
-								.html(
-									$("<div>")
-										.addClass("form-checkbox")
-										.append(
-											$("<label>")
-												.html("Post comment to " + settings.terms.bug + " <span class='bugId'>" + bugId + "</span>")
-												.append(
-													$("<input>")
-														.addClass("syncComment")
-														.attr({
-															type: "checkbox",
-															checked: "checked"
-														})
-														.prop('checked', true)
-												)
-										)
-										.append(
-											$("<p>")
-												.addClass("note")
-												.html("Add the comment to the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
-										)
-								)
-						);
 					}
 				}
 				else {
-					$form.querySelectorAll(".bugOptions").remove();
+					var nodesToRemove = $form.querySelectorAll(".bugOptions");
+					if (nodesToRemove) {
+						for (var node in nodesToRemove) {
+							node.parentNode.removeChild(node);
+						}
+					}
 				}
 			});
 		};
@@ -952,8 +944,8 @@ define("github-rollup-bzgh", [], function() {
 		var injectReleaseOptions = function(contents) {
 			editSection(contents, 'div.new-release', function($div) {
 				if ($div.querySelectorAll("input#updateRevision").length === 0) {
-					var mergeTarget = $div.querySelectorAll(".release-target-wrapper .js-menu-target span").html();
-					var $preRelease = $div.querySelectorAll("input#release_prerelease");
+					var mergeTarget = $div.querySelectorAll(".release-target-wrapper .js-menu-target span")[0].innerHTML;
+					var $preRelease = $div.querySelectorAll("input#release_prerelease")[0];
 					var newCodeStatus = settings.values.codestatusRelease;
 					var showCloseOption = false;
 		
@@ -964,92 +956,48 @@ define("github-rollup-bzgh", [], function() {
 						showCloseOption = true;
 					}
 	
-					var $div = $preRelease.closest("div");
-					$div.after(
-						$("<div>")
-							.addClass("form-checkbox")
-							.append(
-								$("<label>")
-									.html("Update " + settings.terms.bugs + " with release/tag")
-									.attr({
-										for: "updateRevision"
-									})
-									.append(
-										$("<input>")
-											.attr({
-												name: "updateRevision",
-												id: "updateRevision",
-												type: "checkbox",
-												checked: "checked"
-											})
-											.prop('checked', true)
-									)
-							)
-							.append(
-								$("<p>")
-									.addClass("note")
-									.html("Update the " + settings.terms.bugs + " referenced in the comments with this release/tag in " + settings.terms.bugzilla + ".")
-							)
+					var $div = closest($preRelease, "div");
+					$div.insertAdjacentHTML("afterend",
+						`<div class="form-checkbox">`
+							+ `<label for="updateRevision">`
+								+ "Update " + settings.terms.bugs + " with release/tag"
+								+ `<input name="updateRevision" id="updateRevision" type="checkbox" checked />`
+							+ `</label>`
+							+ `<p class="note">`
+								+ "Update the " + settings.terms.bugs + " referenced in the comments with this release/tag in " + settings.terms.bugzilla + "."
+							+ `</p>`
+						+ `</div>`
 					);
 						
 					if (settings.fields.codestatus.length > 0) {
 						$div.after(
-							$("<div>")
-								.addClass("form-checkbox")
-								.append(
-									$("<label>")
-										.html("Update " + settings.terms.bugs + " to <span  class='newCodeStatus'>" + newCodeStatus + "</span>")
-										.attr({
-											for: "updateCodeStatus"
-										})
-										.append(
-											$("<input>")
-												.attr({
-													name: "updateCodeStatus",
-													id: "updateCodeStatus",
-													type: "checkbox",
-													checked: "checked"
-												})
-												.prop('checked', true)
-										)
-								)
-								.append(
-									$("<p>")
-										.addClass("note")
-										.html("Set the " + settings.terms.bugs + " referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in " + settings.terms.bugzilla + ".")
-								)
+							`<div class="form-checkbox">`
+								+ `<label for="updateCodeStatus">`
+									+ "Update " + settings.terms.bugs + " to <span  class='newCodeStatus'>" + newCodeStatus + "</span>"
+									+ `<input name="updateCodeStatus" id="updateCodeStatus" type="checkbox" checked />`
+								+ `</label>`
+								+ `<p class="note">`
+									+ "Set the " + settings.terms.bugs + " referenced in the comments to <strong class='newCodeStatus'>" + newCodeStatus + "</strong> in " + settings.terms.bugzilla + "."
+								+ `</p>`
+							+ `</div>`
 						);
 					}
 						
 					$div.after(
-						$("<div>")
-							.addClass("form-checkbox closeBugsDiv" + (showCloseOption ? "" : " d-none"))
-							.append(
-								$("<label>")
-									.html("Close " + settings.terms.bugs)
-									.attr({
-										for: "closeBugs"
-									})
-									.append(
-										$("<input>")
-											.attr({
-												name: "closeBugs",
-												id: "closeBugs",
-												type: "checkbox"
-											})
-											.prop("disabled", !showCloseOption)
-									)
-							)
-							.append(
-								$("<p>")
-									.addClass("note")
-									.html("Set the " + settings.terms.bugs + " referenced in the comments to <strong>CLOSED</strong> in " + settings.terms.bugzilla + ".")
-							)
+						`<div class="form-checkbox closeBugsDiv` + (showCloseOption ? "" : " d-none") + `">`
+							+ `<label for="closeBugs">`
+								+ "Close " + settings.terms.bugs
+								+ `<input name="closeBugs" id="closeBugs" type="checkbox"` + (showCloseOption ? "" : " disabled") + ` />`
+							+ `</label>`
+							+ `<p class="note">`
+								+ "Set the " + settings.terms.bugs + " referenced in the comments to <strong>CLOSED</strong> in " + settings.terms.bugzilla + "."
+							+ `</p>`
+						+ `</div>`
 					);
 				}
 				else {
 					// Need this line or else we lose previously applied changes.
-					$div.html($div.html());
+					$div.innerHTML = $div.innerHTML;
 				}
 			});
 			
@@ -1070,20 +1018,13 @@ define("github-rollup-bzgh", [], function() {
 						var $this = el;
 						var release = closest($this, "div.release").querySelectorAll("ul.tag-references li a span")[0].textContent;
 						
-						$this.prepend(
-							$("<span>")
-								.addClass("bzButtons")
-								.css("float", "right")
-								.html(
-									$("<a>")
-										.addClass("btn btn-sm ml-2")
-										.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-										.append(" View in " + settings.terms.bugzilla + "")
-										.attr({
-											href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&" + settings.fields.revision + "=" + encodeURIComponent(release),
-											target: "_blank"
-										})
-								)
+						$this.insertAdjacentHTML("afterbegin",
+							`<span class="bzButtons" style="float: right;">`
+								+ `<a class="btn btn-sm ml-2" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&" + settings.fields.revision + "=" + encodeURIComponent(release) + `" target="_blank">`
+									+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+									+ " View in " + settings.terms.bugzilla + ""
+								+ `</a>`
+							+ `</span>`
 						);
 					});
 				});
@@ -1198,36 +1139,31 @@ define("github-rollup-bzgh", [], function() {
 			
 			/* Add button to milestone when viewing milestone */
 			editSection(contents, '.TableObject-item .d-block', function($buttons) {
-				$buttons.querySelectorAll("#bzButtonMilestone").remove();
-				$buttons.querySelectorAll("#bzButtonMilestoneUnresolved").remove();
-				var $a = $buttons.querySelectorAll("a").filter(function() {
-					return $(this).html() === "Edit milestone";
-				});
-				var milestone = $buttons.closest(".TableObject").querySelectorAll(".text-normal").first().text();
+				var nodeToRemove = $buttons.querySelectorAll("#bzButtonMilestone")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
+				nodeToRemove = $buttons.querySelectorAll("#bzButtonMilestoneUnresolved")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
+				var $a = Array.prototype.filter.call($buttons.querySelectorAll("a"), function(el) {
+					return el.innerHTML === "Edit milestone";
+				})[0];
+				var milestone = closest($buttons, ".TableObject").querySelectorAll(".text-normal")[0].textContent;
 					
-				$a
-					.before(
-						$("<a>")
-							.addClass("btn btn-sm mr-2")
-							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-							.append(" View all in " + settings.terms.bugzilla + "")
-							.attr({
-								id: "bzButtonMilestone",
-								href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-								target: "_blank"
-							})
-					)
-					.before(
-						$("<a>")
-							.addClass("btn btn-sm mr-2")
-							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-							.append(" View unresolved only")
-							.attr({
-								id: "bzButtonMilestoneUnresolved",
-								href: bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-								target: "_blank"
-							})
-					);
+				$a.insertAdjacentHTML("beforebegin",
+					`<a class="btn btn-sm mr-2" id="bzButtonMilestone" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
+						+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+						+ " View all in " + settings.terms.bugzilla + ""
+					+ `</a>`
+				);
+				$a.insertAdjacentHTML("beforebegin",
+					`<a class="btn btn-sm mr-2" id="bzButtonMilestoneUnresolved" href="` + bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
+						+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+						+ " View unresolved only"
+					+ `</a>`
+				);
 			});
 		};
 		
@@ -1249,89 +1185,45 @@ define("github-rollup-bzgh", [], function() {
 				}
 	
 				var $input = $el[0].querySelectorAll("input#milestone_title")[0];
-				$input.after(
-					$("<h6>")
-						.addClass("select-menu js-menu-container js-select-menu milestone-select-menu")
-						.attr({
-							id: "bzMilestone"
-						})
-						.append(
-							$("<a>")
-								.attr({
-									href: "#",
-									tabindex: $input.attr("tabindex")
-								})
-								.css({
-									fill: "currentColor",
-									color: "#666"
-								})
-								.html("Use " + settings.terms.bugzilla + " milestone...")
-								.append('<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>')
-								.click(function(e){
-									e.preventDefault();
-									$(this).parent().querySelectorAll(".select-menu-modal-holder").show();
-									window.postMessage({method: "showMilestoneForm"}, '*');
-								})
-						)
-						.append(
-							$("<div>")
-								.addClass("select-menu-modal-holder js-menu-content js-navigation-container js-active-navigation-container")
-								.html(
-									$("<div>")
-										.addClass("select-menu-modal")
-										.html(
-								 			$("<div>")
-												.addClass("select-menu-header")
-												.append('<svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path d="M7.48 8l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75-1.48-1.48 3.75-3.75L0.77 4.25l1.48-1.48 3.75 3.75 3.75-3.75 1.48 1.48-3.75 3.75z"></path></svg>')
-												.append(
-													$("<span>")
-														.addClass("select-menu-title")
-														.html("Select " + settings.terms.bugzilla + " milestone")
-												)
-												.click(function(e) {
-													e.stopPropagation();
-													
-													$(this).closest(".select-menu-modal-holder").hide();
-												})
-										)
-										.append(
-											$("<div>")
-												.addClass("js-select-menu-deferred-content")
-												.html(
-													$("<div>")
-														.addClass("select-menu-filters")
-														.append(
-															$("<div>")
-																.addClass("is-loading p-5")
-																.append(
-																	$("<img>")
-																		.addClass("column centered")
-																		.attr({
-																			"src": "https://assets-cdn.github.com/images/spinners/octocat-spinner-128.gif",
-																			"width": "64px"
-																		})
-																)
-														)
-														.append(
-															$("<div>")
-																.addClass("select-menu-list")
-																.append(
-																	$("<div>")
-																		.attr({
-																			"data-filterable-for": "milestones-filter-field",
-																			"data-filterable-type": "substring"
-																		})
-																		.data({
-																			"filterable-for": "milestones-filter-field",
-																			"filterable-type": "substring"
-																		})
-																)
-														)
-												)
-										)
-								)
-						)
+				$input.insertAdjacentHTML("afterend",
+					`<h6 class="select-menu js-menu-container js-select-menu milestone-select-menu" id="bzMilestone">`
+						+ `<a href="#" tabindex="` + $input.getAttribute("tabindex") + `" style="fill: currentColor; color: #666;">`
+							+ "Use " + settings.terms.bugzilla + " milestone..."
+							+ '<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>'
+						+ `</a>`
+						+ `<div class="select-menu-modal-holder js-menu-content js-navigation-container js-active-navigation-container">`
+							+ `<div class="select-menu-modal">`
+								+ `<div class="select-menu-header">`
+									+ '<svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path d="M7.48 8l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75-1.48-1.48 3.75-3.75L0.77 4.25l1.48-1.48 3.75 3.75 3.75-3.75 1.48 1.48-3.75 3.75z"></path></svg>'
+									+ `<span class="select-menu-title">`
+										+ "Select " + settings.terms.bugzilla + " milestone"
+									+ `</span>`
+								+ `</div>`
+								+ `<div class="js-select-menu-deferred-content">`
+									+ `<div class="select-menu-filters">`
+										+ `<div class="is-loading p-5">`
+											+ `<img class="column centered" src="https://assets-cdn.github.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
+										+ `</div>`
+										+ `<div class="select-menu-list">`
+											+ `<div data-filterable-for="milestones-filter-field" data-filterable-type="substring"></div>`
+										+ `</div>`
+									+ `</div>`
+								+ `</div>`
+							+ `</div>`
+						+ `</div>`
+					+ `</h6>`
 				);
+			
+				$input.parentNode.querySelectorAll("h6#bzMilestone a")[0].onclick = function(e) {
+					e.preventDefault();
+					this.parentNode.querySelectorAll(".select-menu-modal-holder")[0].style.display = "block";
+					window.postMessage({method: "showMilestoneForm"}, '*');
+				};
+				
+				$input.parentNode.querySelectorAll("h6#bzMilestone div.select-menu-header")[0].onclick = function(e) {
+					e.stopPropagation();
+					closest(this, ".select-menu-modal-holder").style.display = "none";
+				};
 			});
 		};
 		
@@ -1341,9 +1233,10 @@ define("github-rollup-bzgh", [], function() {
 			editSection(contents, '.discussion-sidebar-item.sidebar-labels', function($div) {
 				doLabelSync = false;
 				
-				var labels = $div.querySelectorAll(".labels .label").map(function() { return $(this).html(); });
+				var $labels = $div.querySelectorAll(".labels .label");
+				var labels = Array.prototype.slice.call($labels, function() { return this.innerHTML; });
 				var params = {};
-				params[settings.fields.gitHubLabels] = labels.toArray().join(' ');
+				params[settings.fields.gitHubLabels] = labels.join(' ');
 				
 				window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
 			});
