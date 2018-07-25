@@ -1023,7 +1023,7 @@ define("github-rollup-bzgh", [], function() {
 					);
 						
 					if (settings.fields.codestatus.length > 0) {
-						$div.after(
+						$div.insertAdjacentHTML("afterend",
 							`<div class="form-checkbox">`
 								+ `<label for="updateCodeStatus">`
 									+ "Update " + settings.terms.bugs + " to <span  class='newCodeStatus'>" + newCodeStatus + "</span>"
@@ -1036,7 +1036,7 @@ define("github-rollup-bzgh", [], function() {
 						);
 					}
 						
-					$div.after(
+					$div.insertAdjacentHTML("afterend",
 						`<div class="form-checkbox closeBugsDiv` + (showCloseOption ? "" : " d-none") + `">`
 							+ `<label for="closeBugs">`
 								+ "Close " + settings.terms.bugs
