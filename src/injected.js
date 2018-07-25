@@ -1,7 +1,6 @@
 'use strict';
 
-define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
-	var $ = github__jquery.default;
+define("github-rollup-bzgh", [], function() {
 	var DITBugzillaGitHub = function(settings, product) {
 		var bzUrl = settings.bugzillaURL;
 		var bugUrl = bzUrl + "/show_bug.cgi?id=";
@@ -9,6 +8,29 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 		var bugId;
 		var BUG_REGEX = new RegExp("^\\[(\\d+)\\]|^(\\d+)|^(Bug|" + settings.terms.bug + ")\\s*(\\d+)", "i"); // for example, matches [83508], 83508, Bug83508 or Bug 83508
 		var doLabelSync = false;
+		
+		var matches = function(el, selector) {
+			if (!el) {
+				return null;
+			}
+			return (el.matches || el.matchesSelector || el.msMatchesSelector || el.mozMatchesSelector || el.webkitMatchesSelector || el.oMatchesSelector || function (selector) {
+		        var node = el, nodes = (node.parentNode || node.document || node).querySelectorAll(selector), i = -1;
+		        while (nodes[++i] && nodes[i] !== node);
+		        return !!nodes[i];
+		    }).call(el, selector);
+		};
+		
+		var closest = function closest(el, selector) {
+	        while (el && el.nodeType === 1) {
+	            if (matches(el, selector)) {
+	                return el;
+	            }
+
+	            el = el.parentNode;
+	        }
+
+	        return null;
+	    };
 		
 		var applyExtension = function(contents) {
 			linkifyBugNumber(contents);
@@ -28,7 +50,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 		};
 		
 		function getFieldListForUrl(fields) {
-			return encodeURIComponent($.map(fields, function(el) {
+			return encodeURIComponent(fields.map(function(el) {
 				var field = el.field;
 				
 				// work_time is actual_time here
@@ -41,22 +63,22 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 		function editSection(contents, selector, callback) {
 			var $el;
 			
-			if ($(contents).length === 1 && $(contents).is(selector)) {
-				$el = $(contents);
+			if (!contents.length && matches(contents, selector)) {
+				$el = contents;
 			}
 			else {
 				try {
-					$el = $(contents).find(selector);
+					$el = contents.querySelectorAll(selector);
 					if (selector.indexOf(",") < 0) {
-						$el = $el.last(); // if we're trying to return only one element, let's just return the last one
+						$el = $el[$el.length - 1]; // if we're trying to return only one element, let's just return the last one
 					}
 				}
 				catch(e) {
-					// I don't know why but sometimes .find() fails if there are nulls
+					// I don't know why but sometimes .querySelectorAll() fails if there are nulls
 				}
 			}
 			
-			if ($el.length) {
+			if ($el) {
 				callback($el);
 			}
 		};
@@ -78,28 +100,27 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 			}
 
 			var pjaxBeforeReplaceHandler = function(e) {
-				applyExtension(e.originalEvent.detail.contents);
+				applyExtension(e.detail.contents);
 			};
 			
-			$(document)
-				/* Allows us to modify content before GitHub renders it... this handles PJAX */
-				.off("pjax:beforeReplace", pjaxBeforeReplaceHandler)
-				.on("pjax:beforeReplace", pjaxBeforeReplaceHandler)
+			/* Allows us to modify content before GitHub renders it... this handles PJAX */
+			document.removeEventListener("pjax:beforeReplace", pjaxBeforeReplaceHandler);
+			document.addEventListener("pjax:beforeReplace", pjaxBeforeReplaceHandler);
 				
+			var clickHandler = function(event) {
 				/* Syncs comments with the bug in Bugzilla */
-				.off("click.DITBugzillaGitHub", "#partial-new-comment-form-actions button")
-				.on("click.DITBugzillaGitHub", "#partial-new-comment-form-actions button", function() {
+				if (matches(event.target, "#partial-new-comment-form-actions button")) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 				
-					var $form = $(this).closest("form");
-					var syncComment = $form.find(".syncComment").prop("checked");
-					var resolveBug = $form.find(".resolveBug").prop("checked");
-					var reopenBug = $form.find(".reopenBug").prop("checked");
-					var comment = (syncComment ? $("#new_comment_field").val() : "");
-					var hoursWorked = $form.find(".workTime").val();
+					var $form = closest(event.target, "form");
+					var syncComment = $form.querySelectorAll(".syncComment").checked;
+					var resolveBug = $form.querySelectorAll(".resolveBug").checked;
+					var reopenBug = $form.querySelectorAll(".reopenBug").checked;
+					var comment = (syncComment ? document.querySelectorAll("#new_comment_field").value : "");
+					var hoursWorked = $form.querySelectorAll(".workTime").value;
 					
 					if (syncComment && !resolveBug && !reopenBug) {
-						if ($.trim(comment).length) {
+						if (comment.trim().length) {
 							window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: hoursWorked}, '*');
 						}
 					}
@@ -116,26 +137,25 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 						
 						comment += (resolveBug ? "Marking as FIXED." : "Setting to REOPENED.");
 						
-						params["comment"] = {"body": $.trim(comment)};
+						params["comment"] = {"body": comment.trim()};
 					
 						window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
 					}
-				})
+				}
 				
 				/* Syncs line comments with the bug in Bugzilla */
-				.off("click.DITBugzillaGitHub", ".js-inline-comment-form button[name='single_comment']")
-				.on("click.DITBugzillaGitHub", ".js-inline-comment-form button[name='single_comment']", function() {
+				if (matches(event.target, ".js-inline-comment-form button[name='single_comment']")) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
-					var $form = $(this).closest("form");
-					var syncComment = $form.find(".syncComment").prop("checked");
+					var $form = closest(event.target, "form");
+					var syncComment = $form.querySelectorAll(".syncComment").checked;
 					
 					if (syncComment) {
-						var comment = $form.find("textarea").val();
-						var line = $form.find("[name='line']").val();
-						var path = $form.find("[name='path']").val();
+						var comment = $form.querySelectorAll("textarea").value;
+						var line = $form.querySelectorAll("[name='line']").value;
+						var path = $form.querySelectorAll("[name='path']").value;
 						
-						if ($.trim(comment).length) {
+						if (comment.trim().length) {
 							if (!line || line === "false") {
 								comment = path + ": " + comment;
 							}
@@ -146,22 +166,21 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 							window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: 0}, '*');
 						}
 					}
-				})
+				}
 	
 				/* Syncs pull request review comments with the bug in Bugzilla */
-				.off("click.DITBugzillaGitHub", ".pull-request-review-menu form button.btn-primary[type='submit'], .review-summary-form-wrapper form button.btn-primary[type='submit']")
-				.on("click.DITBugzillaGitHub", ".pull-request-review-menu form button.btn-primary[type='submit'], .review-summary-form-wrapper form button.btn-primary[type='submit']", function() {
+				if (matches(event.target, ".pull-request-review-menu form button.btn-primary[type='submit'], .review-summary-form-wrapper form button.btn-primary[type='submit']")) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
-					var isFilesTab = $(this).is(".pull-request-review-menu form button.btn-primary[type='submit']");
-					var $form = $(this).closest("form");
-					var syncComment = $form.find(".syncComment").prop("checked");
-					var syncPendingComments = $form.find(".syncPendingComments").prop("checked");
+					var isFilesTab = matches(event.target, ".pull-request-review-menu form button.btn-primary[type='submit']");
+					var $form = closest(event.target, "form");
+					var syncComment = $form.querySelectorAll(".syncComment").checked;
+					var syncPendingComments = $form.querySelectorAll(".syncPendingComments").checked;
 					
 					if (syncComment || syncPendingComments) {
-						var summary = $.trim($form.find("textarea").val());
-						var reviewType = $form.find("[type='radio']:checked").val();
-						var hoursWorked = $form.find(".workTime").val();
+						var summary = $form.querySelectorAll("textarea").value.trim();
+						var reviewType = $form.querySelectorAll("[type='radio']:checked").value;
+						var hoursWorked = $form.querySelectorAll(".workTime").value;
 						var comment = "Reviewed";
 						
 						if (reviewType === "approve") {
@@ -179,23 +198,23 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 						}
 						
 						if (syncPendingComments) {
-							var $pendingComments = $("div.is-pending").not(".is-writer");
+							var $pendingComments = document.querySelectorAll("div.is-pending").not(".is-writer");
 							
 							if ($pendingComments.length > 0) {
 								comment += "\r\n\r\nLine Comments:";
 								
-								$pendingComments.each(function() {
-									var $form = $(this);
-									var pendingComment = $form.find("textarea").val();
+								Array.prototype.forEach.call($pendingComments, function(el, i) {
+									var $form = el;
+									var pendingComment = $form.querySelectorAll("textarea").value;
 									var line = (
 										isFilesTab ? 
 											$form.closest(".line-comments.js-addition, .line-comments.js-deletion").parent().prev("tr").children("td[data-line-number]").data("line-number")
 										:
-											$form.closest(".file").find(".blob-num-deletion.js-linkable-line-number:last(), .blob-num-addition.js-linkable-line-number:last()").data("line-number")
+											$form.closest(".file").querySelectorAll(".blob-num-deletion.js-linkable-line-number:last(), .blob-num-addition.js-linkable-line-number:last()").data("line-number")
 									);
-									var path = $.trim($form.closest(".file").find(".file-info a, a.file-info").html());
+									var path = $form.closest(".file").querySelectorAll(".file-info a, a.file-info").html().trim();
 									
-									if ($.trim(pendingComment).length) {
+									if (pendingComment.trim().length) {
 										if (!line || line === "false") {
 											pendingComment = path + ": " + pendingComment;
 										}
@@ -213,36 +232,34 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 							window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: hoursWorked}, '*');
 						}
 					}
-				})
+				}
 				
 				/* Updates the bug title in Bugzilla with the pull request title */
-				.off("click.DITBugzillaGitHub", ".js-issue-update button[type='submit']")
-				.on("click.DITBugzillaGitHub", ".js-issue-update button[type='submit']", function() {
+				if (matches(event.target, ".js-issue-update button[type='submit']")) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
-					var $container = $(this).closest(".gh-header-edit");
-					var syncTitle = $container.find("input.syncTitle").prop("checked");
+					var $container = closest(event.target, ".gh-header-edit");
+					var syncTitle = $container.querySelectorAll("input.syncTitle")[0].checked;
 	
 					if (syncTitle) {
-						var summary = $container.find("#issue_title").val();
+						var summary = $container.querySelectorAll("#issue_title")[0].value;
 						
 						// Need to remove any reference to the bug number
-						summary = $.trim(summary.replace(BUG_REGEX, ""));
+						summary = summary.replace(BUG_REGEX, "").trim();
 						
-						if ($.trim(summary).length) {
+						if (summary.trim().length) {
 							window.postMessage({method: "updateBug", bugId: bugId, params: {"summary": summary}}, '*');
 						}
 					}
 					
-					$container.find("div.syncTitle").remove();
-				})
+					$container.removeChild($container.querySelectorAll("div.syncTitle"));
+				}
 				
 				/* Make sure we display correct mergeTarget */
-				.off("click.DITBugzillaGitHub", ".btn-group-merge button[type='submit']")
-				.on("click.DITBugzillaGitHub", ".btn-group-merge button[type='submit']", function() {
+				if (matches(event.target, ".btn-group-merge button[type='submit']")) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
-					var mergeTarget = $(".commit-ref").eq(0).children().html();
+					var mergeTarget = document.querySelectorAll(".commit-ref")[0].children.innerHTML;
 					var newCodeStatus;
 					
 					if (mergeTarget === "master") {
@@ -252,69 +269,66 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 						newCodeStatus = settings.values.codestatusMergeParent;
 					}
 	
-					$("#newCodeStatus").html(newCodeStatus);
-				})
+					document.querySelectorAll("#newCodeStatus")[0].innerHTML = newCodeStatus;
+				}
 				
 				/* Make sure we display correct new code status (new release) */
-				.off("change.DITBugzillaGitHub", "input#release_prerelease")
-				.on("change.DITBugzillaGitHub", "input#release_prerelease", function() {
-					var isPreRelease = $("input#release_prerelease").prop("checked");
-					var mergeTarget = $(".release-target-wrapper .js-menu-target span").html();
+				if (matches(event.target, "input#release_prerelease")) {
+					var isPreRelease = document.querySelectorAll("input#release_prerelease")[0].checked;
+					var mergeTarget = document.querySelectorAll(".release-target-wrapper .js-menu-target span")[0].innerHTML;
 					var newCodeStatus;
 	
 					if (!isPreRelease && mergeTarget === "master") {
 						newCodeStatus = settings.values.codestatusRelease;
 						
 						// Also make sure the close option is shown
-						$("div.closeBugsDiv").removeClass("d-none").find("#closeBugs").prop("disabled", false);
+						$("div.closeBugsDiv").removeClass("d-none").querySelectorAll("#closeBugs").prop("disabled", false);
 					}
 					else {
 						newCodeStatus = settings.values.codestatusPreRelease;
 						
 						// Also make sure the close option is hidden
-						$("div.closeBugsDiv").addClass("d-none").find("#closeBugs").prop("disabled", true);
+						$("div.closeBugsDiv").addClass("d-none").querySelectorAll("#closeBugs").prop("disabled", true);
 					}
 	
 					$(".newCodeStatus").html(newCodeStatus);
-				})
+				}
 				
 				/* Make sure we display correct new code status (new release) */
-				.off("click.DITBugzillaGitHub", "div.releases-target-menu .select-menu-item")
-				.on("click.DITBugzillaGitHub", "div.releases-target-menu .select-menu-item", function(e) {
-					var isPreRelease = $("input#release_prerelease").prop("checked");
-					var mergeTarget = $(e.currentTarget).find("div").html();
+				if (matches(event.target, "div.releases-target-menu .select-menu-item")) {
+					var isPreRelease = document.querySelectorAll("input#release_prerelease")[0].checked;
+					var mergeTarget = event.target.querySelectorAll("div").innerHTML;
 					var newCodeStatus;
 	
 					if (!isPreRelease && mergeTarget === "master") {
 						newCodeStatus = settings.values.codestatusRelease;
 						
 						// Also make sure the close option is shown
-						$("div.closeBugsDiv").removeClass("d-none").find("#closeBugs").prop("disabled", false);
+						$("div.closeBugsDiv").removeClass("d-none").querySelectorAll("#closeBugs").prop("disabled", false);
 					}
 					else {
 						newCodeStatus = settings.values.codestatusPreRelease;
 						
 						// Also make sure the close option is hidden
-						$("div.closeBugsDiv").addClass("d-none").find("#closeBugs").prop("disabled", true);
+						$("div.closeBugsDiv").addClass("d-none").querySelectorAll("#closeBugs").prop("disabled", true);
 					}
 	
 					$(".newCodeStatus").html(newCodeStatus);
-				})
+				}
 				
 				/* Update bugs in release to new code status */
-				.off("click.DITBugzillaGitHub", "button.js-publish-release")
-				.on("click.DITBugzillaGitHub", "button.js-publish-release", function(e) {
-					var $form = $(e.currentTarget).closest("form");
-					var tag = $form.find("[name='release[tag_name]'].js-new-item-value").val();
-					if ($form.get(0).id !== 'new_release') {
-						tag = $form.get(0).action.split('/')[$form.get(0).action.split('/').length-1];
+				if (matches(event.target, "button.js-publish-release")) {
+					var $form = closest(event.target, "form");
+					var tag = $form.querySelectorAll("[name='release[tag_name]'].js-new-item-value")[0].value;
+					if ($form[0].id !== 'new_release') {
+						tag = $form[0].action.split('/')[$form[0].action.split('/').length-1];
 					}
-					var title = $form.find("input#release_name").val();
-					var comments = $form.find("textarea").val();
-					var updateCodeStatus = $form.find("input#updateCodeStatus").prop("checked");
-					var updateRevision = $form.find("input#updateRevision").prop("checked");
-					var $closeBugs = $form.find("input#closeBugs");
-					var closeBugs = $closeBugs.prop("checked") && !$closeBugs.prop("disabled");
+					var title = $form.querySelectorAll("input#release_name")[0].value;
+					var comments = $form.querySelectorAll("textarea")[0].value;
+					var updateCodeStatus = $form.querySelectorAll("input#updateCodeStatus")[0].checked;
+					var updateRevision = $form.querySelectorAll("input#updateRevision")[0].checked;
+					var $closeBugs = $form.querySelectorAll("input#closeBugs")[0];
+					var closeBugs = $closeBugs.checked && !$closeBugs.disabled;
 
 					if (comments.length && tag.length && title.length && (updateCodeStatus || updateRevision || closeBugs)) {
 						var matches = comments.match(new RegExp("^(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))|\\n(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))", "ig"));
@@ -336,7 +350,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 							}
 							
 							if (updateCodeStatus) {
-								var newCodeStatus = $form.find(".newCodeStatus").html();
+								var newCodeStatus = $form.querySelectorAll(".newCodeStatus")[0].innerHTML;
 								
 								if (newCodeStatus.indexOf("In ") === 0) {
 									comment += (comment.length ? "\r\n\r\n" : "") + "Pushed to " + newCodeStatus.replace(/^In\s/, "") + ".";
@@ -357,17 +371,16 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 							window.postMessage({method: "updateBugs", bugIds: bugIds, params: params}, '*');
 						}
 					}
-				})
+				}
 				
 				/* Updates the bug in Bugzilla when merging a pull request */
-				.off("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button")
-				.on("click.DITBugzillaGitHub", "button[type='submit'].js-merge-commit-button", function() {
+				if (matches(event.target, "button[type='submit'].js-merge-commit-button")) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 				
-					var resolveBug = $("#resolveBug").prop("checked");
-					var updateBugCodeStatus = $("#updateBugCodeStatus").prop("checked");
-					var hoursWorked = $("#workTimeMerge").val();
-					var mergeTarget = $(".commit-ref").eq(0).children().html();
+					var resolveBug = document.querySelectorAll("#resolveBug")[0].checked;
+					var updateBugCodeStatus = document.querySelectorAll("#updateBugCodeStatus")[0].checked;
+					var hoursWorked = document.querySelectorAll("#workTimeMerge")[0].value;
+					var mergeTarget = document.querySelectorAll(".commit-ref")[0].children[0].innerHTML;
 					var params = {};
 					var comment = "";
 					var newCodeStatus;
@@ -380,7 +393,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 					}
 						
 					/* Always comment that we merged it */
-					comment += "Merged pull request " + $(".gh-header-number").html();
+					comment += "Merged pull request " + document.querySelectorAll(".gh-header-number")[0].innerHTML;
 					
 					if (mergeTarget === "master") {
 						newCodeStatus = settings.values.codestatusMerge;
@@ -397,23 +410,22 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 						params[settings.fields.codestatus] = newCodeStatus;
 					}
 					
-					params["comment"] = {"body": $.trim(comment)};
+					params["comment"] = {"body": comment.trim()};
 					params["work_time"] = hoursWorked;
 					
 					window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
-				})
+				}
 					
 				/* Updates the bug in Bugzilla when creating a pull request */
-				.off("click.DITBugzillaGitHub", "#new_pull_request button[type='submit']")
-				.on("click.DITBugzillaGitHub", "#new_pull_request button[type='submit']", function() {
+				if (matches(event.target, "#new_pull_request button[type='submit']")) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 				
-					var updateBug = $("#new_pull_request .updateBug").prop("checked");
-					var syncComment = $("#new_pull_request .syncComment").prop("checked");
+					var updateBug = $("#new_pull_request .updateBug").checked;
+					var syncComment = $("#new_pull_request .syncComment").checked;
 					var comment = "";
 					
 					if (syncComment) {	
-						comment = $("#pull_request_body").val();
+						comment = $("#pull_request_body").value;
 					}
 					
 					if (updateBug || syncComment) {
@@ -426,28 +438,32 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 						var labels = $("a.label").map(function() { return $(this).html(); }).toArray().join(' ');
 						window.localStorage.setItem("DIT-labels", labels);
 					}
-				})
+				}
 				
-				.off("click.DITBugzillaGitHub", "div.label-select-menu button.discussion-sidebar-heading")
-				.on("click.DITBugzillaGitHub", "div.label-select-menu button.discussion-sidebar-heading", function() {
-					var $labels = $("div.label-select-menu");
+				if (matches(event.target, "div.label-select-menu button.discussion-sidebar-heading")) {
+					var $labels = document.querySelectorAll("div.label-select-menu")[0];
 					
-					if (!$labels.is(".active")) {
+					if (!matches($labels, ".active")) {
 						// Opened the label menu, so turn on label syncing (if there is a Bugzilla field defined)
 						doLabelSync = true && (settings.fields.gitHubLabels.length > 0);
 					}
-				});
-		};
+				}
+			}
+			
+			document.removeEventListener("click.DITBugzillaGitHub", clickHandler);
+			document.addEventListener("click.DITBugzillaGitHub", clickHandler);
+		}
 	
 		var linkifyBugNumber = function(contents) {
-			var $issueTitle = $(contents).find('.js-issue-title').last();
-			var $comments = $(contents).find('.markdown-body p, .markdown-body li, .markdown-body table');
+			var $issueTitle = contents.querySelectorAll('.js-issue-title');
+			$issueTitle = $issueTitle[$issueTitle.length - 1];
+			var $comments = contents.querySelectorAll('.markdown-body p, .markdown-body li, .markdown-body table');
 			
 			// Issue titles need changing
-			if ($issueTitle.length) {
-				var newHtml = $.trim($issueTitle.html());
+			if ($issueTitle) {
+				var newHtml = $issueTitle.innerHTML.trim();
 				
-				if ($issueTitle.children('a').length === 0) {
+				if ($issueTitle.querySelectorAll('a').length === 0) {
 					var matches = newHtml.match(BUG_REGEX);
 	
 					if (matches && matches.length) {
@@ -457,7 +473,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 						newHtml = newHtml.replace(BUG_REGEX, '<a class="bzLink" name="' + bugId + '" href="' + getBugUrl() + '">[' + bugId + ']</a>');
 					}
 					else {
-						var branch = $(contents).find(".commit-ref").eq(1).children().html() || "";
+						var branch = contents.querySelectorAll(".commit-ref")[1].children[0].innerHTML || "";
 						matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + ")[-|_]?\\d+", "i"));
 						
 						if (matches && matches.length) {
@@ -472,12 +488,12 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 					}
 				}
 	
-				$issueTitle.html(newHtml);
+				$issueTitle.innerHTML = newHtml;
 			}
 			if ($comments.length) {
-				$comments.each(function() {
-					var $this = $(this);
-					var newHtml = $this.html();
+				Array.prototype.forEach.call($comments, function(el, i) {
+					var $this = el;
+					var newHtml = $this.innerHTML;
 					var regex = new RegExp("(\\[(\\d+)\\]|(Bug|" + settings.terms.bug + ")\\s*(\\d+))|\\n(\\[(\\d+)\\]|(Bug|" + settings.terms.bug + ")\\s*(\\d+))", "ig");
 					var matches = newHtml.match(regex);
 	
@@ -490,12 +506,12 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 						}
 					}
 					
-					$this.html(newHtml);
+					$this.innerHTML = newHtml;
 				});
 			}
 			
-			var bugIds = $(contents).find("a.bzLink").map(function() {
-				return this.name;
+			var bugIds = Array.prototype.slice.call(contents.querySelectorAll("a.bzLink")).map(function(link) {
+				return link.name;
 			});
 			// Remove duplicates
 			bugIds = new Set(bugIds);
@@ -508,212 +524,136 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 			if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 		
 			editSection(contents, '#partial-discussion-sidebar', function($sidebar) {
-				if ($sidebar.find("div.sidebar-dit-bugzilla").length === 0) {
-					$sidebar.find(".sidebar-notifications").before(
-						$("<div>")
-							.addClass("discussion-sidebar-item sidebar-dit-bugzilla")
-							.append(
-								$("<h3>")
-									.addClass("discussion-sidebar-heading")
-									.html(settings.terms.bugzilla + " Info ")
-									.append(
-										$("<a>")
-											.addClass("bzLink")
-											.attr({
-												href: getBugUrl(),
-												name: bugId
-											})
-											.html("[" + bugId + "]")
-									)
-							)
-							.append(
-								$("<div>")
-									.addClass("sidebar-dit-bugzilla-details")
-									.html(
-										$('<p class="reason text-small text-muted">')
-											.html("Loading...")
-									)
-							)
-							.append(
-								'<h3 class="discussion-sidebar-heading">Attachments</h3>'
-							)
-							.append(
-								$("<div>")
-									.addClass("sidebar-dit-bugzilla-attachments")
-									.html(
-										$('<p class="reason text-small text-muted">')
-											.html("Loading...")
-									)
-							)
+				if ($sidebar.querySelectorAll("div.sidebar-dit-bugzilla").length === 0) {
+					$sidebar.querySelectorAll(".sidebar-notifications")[0].insertAdjacentHTML('beforebegin',
+						`<div class="discussion-sidebar-item sidebar-dit-bugzilla">`
+							+ `<h3 class="discussion-sidebar-heading">`
+								+ `${settings.terms.bugzilla} Info`
+									+ `<a class="bzLink" href=${getBugUrl()} name="${bugId}">`
+										+ `[${bugId}]`
+									+ `</a>`
+							+ `</h3>`
+							+ `<div class="sidebar-dit-bugzilla-details">`
+								+ `<p class="reason text-small text-muted">Loading</p>`
+							+ `</div>`
+							+ `<h3 class="discussion-sidebar-heading">Attachments</h3>`
+							+ `<div class="sidebar-dit-bugzilla-attachments">`
+								+ `<p class="reason text-small text-muted">Loading...</p>`
+							+ `</div>`
+						+ `</div>`
 					);
 					
 					window.postMessage({method: "loadBugDetails", bugId: bugId}, '*');
 				}
 				else {
 					// Need this line or else we lose previously applied changes.
-					$sidebar.html($sidebar.html());
+					$sidebar.innerHTML = $sidebar.innerHTML;
 				}
 			});
 		};
 		
 		var injectProductName = function(contents) {
 			editSection(contents, 'div.repohead-details-container', function($el) {
-				$el.find("h6#bzProduct").remove();
+				var existingNode = $el.querySelectorAll("h6#bzProduct");
+				if (existingNode.length) {
+					$el.removeChild(existingNode[0]);	
+				}
 	
-				$el.append(
-					$("<h6>")
-						.addClass("select-menu js-menu-container js-select-menu product-select-menu")
-						.attr({
-							id: "bzProduct"
-						})
-						.css({
-							float: "left",
-							clear: "both"
-						})
-						.append(
-							$("<a>")
-								.attr({
-									href: "#"
-								})
-								.css({
-									fill: "currentColor",
-									color: "#666"
-								})
-								.html(product ? product.name : "[" + settings.terms.bugzilla + " product not set]")
-								.append('<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>')
-								.click(function(e){
-									e.preventDefault();
-									$(this).parent().find(".select-menu-modal-holder").show();
-									window.postMessage({method: "showProductForm"}, '*');
-								})
-						)
-						.append(
-							$("<div>")
-								.addClass("select-menu-modal-holder js-menu-content js-navigation-container js-active-navigation-container")
-								.html(
-									$("<div>")
-										.addClass("select-menu-modal")
-										.html(
-								 			$("<div>")
-												.addClass("select-menu-header")
-												.append('<svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path d="M7.48 8l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75-1.48-1.48 3.75-3.75L0.77 4.25l1.48-1.48 3.75 3.75 3.75-3.75 1.48 1.48-3.75 3.75z"></path></svg>')
-												.append(
-													$("<span>")
-														.addClass("select-menu-title")
-														.html("Select " + settings.terms.bugzilla + " product for this repo")
-												)
-												.click(function(e) {
-													e.stopPropagation();
-													
-													$(this).closest(".select-menu-modal-holder").hide();
-												})
-										)
-										.append(
-											$("<div>")
-												.addClass("js-select-menu-deferred-content")
-												.html(
-													$("<div>")
-														.addClass("select-menu-filters")
-														.append(
-															$("<div>")
-																.addClass("is-loading p-5")
-																.append(
-																	$("<img>")
-																		.addClass("column centered")
-																		.attr({
-																			"src": "https://assets-cdn.github.com/images/spinners/octocat-spinner-128.gif",
-																			"width": "64px"
-																		})
-																)
-														)
-														.append(
-															$("<div>")
-																.addClass("select-menu-list")
-																.append(
-																	$("<div>")
-																		.attr({
-																			"data-filterable-for": "products-filter-field",
-																			"data-filterable-type": "substring"
-																		})
-																		.data({
-																			"filterable-for": "products-filter-field",
-																			"filterable-type": "substring"
-																		})
-																)
-														)
-												)
-										)
-								)
-						)
+				$el.insertAdjacentHTML('beforeend',
+					`<h6 class="select-menu js-menu-container js-select-menu product-select-menu" id="bzProduct" style="float: left; clear: both;">`
+						+ `<a href="#" style="fill: currentColor; color: #666;">`
+							+ (product ? product.name : "[" + settings.terms.bugzilla + " product not set]")
+							+ '<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>'
+						+ `</a>`
+						+ `<div class="select-menu-modal-holder js-menu-content js-navigation-container js-active-navigation-container">`
+							+ `<div class="select-menu-modal">`
+								+ `<div class="select-menu-header">`
+									+ '<svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path d="M7.48 8l3.75 3.75-1.48 1.48-3.75-3.75-3.75 3.75-1.48-1.48 3.75-3.75L0.77 4.25l1.48-1.48 3.75 3.75 3.75-3.75 1.48 1.48-3.75 3.75z"></path></svg>'
+									+ `<span class="select-menu-title">`
+										+ "Select " + settings.terms.bugzilla + " product for this repo"
+									+ `</span>`
+								+ `</div>`
+								+ `<div class="js-select-menu-deferred-content">`
+									+ `<div class="select-menu-filters">`
+										+ `<div class="is-loading p-5">`
+											+ `<img class="column centered" src="https://assets-cdn.github.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
+										+ `</div>`
+										+ `<div class="select-menu-list">`
+											+ `<div data-filterable-for="products-filter-field" data-filterable-type="substring"></div>`
+										+ `</div>`
+									+ `</div>`
+								+ `</div>`
+							+ `</div>`
+						+ `</div>`
+					+ `</h6>`
 				);
+				
+				$el.querySelectorAll("h6.select-menu a")[0].onclick = function(e) {
+					e.preventDefault();
+					this.parentNode.querySelectorAll('.select-menu-modal-holder')[0].style.display='block';
+					window.postMessage({method: 'showProductForm'}, '*');
+				};
+				
+				$el.querySelectorAll("h6.select-menu div.select-menu-modal-holder div.select-menu-modal div.select-menu-header")[0].onclick = function(e) {
+					e.stopPropagation(); 
+					closest(this, ".select-menu-modal-holder")[0].style.display = 'none';
+				};
 			});
 		};
 		
 		var injectPageHeadActions = function(contents) {
 			// Don't continue if we aren't mapped to a product
 			if (!product) { 
-				$("li#bzButtons").remove();
+				var nodeToRemove = document.querySelectorAll("li#bzButtons")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
 				return;
 			}
 			
 			editSection(contents, 'ul.pagehead-actions', function($ul) {
-				$ul.find("li#bzButtons").remove();
+				var nodeToRemove = $ul.querySelectorAll("li#bzButtons")[0];
+				if (nodeToRemove) {
+					$ul.removeChild(nodeToRemove);
+				}
 	
-				$ul.prepend(
-					$("<li>")
-						.attr({
-							id: "bzButtons"
-						})
-						.addClass("btn-group")
-						.html(
-							$("<a>")
-								.addClass("btn btn-sm")
-								.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-								.append(" Unresolved")
-								.attr({
-									href: bugListUrl + "&bug_status=NEW&bug_status=ASSIGNED&bug_status=UNCONFIRMED&bug_status=REOPENED&product=" + encodeURIComponent(product.name),
-									target: "_blank"
-								})
-						)
-						.append(
-							$("<a>")
-								.addClass("btn btn-sm")
-								.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-								.append(" Resolved")
-								.attr({
-									href: bugListUrl + "&bug_status=RESOLVED&product=" + encodeURIComponent(product.name),
-									target: "_blank"
-								})
-						)
+				$ul.firstElementChild.insertAdjacentHTML('beforeBegin',
+					`<li id="bzButtons" class="btn-group">`
+						+ `<a class="btn btn-sm" href="` + bugListUrl + "&bug_status=NEW&bug_status=ASSIGNED&bug_status=UNCONFIRMED&bug_status=REOPENED&product=" + encodeURIComponent(product.name) + `" target="_blank">`
+							+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+							+ " Unresolved"
+						+ `</a>`
+						+ `<a class="btn btn-sm" href="` + bugListUrl + "&bug_status=RESOLVED&product=" + encodeURIComponent(product.name) + `" target="_blank">` 
+							+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+							+ " Resolved"
+						+ `</a>`
+					+ `</li>`
 				);
 			});
 		};
 		
 		var injectRepoNavLinks = function(contents) {
 			editSection(contents, 'nav.reponav', function($nav) {
-				$nav.find("a#bzMilestonesButton").remove();
+				var nodeToRemove = $nav.querySelectorAll("a#bzMilestonesButton")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
 				
-				var $a = $nav.children("a").first();
-				var href = $a.attr('href');
+				var $a = $nav.querySelectorAll("a")[1];
+				var href = $a.getAttribute('href');
 				href = href.substr(0, href.lastIndexOf('/')) + '/milestones';
 				
 				// Remove the selected styling from the Issues link when Milestones is selected
-				var $issuesLink = $nav.find("a[data-selected-links*=repo_milestones]");
-				if ($issuesLink.length === 1) {
-					$issuesLink.attr('data-selected-links', $issuesLink.attr('data-selected-links').replace('repo_milestones', ''));
+				var $issuesLink = $nav.querySelectorAll("a[data-selected-links*=repo_milestones]")[0];
+				if ($issuesLink) {
+					$issuesLink.setAttribute('data-selected-links', $issuesLink.getAttribute('data-selected-links').replace('repo_milestones', ''));
 				}
 	
-				$a.before(
-					$("<a>")
-						.attr({
-							id: 'bzMilestonesButton',
-							href: href,
-							'data-selected-links': 'repo_milestones new_repo_milestone repo_milestone ' + href,
-							'data-hotkey': 'g m'
-						})
-						.addClass('js-selected-navigation-item reponav-item')
-						.html('<svg aria-hidden="true" class="octicon octicon-milestone" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>')
-						.append(" Milestones")
+				$a.insertAdjacentHTML('afterEnd',
+					`<a id="bzMilestonesButton" href="${href}" data-selected-links="repo_milestones new_repo_milestone repo_milestone ${href}" data-hotkey="g m" class="js-selected-navigation-item reponav-item">`
+						+ '<svg aria-hidden="true" class="octicon octicon-milestone" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>'
+						+ " Milestones"
+					+ `</a>`
 				);
 			});
 		};
@@ -721,42 +661,29 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 		var injectPullRequestTitleOptions = function(contents) {
 			// Don't continue if we aren't mapped to a bug
 			if (!bugId) { 
-				$("div.syncTitle").remove();
+				var nodeToRemove = document.querySelectorAll("div.syncTitle")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
 				return;
 			}
 			
 			editSection(contents, 'div.gh-header-edit', function($div) {
-				if ($div.find("div.syncTitle").length === 0) {
-					$div.append(
-						$("<div>")
-							.addClass("pl-3 d-inline-block syncTitle")
-							.html(
-								$("<div>")
-									.addClass("form-checkbox")
-									.append(
-										$("<label>")
-											.text("Update title for " + settings.terms.bug + " " + bugId)
-											.append(
-												$("<input>")
-													.addClass("syncTitle")
-													.attr({
-														type: "checkbox",
-														checked: "checked"
-													})
-													.prop('checked', true)
-											)
-									)
-									.append(
-										$("<p>")
-											.addClass("note")
-											.html("Update the title of the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
-									)
-							)
+				if ($div.querySelectorAll("div.syncTitle").length === 0) {
+					$div.insertAdjacentHTML('beforeend',
+						`<div class="pl-3 d-inline-block syncTitle">`
+							+ `<div class="form-checkbox">`
+								+ `<label>Update title for ${settings.terms.bug} ${bugId}`
+									+ `<input class="syncTitle" type="checkbox" checked />`
+								+ `</label>`
+								+ `<p class="note">Update the title of the ${settings.terms.bug} in ${settings.terms.bugzilla}.</p>`
+							+ `</div>`
+						+ `</div>`
 					);
 				}
 				else {
 					// Need this line or else we lose previously applied changes.
-					$div.html($div.html());
+					$div.innerHTML = $div.innerHTML;
 				}
 			});
 		};
@@ -765,137 +692,85 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 			if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
 			editSection(contents, '.js-previewable-comment-form, .pull-request-review-menu, .review-summary-form-wrapper', function($div) {
-				$div.each(function(i) {
-					var $this = $(this);
-					var $form = $this.closest("form"); 
+				$div.forEach(function(item, i) {
+					var $this = item;
+					var $form = closest($this, "form"); 
 	
 					// Don't do anything if we've already updated previously or if it's an update to an existing comment
-					if ($this.find("input.syncComment").length > 0 || $form.is(".js-comment-update") || $form.is(".new-pr-form")) { return; }
+					if ($this.querySelectorAll("input.syncComment").length > 0 || matches($form, ".js-comment-update") || matches($form, ".new-pr-form")) { return; }
 					
-					var showResolveInput = $form.is(".js-new-comment-form");
+					var showResolveInput = matches($form, ".js-new-comment-form");
 					
 					if (showResolveInput) {
-						$this.find("div.preview-content").next()
-							.before(
-								$("<div>")
-									.addClass("pl-3")
-									.html(
-										$("<div>")
-											.addClass("form-checkbox")
-											.append(
-												$("<label>")
-													.text("Resolve " + settings.terms.bug + " " + bugId)
-													.append(
-														$("<input>")
-															.addClass("resolveBug")
-															.attr({
-																type: "checkbox"
-															})
-															.prop('checked', false)
-															.change(function() {
-																var checked = $(this).prop("checked");
-																if (checked) {
-																	$(this.form).find(".reopenBug").prop("checked", false);
-																}
-															})
-													)
-											)
-											.append(
-												$("<p>")
-													.addClass("note")
-													.html("Set the " + settings.terms.bug + " to <strong>RESOLVED FIXED</strong> in " + settings.terms.bugzilla + ".")
-											)
-									)
-							)
-							.before(
-								$("<div>")
-									.addClass("pl-3")
-									.html(
-										$("<div>")
-											.addClass("form-checkbox")
-											.append(
-												$("<label>")
-													.text("Reopen " + settings.terms.bug + " " + bugId)
-													.append(
-														$("<input>")
-															.addClass("reopenBug")
-															.attr({
-																type: "checkbox"
-															})
-															.prop('checked', false)
-															.change(function() {
-																var checked = $(this).prop("checked");
-																if (checked) {
-																	$(this.form).find(".resolveBug").prop("checked", false);
-																}
-															})
-													)
-											)
-											.append(
-												$("<p>")
-													.addClass("note")
-													.html("Set the " + settings.terms.bug + " to <strong>REOPENED</strong> in " + settings.terms.bugzilla + ".")
-											)
-									)
-							);
+						$this.querySelectorAll("div.preview-content")[0].insertAdjacentHTML('afterend',
+							`<div class="pl-3">`
+							+ `<div class="form-checkbox">`
+								+ `<label>` + "Resolve " + settings.terms.bug + " " + bugId
+									+ `<input class="resolveBug" type="checkbox" />`
+								+ `</label>`
+								+ `<p class="note">`
+									+ "Set the " + settings.terms.bug + " to <strong>RESOLVED FIXED</strong> in " + settings.terms.bugzilla + "."
+								+ `</p>`
+							+ `</div>`
+						+ `</div>`
+						+ `<div class="pl-3">`
+							+ `<div class="form-checkbox">`
+								+ `<label>` + "Reopen " + settings.terms.bug + " " + bugId
+									+ `<input class="reopenBug" type="checkbox" />`
+								+ `</label>`
+								+ `<p class="note">`
+									+ "Set the " + settings.terms.bug + " to <strong>REOPENED</strong> in " + settings.terms.bugzilla + "."
+								+ `</p>`
+							+ `</div>`
+						+ `</div>`
+						);
+						
+						$this.querySelectorAll("input.resolveBug")[0].addEventListener("change", function() {
+							var checked = this.checked;
+							if (checked) {
+								this.form.querySelectorAll(".reopenBug")[0].checked = false;
+							}
+						}, false);
+						
+						$this.querySelectorAll("input.reopenBug")[0].addEventListener("change", function() {
+							var checked = this.checked;
+							if (checked) {
+								this.form.querySelectorAll(".resolveBug")[0].checked = false;
+							}
+						}, false);
 					}
 					
-					var isReview = $this.is(".pull-request-review-menu") || $this.is(".review-summary-form-wrapper");
+					var isReview = matches($this, ".pull-request-review-menu") || matches($this, ".review-summary-form-wrapper");
 					var toFind = (isReview ? "div.form-checkbox" : "div.float-left");
 				
-					$this.find(toFind).first()
-						.before(
-							$("<div>")
-								.addClass("pl-3")
-								.html(
-									$("<div>")
-										.addClass("form-checkbox")
-										.append(
-											$("<label>")
-												.text("Post "+ (isReview ? "summary" : "comment") + " to " + settings.terms.bug + " " + bugId)
-												.append(
-													$("<input>")
-														.addClass("syncComment")
-														.attr({
-															type: "checkbox",
-															checked: "checked"
-														})
-														.prop('checked', true)
-												)
-										)
-										.append(
-											$("<p>")
-												.addClass("note")
-												.html("Add the "+ (isReview ? "summary" : "comment") + " to the " + settings.terms.bug + " in " + settings.terms.bugzilla + (isReview ? "." : " when you click Add Single Comment."))
-										)
-								),
-							(isReview ? 
-								$("<div>")
-									.addClass("pl-3")
-									.html(
-										$("<div>")
-											.addClass("form-checkbox")
-											.append(
-												$("<label>")
-													.text("Post all pending comments to " + settings.terms.bug + " " + bugId)
-													.append(
-														$("<input>")
-															.addClass("syncPendingComments")
-															.attr({
-																type: "checkbox",
-																checked: "checked"
-															})
-															.prop('checked', true)
-													)
-											)
-											.append(
-												$("<p>")
-													.addClass("note")
-													.html("Add the pending comments to the " + settings.terms.bug + " in " + settings.terms.bugzilla + ".")
-											)
-									)
-								: null)
+					var target = $this.querySelectorAll(toFind)[0];
+					
+					if (target) {
+						target.insertAdjacentHTML('beforebegin',
+							`<div class="pl-3">`
+								+ `<div class="form-checkbox">`
+									+ `<label>` + "Post "+ (isReview ? "summary" : "comment") + " to " + settings.terms.bug + " " + bugId
+										+ `<input class="syncComment" type="checkbox" checked />`
+									+ `</label>`
+									+ `<p class="note">`
+										+ "Add the "+ (isReview ? "summary" : "comment") + " to the " + settings.terms.bug + " in " + settings.terms.bugzilla + (isReview ? "." : " when you click Add Single Comment.")
+									+ `</p>`
+								+ `</div>`
+							+ `</div>`
+							+ (isReview ? 
+								`<div class="pl-3">`
+									+ `<div class="form-checkbox">`
+										+ `<label>` + "Post all pending comments to " + settings.terms.bug + " " + bugId
+											+ `<input class="syncPendingComments" type="checkbox" checked />`
+										+ `</label>`
+										+ `<p class="note">`
+											+ "Add the pending comments to the " + settings.terms.bug + " in " + settings.terms.bugzilla + "."
+										+ `</p>`
+									+ `</div>`
+								+ `</div>`
+								: "")
 						);
+					}
 				});
 			});
 		};
@@ -904,42 +779,20 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 			if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 			
 			editSection(contents, '#partial-new-comment-form-actions, .pull-request-review-menu .form-actions, .review-summary-form-wrapper .form-actions', function($buttonsArray) {
-				$buttonsArray.each(function() {
-					var $buttons = $(this);
-					if ($buttons.find("input.workTime").length === 0) {
-						var isPRComment = $buttons.is('#partial-new-comment-form-actions');
+				if (!$buttonsArray) { return; }
+				$buttonsArray.forEach(function(item, i) {
+					var $buttons = item;
+					if ($buttons.querySelectorAll("input.workTime").length === 0) {
+						var isPRComment = matches($buttons, '#partial-new-comment-form-actions');
 						var id = "workTime" + (new Date()).getTime();
-						$buttons
-							.append(
-								$("<input>")
-									.addClass("workTime")
-									.attr({
-										id: id,
-										name: id,
-										type: "number",
-										step: "0.25"
-									})
-									.css({
-										width: "2.5em",
-										float: "right",
-										margin: (isPRComment ? "5px" : "3px 5px")
-									})
-							)
-							.append(
-								$("<label>")
-									.text("Hours Worked")
-									.attr({
-										for: id
-									})
-									.css({
-										float: "right",
-										padding: (isPRComment ? "7px 0" : "6px 0")
-									})
-							);
+						$buttons.insertAdjacentHTML('beforeend',
+							`<input class="workTime" id="${id}" name="${id}" type="number" step="0.25" style="width: 2.5em; float: right; margin: ` + (isPRComment ? "5px" : "3px 5px") + `;" />`
+							+ `<label for="${id}" style="float: right; padding: ` + (isPRComment ? "7px 0" : "6px 0") + `">Hours Worked</label>`
+						);
 					}
 					else if (isPRComment) {
 						// Need this line or else we lose previously applied changes.
-						$buttons.html($buttons.html());
+						$buttons.innerHTML = $buttons.innerHTML;
 					}
 				});
 			});
@@ -948,7 +801,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 		var injectNewPullRequestOptions = function(contents, ignoreBranch) {
 			editSection(contents, 'form#new_pull_request', function($form) {
 				// Figure out the bug number
-				var $title = $form.find("input#pull_request_title");
+				var $title = $form.querySelectorAll("input#pull_request_title");
 				var matches;
 				
 				if (!ignoreBranch) {
@@ -963,7 +816,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 					}	
 				}
 				
-				matches = $title.val().match(BUG_REGEX);
+				matches = $title.value.match(BUG_REGEX);
 				
 				// Update things if title changes, and stop trying to use the branch to get the bug number
 				$title.off("change.DITBugzillaGitHub");
@@ -975,11 +828,11 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 				if (matches && matches.length) {
 					bugId = matches[0].match(/\d+/)[0];
 					
-					if ($form.find(".bugOptions").length) {
-						$form.find(".bugId").html(bugId);
+					if ($form.querySelectorAll(".bugOptions").length) {
+						$form.querySelectorAll(".bugId").html(bugId);
 					}
 					else {
-						var $div = $form.find("div.preview-content").next();
+						var $div = $form.querySelectorAll("div.preview-content").next();
 						
 						if (settings.fields.gitHubPullRequestURL.length > 0) {
 							$div.before(
@@ -1039,7 +892,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 					}
 				}
 				else {
-					$form.find(".bugOptions").remove();
+					$form.querySelectorAll(".bugOptions").remove();
 				}
 			});
 		};
@@ -1048,9 +901,11 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 			if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
 			editSection(contents, '#partial-pull-merging', function($div) {
-				if ($div.find("input#resolveBug").length === 0) {
-					var $buttons = $div.find("div.commit-form-actions");
-					var mergeTarget = $(".commit-ref").eq(0).children().html();
+				if ($div.querySelectorAll("input#resolveBug").length === 0) {
+					var $buttons = $div.querySelectorAll("div.commit-form-actions")[0];
+					if (!$buttons) { return; }
+
+					var mergeTarget = document.querySelectorAll(".commit-ref")[0].children[0].innerHTML;
 	
 					if (mergeTarget === "master") {
 						var newCodeStatus = settings.values.codestatusMerge;
@@ -1059,104 +914,50 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 						var newCodeStatus = settings.values.codestatusMergeParent;
 					}
 					
-					$buttons
-						.append(
-							$("<label>")
-								.addClass("ml-2")
-								.text("Hours Worked")
-								.attr({
-									for: "workTimeMerge"
-								})
-								.css({
-									"vertical-align": "middle"
-								})
-						)
-						.append(
-							$("<input>")
-								.addClass("ml-1")
-								.attr({
-									name: "workTimeMerge",
-									id: "workTimeMerge",
-									type: "number",
-									step: "0.25"
-								})
-								.css({
-									width: "2.5em",
-									"vertical-align": "middle"
-								})
-						)
-						.append(
-							$("<div>")
-								.addClass("form-checkbox")
-								.append(
-									$("<label>")
-										.text("Resolve " + settings.terms.bug + " " + bugId)
-										.attr({
-											for: "resolveBug"
-										})
-										.append(
-											$("<input>")
-												.attr({
-													name: "resolveBug",
-													id: "resolveBug",
-													type: "checkbox",
-													checked: "checked"
-												})
-												.prop('checked', true)
-										)
-								)
-								.append(
-									$("<p>")
-										.addClass("note")
-										.html("Set the " + settings.terms.bug + " to <strong>RESOLVED TESTED</strong> in " + settings.terms.bugzilla + ".")
-								)
-						);
+					$buttons.insertAdjacentHTML("beforeend",
+						`<label class="ml-2" for="workTimeMerge" style="vertical-align: middle;">Hours Worked</label>`
+						+ `<input class="ml-1" name="workTimeMerge" id="workTimeMerge" type="number" step="0.25" style="width: 2.5em; vertical-align: middle;" />`
+						+ `<div class="form-checkbox">`
+							+ `<label for="resolveBug">`
+								+ "Resolve " + settings.terms.bug + " " + bugId
+								+ `<input name="resolveBug" id="resolveBug" type="checkbox" checked />`
+							+ `</label>`
+							+ `<p class="note">`
+								+ "Set the " + settings.terms.bug + " to <strong>RESOLVED TESTED</strong> in " + settings.terms.bugzilla + "."
+							+ `</p>`
+						+ `</div>`
+					);
 					
 					if (settings.fields.codestatus.length > 0) {
-						$buttons.append(
-							$("<div>")
-								.addClass("form-checkbox")
-								.append(
-									$("<label>")
-										.text("Update code status of " + settings.terms.bug + " " + bugId)
-										.attr({
-											for: "updateBugCodeStatus"
-										})
-										.append(
-											$("<input>")
-												.attr({
-													name: "updateBugCodeStatus",
-													id: "updateBugCodeStatus",
-													type: "checkbox",
-													checked: "checked"
-												})
-												.prop('checked', true)
-										)
-								)
-								.append(
-									$("<p>")
-										.addClass("note")
-										.html("Set the " + settings.terms.bug + "'s code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in " + settings.terms.bugzilla + ".")
-								)
+						$buttons.insertAdjacentHTML("beforeend",
+							`<div class="form-checkbox">`
+								+ `<label for="updateBugCodeStatus">`
+									+ "Update code status of " + settings.terms.bug + " " + bugId
+									+ `<input name="updateBugCodeStatus" id="updateBugCodeStatus" type="checkbox" checked />`
+								+ `</label>`
+								+ `<p class="note">`
+									+ "Set the " + settings.terms.bug + "'s code status to <strong id='newCodeStatus'>" + newCodeStatus + "</strong> in " + settings.terms.bugzilla + "."
+								+ `</p>`
+							+ `</div>`
 						);
 					}
 				}
 				else {
 					// Need this line or else we lose previously applied changes.
-					$div.html($div.html());
+					$div.innerHTML = $div.innerHTML;
 				}
 			});
 		};
 		
 		var injectReleaseOptions = function(contents) {
 			editSection(contents, 'div.new-release', function($div) {
-				if ($div.find("input#updateRevision").length === 0) {
-					var mergeTarget = $div.find(".release-target-wrapper .js-menu-target span").html();
-					var $preRelease = $div.find("input#release_prerelease");
+				if ($div.querySelectorAll("input#updateRevision").length === 0) {
+					var mergeTarget = $div.querySelectorAll(".release-target-wrapper .js-menu-target span").html();
+					var $preRelease = $div.querySelectorAll("input#release_prerelease");
 					var newCodeStatus = settings.values.codestatusRelease;
 					var showCloseOption = false;
 		
-					if ($preRelease.prop("checked") || mergeTarget !== "master") {
+					if ($preRelease.checked || mergeTarget !== "master") {
 						newCodeStatus = settings.values.codestatusPreRelease;
 					}
 					else {
@@ -1255,11 +1056,19 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 			/* Add button to bugs in release when viewing releases */
 			if (settings.fields.revision.length) {
 				editSection(contents, 'div.release-timeline, div.release-show', function($div) {
-					$div.find("span.bzButtons").remove();
+					if (!$div.length) { return; }
+					
+					var nodesToRemove = $div.querySelectorAll("span.bzButtons");
+					if (nodesToRemove) {
+						for (var node in nodesToRemove) {
+							node.parentNode.removeChild(node);
+						}
+					}
 		
-					$div.find("div.release-header").each(function() {
-						var $this = $(this);
-						var release = $this.closest("div.release").find("ul.tag-references li a span").text();
+					var $headers = $div.querySelectorAll("div.release-header");
+					Array.prototype.forEach.call($headers, function(el, i) {
+						var $this = el;
+						var release = closest($this, "div.release").querySelectorAll("ul.tag-references li a span")[0].textContent;
 						
 						$this.prepend(
 							$("<span>")
@@ -1295,7 +1104,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 				
 				comment = "Created pull request #" + pr + ". (" + window.location.href + ")\r\n\r\n" + comment;
 				
-				params["comment"] = {"body": $.trim(comment)};
+				params["comment"] = {"body": comment.trim()};
 	
 				if (updateBug) {
 					if (settings.fields.gitHubPullRequestURL.length > 0) {
@@ -1319,100 +1128,82 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 		var injectMilestoneActions = function(contents) {
 			// Don't continue if we aren't mapped to a product
 			if (!product) { 
-				$("div.bzButtons").remove();
+				var nodesToRemove = document.querySelectorAll("span.bzButtons");
+				if (nodesToRemove) {
+					for (var node in nodesToRemove) {
+						node.parentNode.removeChild(node);
+					}
+				}
 				return;
 			}
 			
 			/* Add button to milestone when viewing milestones */
 			editSection(contents, 'ul.table-list-milestones', function($ul) {
-				$ul.find("span.bzButtons").remove();
+				var nodesToRemove = $ul.querySelectorAll("span.bzButtons");
+				if (nodesToRemove) {
+					for (var node in nodesToRemove) {
+						node.parentNode.removeChild(node);
+					}
+				}
 	
-				$ul.find("div.milestone-title").each(function() {
-					var $this = $(this);
-					var milestone = $this.find("h2 a").text();
+				var $milestones = $ul.querySelectorAll("div.milestone-title");
+				Array.prototype.forEach.call($milestones, function(el, i) {
+					var $this = el;
+					var milestone = $this.querySelectorAll("h2 a").textContent;
 
-					$this
-						.append(
-							$("<span>")
-								.addClass("bzButtons")
-								.html(
-									$("<a>")
-										.addClass("btn btn-sm")
-										.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-										.append(" View all in " + settings.terms.bugzilla + "")
-										.attr({
-											href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-											target: "_blank"
-										})
-								)
-						)
-						.append(
-							$("<span>")
-								.addClass("bzButtons")
-								.html(
-									$("<a>")
-										.addClass("btn btn-sm")
-										.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-										.append(" View unresolved only")
-										.attr({
-											href: bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-											target: "_blank"
-										})
-								)
-						);
+					$this.insertAdjacentHTML('beforeend',
+							`<span class="bzButtons">`
+							+ `<a class="btn btn-sm" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
+								+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+								+ " View all in " + settings.terms.bugzilla
+							+ `</a>`
+							+ `</span>`
+							`<span class="bzButtons">`
+							+ `<a class="btn btn-sm" href="` + bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
+								+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+								+ " View unresolved only"
+							+ `</a>`
+						+ `</span>`
+					);
 				});
 			});
 			
 			/* Add button to milestone in sidebar */
 			editSection(contents, '#partial-discussion-sidebar', function($sidebar) {
-				$sidebar.find("#bzButtonMilestone").remove();
-				$sidebar.find("#bzButtonMilestoneUnresolved").remove();
-				var $a = $sidebar.find("a.milestone-name");
-				var milestone = $a.attr("title");
-					
-				$a
-					.after(
-						$("<a>")
-							.addClass("btn btn-sm")
-							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-							.append(" View unresolved only")
-							.css({
-								width: "100%",
-								"text-align": "center",
-								"margin-top": "5px"
-							})
-							.attr({
-								id: "bzButtonMilestoneUnresolved",
-								href: bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-								target: "_blank"
-							})
-					)
-					.after(
-						$("<a>")
-							.addClass("btn btn-sm")
-							.html('<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>')
-							.append(" View all in " + settings.terms.bugzilla + "")
-							.css({
-								width: "100%",
-								"text-align": "center",
-								"margin-top": "5px"
-							})
-							.attr({
-								id: "bzButtonMilestone",
-								href: bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone),
-								target: "_blank"
-							})
+				var nodeToRemove = $sidebar.querySelectorAll("#bzButtonMilestone")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
+				nodeToRemove = $sidebar.querySelectorAll("#bzButtonMilestoneUnresolved")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
+				var $a = $sidebar.querySelectorAll("a.milestone-name")[0];
+				
+				if ($a) {
+					var milestone = $a.getAttribute("title");
+						
+					$a.insertAdjacentHTML("afterend",
+						`<a class="btn btn-sm" style="width: 100%; text-align: center; margin-top: 5px;" id="bzButtonMilestoneUnresolved" href="` + bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
+							+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+							+ " View unresolved only"
+						+ `</a>`
+						+ `<a class="btn btn-sm" style="width: 100%; text-align: center; margin-top: 5px;" id="bzButtonMilestone" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
+							+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+							+ " View all in " + settings.terms.bugzilla + ""
+						+ `</a>`
 					);
+				}
 			});
 			
 			/* Add button to milestone when viewing milestone */
 			editSection(contents, '.TableObject-item .d-block', function($buttons) {
-				$buttons.find("#bzButtonMilestone").remove();
-				$buttons.find("#bzButtonMilestoneUnresolved").remove();
-				var $a = $buttons.find("a").filter(function() {
+				$buttons.querySelectorAll("#bzButtonMilestone").remove();
+				$buttons.querySelectorAll("#bzButtonMilestoneUnresolved").remove();
+				var $a = $buttons.querySelectorAll("a").filter(function() {
 					return $(this).html() === "Edit milestone";
 				});
-				var milestone = $buttons.closest(".TableObject").find(".text-normal").first().text();
+				var milestone = $buttons.closest(".TableObject").querySelectorAll(".text-normal").first().text();
 					
 				$a
 					.before(
@@ -1443,14 +1234,21 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 		var injectNewMilestoneSelect = function(contents) {
 			// Don't continue if we aren't mapped to a product
 			if (!product) { 
-				$("h6.milestone-select-menu").remove();
+				var nodeToRemove = document.querySelectorAll("h6.milestone-select-menu")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
 				return;
 			}
 			
 			editSection(contents, 'form.new_milestone, form.js-milestone-edit-form', function($el) {
-				$el.find("h6.milestone-select-menu").remove();
+				if (!$el.length) { return; }
+				var nodeToRemove = $el[0].querySelectorAll("h6.milestone-select-menu")[0];
+				if (nodeToRemove) {
+					nodeToRemove.parentNode.removeChild(nodeToRemove);
+				}
 	
-				var $input = $el.find("input#milestone_title");
+				var $input = $el[0].querySelectorAll("input#milestone_title")[0];
 				$input.after(
 					$("<h6>")
 						.addClass("select-menu js-menu-container js-select-menu milestone-select-menu")
@@ -1471,7 +1269,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 								.append('<svg height="16" width="14" class="ml-2" style="vertical-align: bottom;"><path d="M14 8.77V7.17l-1.94-0.64-0.45-1.09 0.88-1.84-1.13-1.13-1.81 0.91-1.09-0.45-0.69-1.92H6.17l-0.63 1.94-1.11 0.45-1.84-0.88-1.13 1.13 0.91 1.81-0.45 1.09L0 7.23v1.59l1.94 0.64 0.45 1.09-0.88 1.84 1.13 1.13 1.81-0.91 1.09 0.45 0.69 1.92h1.59l0.63-1.94 1.11-0.45 1.84 0.88 1.13-1.13-0.92-1.81 0.47-1.09 1.92-0.69zM7 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" /></svg>')
 								.click(function(e){
 									e.preventDefault();
-									$(this).parent().find(".select-menu-modal-holder").show();
+									$(this).parent().querySelectorAll(".select-menu-modal-holder").show();
 									window.postMessage({method: "showMilestoneForm"}, '*');
 								})
 						)
@@ -1543,7 +1341,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 			editSection(contents, '.discussion-sidebar-item.sidebar-labels', function($div) {
 				doLabelSync = false;
 				
-				var labels = $div.find(".labels .label").map(function() { return $(this).html(); });
+				var labels = $div.querySelectorAll(".labels .label").map(function() { return $(this).html(); });
 				var params = {};
 				params[settings.fields.gitHubLabels] = labels.toArray().join(' ');
 				
@@ -1569,7 +1367,7 @@ define("github-rollup-bzgh", ["github/jquery"], function(github__jquery) {
 				/* Sets the product so we can do product-specific things */
 				case "setProduct":
 					product = message.product;
-					$(".product-select-menu .select-menu-modal-holder").hide();
+					document.querySelectorAll(".product-select-menu .select-menu-modal-holder")[0].style.display = 'none';
 					
 					injectProductName(document);
 					injectPageHeadActions(document);
