@@ -209,7 +209,7 @@ define("github-rollup-bzgh", [], function() {
 						}
 						
 						if (syncPendingComments) {
-							var $pendingComments = document.querySelectorAll("div.is-pending").not(".is-writer");
+							var $pendingComments = document.querySelectorAll("div.is-pending:not(.is-writer)");
 							
 							if ($pendingComments.length > 0) {
 								comment += "\r\n\r\nLine Comments:";
