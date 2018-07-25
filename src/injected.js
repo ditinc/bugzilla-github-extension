@@ -101,7 +101,6 @@ define("github-rollup-bzgh", [], function() {
 		}
 	
 		var createListeners = function() {
-
 			// proxy the html replaceWith instead of jQuery's replaceWith
 			var testReplace = HTMLDivElement.prototype.replaceWith;
 			
@@ -125,11 +124,11 @@ define("github-rollup-bzgh", [], function() {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 				
 					var $form = closest(event.target, "form");
-					var syncComment = $form.querySelectorAll(".syncComment").checked;
-					var resolveBug = $form.querySelectorAll(".resolveBug").checked;
-					var reopenBug = $form.querySelectorAll(".reopenBug").checked;
-					var comment = (syncComment ? document.querySelectorAll("#new_comment_field").value : "");
-					var hoursWorked = $form.querySelectorAll(".workTime").value;
+					var syncComment = $form.querySelectorAll(".syncComment")[0].checked;
+					var resolveBug = $form.querySelectorAll(".resolveBug")[0].checked;
+					var reopenBug = $form.querySelectorAll(".reopenBug")[0].checked;
+					var comment = (syncComment ? document.querySelectorAll("#new_comment_field")[0].value : "");
+					var hoursWorked = $form.querySelectorAll(".workTime")[0].value;
 					
 					if (syncComment && !resolveBug && !reopenBug) {
 						if (comment.trim().length) {
@@ -160,12 +159,12 @@ define("github-rollup-bzgh", [], function() {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
 					var $form = closest(event.target, "form");
-					var syncComment = $form.querySelectorAll(".syncComment").checked;
+					var syncComment = $form.querySelectorAll(".syncComment")[0].checked;
 					
 					if (syncComment) {
-						var comment = $form.querySelectorAll("textarea").value;
-						var line = $form.querySelectorAll("[name='line']").value;
-						var path = $form.querySelectorAll("[name='path']").value;
+						var comment = $form.querySelectorAll("textarea")[0].value;
+						var line = $form.querySelectorAll("[name='line']")[0].value;
+						var path = $form.querySelectorAll("[name='path']")[0].value;
 						
 						if (comment.trim().length) {
 							if (!line || line === "false") {
@@ -186,13 +185,13 @@ define("github-rollup-bzgh", [], function() {
 	
 					var isFilesTab = matches(event.target, ".pull-request-review-menu form button.btn-primary[type='submit']");
 					var $form = closest(event.target, "form");
-					var syncComment = $form.querySelectorAll(".syncComment").checked;
-					var syncPendingComments = $form.querySelectorAll(".syncPendingComments").checked;
+					var syncComment = $form.querySelectorAll(".syncComment")[0].checked;
+					var syncPendingComments = $form.querySelectorAll(".syncPendingComments")[0].checked;
 					
 					if (syncComment || syncPendingComments) {
-						var summary = $form.querySelectorAll("textarea").value.trim();
-						var reviewType = $form.querySelectorAll("[type='radio']:checked").value;
-						var hoursWorked = $form.querySelectorAll(".workTime").value;
+						var summary = $form.querySelectorAll("textarea")[0].value.trim();
+						var reviewType = $form.querySelectorAll("[type='radio']:checked")[0].value;
+						var hoursWorked = $form.querySelectorAll(".workTime")[0].value;
 						var comment = "Reviewed";
 						
 						if (reviewType === "approve") {
@@ -217,7 +216,7 @@ define("github-rollup-bzgh", [], function() {
 								
 								Array.prototype.forEach.call($pendingComments, function(el, i) {
 									var $form = el;
-									var pendingComment = $form.querySelectorAll("textarea").value;
+									var pendingComment = $form.querySelectorAll("textarea")[0].value;
 									var line = (
 										isFilesTab ? 
 											$form.closest(".line-comments.js-addition, .line-comments.js-deletion").parent().prev("tr").children("td[data-line-number]").data("line-number")
@@ -351,11 +350,11 @@ define("github-rollup-bzgh", [], function() {
 					var closeBugs = $closeBugs.checked && !$closeBugs.disabled;
 
 					if (comments.length && tag.length && title.length && (updateCodeStatus || updateRevision || closeBugs)) {
-						var matches = comments.match(new RegExp("^(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))|\\n(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))", "ig"));
+						var matched = comments.match(new RegExp("^(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))|\\n(\\[(\\d+)\\]|(\\d+)|(Bug|" + settings.terms.bug + ")\\s*(\\d+))", "ig"));
 						
 						var bugIds = [];
-						for (var i = 0; i < matches.length; i++) {
-							bugIds.push(matches[i].match(/\d+/)[0]);
+						for (var i = 0; i < matched.length; i++) {
+							bugIds.push(matched[i].match(/\d+/)[0]);
 						}
 						
 						if (bugIds.length) {
@@ -471,8 +470,8 @@ define("github-rollup-bzgh", [], function() {
 				}
 			}
 			
-			document.removeEventListener("click.DITBugzillaGitHub", clickHandler);
-			document.addEventListener("click.DITBugzillaGitHub", clickHandler);
+			document.removeEventListener("click", clickHandler.bind(DITBugzillaGitHub));
+			document.addEventListener("click", clickHandler.bind(DITBugzillaGitHub));
 		}
 	
 		var linkifyBugNumber = function(contents) {
@@ -752,7 +751,7 @@ define("github-rollup-bzgh", [], function() {
 			if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 	
 			editSection(contents, '.js-previewable-comment-form, .pull-request-review-menu, .review-summary-form-wrapper', function($div) {
-				$div.forEach(function(item, i) {
+				Array.prototype.forEach.call($div, function(item, i) {
 					var $this = item;
 					var $form = closest($this, "form"); 
 	
@@ -840,7 +839,7 @@ define("github-rollup-bzgh", [], function() {
 			
 			editSection(contents, '#partial-new-comment-form-actions, .pull-request-review-menu .form-actions, .review-summary-form-wrapper .form-actions', function($buttonsArray) {
 				if (!$buttonsArray) { return; }
-				$buttonsArray.forEach(function(item, i) {
+				Array.prototype.forEach.call($buttonsArray, function(item, i) {
 					var $buttons = item;
 					if ($buttons.querySelectorAll("input.workTime").length === 0) {
 						var isPRComment = matches($buttons, '#partial-new-comment-form-actions');
@@ -883,8 +882,8 @@ define("github-rollup-bzgh", [], function() {
 					$title.removeEventListener("change.DITBugzillaGitHub", titleChangeHandler);
 					injectNewPullRequestOptions(contents, true);
 				};
-				$title.removeEventListener("change.DITBugzillaGitHub", titleChangeHandler);
-				$title.addEventListener("change.DITBugzillaGitHub", titleChangeHandler);
+				$title.removeEventListener("change", titleChangeHandler);
+				$title.addEventListener("change", titleChangeHandler);
 	
 				if (matches && matches.length) {
 					bugId = matches[0].match(/\d+/)[0];
