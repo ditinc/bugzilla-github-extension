@@ -4,7 +4,7 @@
 	"name": "bugzilla-github-extension",
 	"short_name": "BZ<->GH",
 	"description": "This extension integrates GitHub and Bugzilla",
-	"version": "1.17.3",
+	"version": "1.17.4",
 	"background": {
 		"scripts": ["src/background.js"]
 	},

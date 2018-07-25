@@ -338,9 +338,11 @@ define("github-rollup-bzgh", [], function() {
 				/* Update bugs in release to new code status */
 				if (matches(event.target, "button.js-publish-release")) {
 					var $form = closest(event.target, "form");
-					var tag = $form.querySelectorAll("[name='release[tag_name]'].js-new-item-value")[0].value;
-					if ($form[0].id !== 'new_release') {
-						tag = $form[0].action.split('/')[$form[0].action.split('/').length-1];
+					var tag;
+					if ($form.id !== 'new_release') {
+						tag = $form.action.split('/')[$form.action.split('/').length-1];
+					} else {
+						tag = $form.querySelectorAll("[name='release[tag_name]'].js-new-item-value")[0].value;
 					}
 					var title = $form.querySelectorAll("input#release_name")[0].value;
 					var comments = $form.querySelectorAll("textarea")[0].value;
@@ -1055,15 +1057,15 @@ define("github-rollup-bzgh", [], function() {
 			
 			/* Add button to bugs in release when viewing releases */
 			if (settings.fields.revision.length) {
-				editSection(contents, 'div.release-timeline, div.release-show', function($div) {
+				editSection(contents, 'div.new-discussion-timeline, div.release-show', function($div) {
 					if (!$div.length) { return; }
 					
-					var $nodesToRemove = $div.querySelectorAll("span.bzButtons");
+					var $nodesToRemove = $div[0].querySelectorAll("span.bzButtons");
 					Array.prototype.forEach.call($nodesToRemove, function(node) {
 						node.parentNode.removeChild(node);
 					});
 		
-					var $headers = $div.querySelectorAll("div.release-header");
+					var $headers = $div[0].querySelectorAll("div.release-header");
 					Array.prototype.forEach.call($headers, function(el, i) {
 						var $this = el;
 						var release = closest($this, "div.release").querySelectorAll("ul.tag-references li a span")[0].textContent;
