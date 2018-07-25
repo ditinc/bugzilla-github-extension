@@ -61,6 +61,7 @@ define("github-rollup-bzgh", [], function() {
 		}
 		
 		function editSection(contents, selector, callback) {
+			if (!contents) { return; }
 			var $el;
 			
 			if (!contents.length && matches(contents, selector)) {
@@ -68,7 +69,18 @@ define("github-rollup-bzgh", [], function() {
 			}
 			else {
 				try {
-					$el = contents.querySelectorAll(selector);
+					if (contents.querySelectorAll) {
+						$el = contents.querySelectorAll(selector);
+					} else {
+						Array.prototype.forEach.call(contents, function(el) {
+							if (el && el.querySelectorAll) {
+								var $elsFound = el.querySelectorAll(selector);
+								if ($elsFound.length) {
+									$el = ($el || []).concat(Array.prototype.slice.call($elsFound));
+								}
+							}
+						});
+					}
 					if (selector.indexOf(",") < 0) {
 						$el = $el[$el.length - 1]; // if we're trying to return only one element, let's just return the last one
 					}
@@ -464,9 +476,32 @@ define("github-rollup-bzgh", [], function() {
 		}
 	
 		var linkifyBugNumber = function(contents) {
-			var $issueTitle = contents.querySelectorAll('.js-issue-title');
+			if (!contents) { return; }
+			var $issueTitle = [];
+			var $comments = [];
+			
+			if (contents.querySelectorAll) {
+				$issueTitle = contents.querySelectorAll('.js-issue-title');
+				$comments = contents.querySelectorAll('.markdown-body p, .markdown-body li, .markdown-body table');
+			} else {
+				Array.prototype.forEach.call(contents, function(el) {
+					if (el && el.querySelectorAll) {
+						var $issueTitles = el.querySelectorAll('.js-issue-title');
+						if ($issueTitles.length) {
+							$issueTitle = $issueTitle.concat(Array.prototype.slice.call($issueTitles));
+						}
+					}
+				});
+				Array.prototype.forEach.call(contents, function(el) {
+					if (el && el.querySelectorAll) {
+						var $commentsFound = el.querySelectorAll('.markdown-body p, .markdown-body li, .markdown-body table');
+						if ($commentsFound.length) {
+							$comments = $comments.concat(Array.prototype.slice.call($commentsFound));
+						}
+					}
+				});
+			}
 			$issueTitle = $issueTitle[$issueTitle.length - 1];
-			var $comments = contents.querySelectorAll('.markdown-body p, .markdown-body li, .markdown-body table');
 			
 			// Issue titles need changing
 			if ($issueTitle) {
@@ -519,9 +554,25 @@ define("github-rollup-bzgh", [], function() {
 				});
 			}
 			
-			var bugIds = Array.prototype.slice.call(contents.querySelectorAll("a.bzLink")).map(function(link) {
+			var $bzLinks = [];
+			if (contents.querySelectorAll) {
+				$bzLinks = contents.querySelectorAll("a.bzLink");
+				
+			} else {
+				Array.prototype.forEach.call(contents, function(el) {
+					if (el && el.querySelectorAll) {
+						var $bzLinksFound = el.querySelectorAll('a.bzLink');
+						if ($bzLinksFound.length) {
+							$bzLinks = $bzLinks.concat(Array.prototype.slice.call($bzLinksFound));
+						}
+					}
+				});
+			}
+			
+			var bugIds= Array.prototype.slice.call($bzLinks).map(function(link) {
 				return link.name;
 			});
+			
 			// Remove duplicates
 			bugIds = new Set(bugIds);
 			bugIds = [...bugIds];
@@ -879,12 +930,10 @@ define("github-rollup-bzgh", [], function() {
 					}
 				}
 				else {
-					var nodesToRemove = $form.querySelectorAll(".bugOptions");
-					if (nodesToRemove) {
-						for (var node in nodesToRemove) {
-							node.parentNode.removeChild(node);
-						}
-					}
+					var $nodesToRemove = $form.querySelectorAll(".bugOptions");
+					Array.prototype.forEach.call($nodesToRemove, function(node) {
+						node.parentNode.removeChild(node);
+					});
 				}
 			});
 		};
@@ -897,7 +946,11 @@ define("github-rollup-bzgh", [], function() {
 					var $buttons = $div.querySelectorAll("div.commit-form-actions")[0];
 					if (!$buttons) { return; }
 
-					var mergeTarget = document.querySelectorAll(".commit-ref")[0].children[0].innerHTML;
+					try {
+						var mergeTarget = document.querySelectorAll(".commit-ref")[0].children[0].innerHTML;
+					} catch (err) {
+						var mergeTarget = $div.getAttribute('data-channel').match(/ .*branch:([^ ]*) /g)[0].replace(/ .*branch:([^ ]*) /g, "$1");
+					}
 	
 					if (mergeTarget === "master") {
 						var newCodeStatus = settings.values.codestatusMerge;
@@ -1006,12 +1059,10 @@ define("github-rollup-bzgh", [], function() {
 				editSection(contents, 'div.release-timeline, div.release-show', function($div) {
 					if (!$div.length) { return; }
 					
-					var nodesToRemove = $div.querySelectorAll("span.bzButtons");
-					if (nodesToRemove) {
-						for (var node in nodesToRemove) {
-							node.parentNode.removeChild(node);
-						}
-					}
+					var $nodesToRemove = $div.querySelectorAll("span.bzButtons");
+					Array.prototype.forEach.call($nodesToRemove, function(node) {
+						node.parentNode.removeChild(node);
+					});
 		
 					var $headers = $div.querySelectorAll("div.release-header");
 					Array.prototype.forEach.call($headers, function(el, i) {
@@ -1069,23 +1120,19 @@ define("github-rollup-bzgh", [], function() {
 		var injectMilestoneActions = function(contents) {
 			// Don't continue if we aren't mapped to a product
 			if (!product) { 
-				var nodesToRemove = document.querySelectorAll("span.bzButtons");
-				if (nodesToRemove) {
-					for (var node in nodesToRemove) {
-						node.parentNode.removeChild(node);
-					}
-				}
+				var $nodesToRemove = document.querySelectorAll("span.bzButtons");
+				Array.prototype.forEach.call($nodesToRemove, function(node) {
+					node.parentNode.removeChild(node);
+				});
 				return;
 			}
 			
 			/* Add button to milestone when viewing milestones */
 			editSection(contents, 'ul.table-list-milestones', function($ul) {
-				var nodesToRemove = $ul.querySelectorAll("span.bzButtons");
-				if (nodesToRemove) {
-					for (var node in nodesToRemove) {
-						node.parentNode.removeChild(node);
-					}
-				}
+				var $nodesToRemove = $ul.querySelectorAll("span.bzButtons");
+				Array.prototype.forEach.call($nodesToRemove, function(node) {
+					node.parentNode.removeChild(node);
+				});
 	
 				var $milestones = $ul.querySelectorAll("div.milestone-title");
 				Array.prototype.forEach.call($milestones, function(el, i) {
@@ -1093,13 +1140,13 @@ define("github-rollup-bzgh", [], function() {
 					var milestone = $this.querySelectorAll("h2 a").textContent;
 
 					$this.insertAdjacentHTML('beforeend',
-							`<span class="bzButtons">`
+						`<span class="bzButtons">`
 							+ `<a class="btn btn-sm" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
 								+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
 								+ " View all in " + settings.terms.bugzilla
 							+ `</a>`
-							+ `</span>`
-							`<span class="bzButtons">`
+						+ `</span>`
+						+ `<span class="bzButtons">`
 							+ `<a class="btn btn-sm" href="` + bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
 								+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
 								+ " View unresolved only"
