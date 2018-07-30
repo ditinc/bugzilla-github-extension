@@ -1138,7 +1138,7 @@ define("github-rollup-bzgh", [], function() {
 				var $milestones = $ul.querySelectorAll("div.milestone-title");
 				Array.prototype.forEach.call($milestones, function(el, i) {
 					var $this = el;
-					var milestone = $this.querySelectorAll("h2 a").textContent;
+					var milestone = $this.querySelectorAll("h2 a")[0].textContent;
 
 					$this.insertAdjacentHTML('beforeend',
 						`<span class="bzButtons">`
