@@ -219,11 +219,11 @@ define("github-rollup-bzgh", [], function() {
 									var pendingComment = $form.querySelectorAll("textarea")[0].value;
 									var line = (
 										isFilesTab ? 
-											$form.closest(".line-comments.js-addition, .line-comments.js-deletion").parent().prev("tr").children("td[data-line-number]").data("line-number")
+											closest($form, ".line-comments.js-addition, .line-comments.js-deletion, .line-comments").parentNode.previousElementSibling.querySelectorAll("td[data-line-number]")[0].getAttribute("data-line-number")
 										:
-											$form.closest(".file").querySelectorAll(".blob-num-deletion.js-linkable-line-number:last(), .blob-num-addition.js-linkable-line-number:last()").data("line-number")
+											closest($form, ".file").querySelectorAll(".blob-num-deletion.js-linkable-line-number:last(), .blob-num-addition.js-linkable-line-number:last()")[0].getAttribute("data-line-number")
 									);
-									var path = $form.closest(".file").querySelectorAll(".file-info a, a.file-info").html().trim();
+									var path = $form.closest(".file").querySelectorAll(".file-info a, a.file-info")[0].innerHTML.trim();
 									
 									if (pendingComment.trim().length) {
 										if (!line || line === "false") {
