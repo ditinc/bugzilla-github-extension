@@ -472,8 +472,9 @@ define("github-rollup-bzgh", [], function() {
 				}
 			}
 			
-			document.removeEventListener("click", clickHandler.bind(DITBugzillaGitHub));
-			document.addEventListener("click", clickHandler.bind(DITBugzillaGitHub));
+			var boundClickHandler = clickHandler.bind(DITBugzillaGitHub);
+			document.removeEventListener("click", boundClickHandler);
+			document.addEventListener("click", boundClickHandler);
 		}
 	
 		var linkifyBugNumber = function(contents) {
