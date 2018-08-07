@@ -658,7 +658,7 @@ define("github-rollup-bzgh", [], function() {
 				
 				$el.querySelectorAll("h6.select-menu div.select-menu-modal-holder div.select-menu-modal div.select-menu-header")[0].onclick = function(e) {
 					e.stopPropagation(); 
-					closest(this, ".select-menu-modal-holder")[0].style.display = 'none';
+					closest(this, ".select-menu-modal-holder").style.display = 'none';
 				};
 			});
 		};
