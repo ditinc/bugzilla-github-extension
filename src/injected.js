@@ -286,7 +286,7 @@ define("github-rollup-bzgh", [], function() {
 				/* Make sure we display correct new code status (new release) */
 				if (matches(event.target, "input#release_prerelease")) {
 					var isPreRelease = document.querySelectorAll("input#release_prerelease")[0].checked;
-					var mergeTarget = document.querySelectorAll(".release-target-wrapper .js-menu-target span")[0].innerHTML;
+					var mergeTarget = document.querySelectorAll(".js-release-target-wrapper .js-menu-target span")[0].innerHTML;
 					var newCodeStatus;
 	
 					if (!isPreRelease && mergeTarget === "master") {
@@ -342,7 +342,7 @@ define("github-rollup-bzgh", [], function() {
 					if ($form.id !== 'new_release') {
 						tag = $form.action.split('/')[$form.action.split('/').length-1];
 					} else {
-						tag = $form.querySelectorAll("[name='release[tag_name]'].js-new-item-value")[0].value;
+						tag = $form.querySelectorAll("[name='release[tag_name]']")[0].value;
 					}
 					var title = $form.querySelectorAll("input#release_name")[0].value;
 					var comments = $form.querySelectorAll("textarea")[0].value;
@@ -997,9 +997,9 @@ define("github-rollup-bzgh", [], function() {
 		};
 		
 		var injectReleaseOptions = function(contents) {
-			editSection(contents, 'div.new-release', function($div) {
+			editSection(contents, 'form.js-release-form', function($div) {
 				if ($div.querySelectorAll("input#updateRevision").length === 0) {
-					var mergeTarget = $div.querySelectorAll(".release-target-wrapper .js-menu-target span")[0].innerHTML;
+					var mergeTarget = $div.querySelectorAll(".js-release-target-wrapper .js-menu-target span")[0].innerHTML;
 					var $preRelease = $div.querySelectorAll("input#release_prerelease")[0];
 					var newCodeStatus = settings.values.codestatusRelease;
 					var showCloseOption = false;
@@ -1069,7 +1069,7 @@ define("github-rollup-bzgh", [], function() {
 					var $headers = $div[0].querySelectorAll("div.release-header");
 					Array.prototype.forEach.call($headers, function(el, i) {
 						var $this = el;
-						var release = closest($this, "div.release").querySelectorAll("ul.tag-references li a span")[0].textContent;
+						var release = closest($this, "div.release").querySelectorAll("ul li a span")[0].textContent;
 						
 						$this.insertAdjacentHTML("afterbegin",
 							`<span class="bzButtons" style="float: right;">`
