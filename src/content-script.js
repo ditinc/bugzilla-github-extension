@@ -378,10 +378,11 @@ function run(settings) {
 				$div
 					.before(
 						$("<div>")
-							.addClass("select-menu-text-filter")
+							.addClass("select-menu-text-filter pb-10")
 							.css({
 								"padding-bottom": "10px",
-								"border-bottom": "1px solid #ddd"
+								"border-bottom": "1px solid #ddd",
+								"cursor": "auto"
 							})
 							.html(
 								$("<input>")
@@ -447,6 +448,27 @@ function run(settings) {
 										}
 									})
 							)
+							.append(
+								$("<div>")
+									.addClass("pt-2")
+									.append(
+										$("<label>")
+											.append(
+												$('<input class="showAllMilestones mr-1 d-inline" type="checkbox" style="width: auto;" />')
+													.change(function(e) {
+														e.stopPropagation();
+														
+														var checked = e.target.checked;
+														if (checked) {
+															$(".bzInactive").removeClass("d-none");
+														} else {
+															$(".bzInactive").addClass("d-none");
+														}
+													})
+											)
+											.append("Show Inactive Milestones")
+									)
+							)
 					)
 					.before(
 						$("<div>")
@@ -479,7 +501,7 @@ function run(settings) {
 						return;
 					}
 					else {
-						return {name: milestone.name, sortkey: milestone.sortkey};
+						return {name: milestone.name, sortkey: milestone.sortkey, is_active: milestone.is_active};
 					}
 				});
 				
@@ -492,7 +514,7 @@ function run(settings) {
 					
 					$div.append(
 						$("<div>")
-							.addClass("select-menu-item js-navigation-item" + (selected ? " selected" : ""))
+							.addClass("select-menu-item js-navigation-item" + (selected ? " selected" : "") + (el.is_active ? "" : " bzInactive d-none"))
 							.html('<svg aria-hidden="true" class="octicon octicon-check select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path d="M12 5L4 13 0 9l1.5-1.5 2.5 2.5 6.5-6.5 1.5 1.5z"></path></svg>')
 							.append(
 								$("<div>")
