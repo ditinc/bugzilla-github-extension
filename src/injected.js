@@ -503,39 +503,41 @@ define("github-rollup-bzgh", [], function() {
 					}
 				});
 			}
-			$issueTitle = $issueTitle[$issueTitle.length - 1];
 			
 			// Issue titles need changing
-			if ($issueTitle) {
-				var newHtml = $issueTitle.innerHTML.trim();
-				
-				if ($issueTitle.querySelectorAll('a').length === 0) {
-					var matches = newHtml.match(BUG_REGEX);
-	
-					if (matches && matches.length) {
-						bugId = matches[0].match(/\d+/)[0];
-						
-						/* This will turn the bug number into a link to the bug */
-						newHtml = newHtml.replace(BUG_REGEX, '<a class="bzLink" name="' + bugId + '" href="' + getBugUrl() + '">[' + bugId + ']</a>');
-					}
-					else {
-						var branch = contents.querySelectorAll(".commit-ref")[1].children[0].innerHTML || "";
-						matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + ")[-|_]?\\d+", "i"));
-						
+			Array.prototype.forEach.call($issueTitle, function($title) {
+				if ($title) {
+					var newHtml = $title.innerHTML.trim();
+					
+					if ($title.querySelectorAll('a').length === 0) {
+						var matches = newHtml.match(BUG_REGEX);
+		
 						if (matches && matches.length) {
 							bugId = matches[0].match(/\d+/)[0];
-						
-							/* This will add the bug number as a link to the bug */
-							newHtml = '<a class="bzLink" name="' + bugId + '" href="' + getBugUrl() + '">[' + bugId + ']</a> ' + newHtml;
+							
+							/* This will turn the bug number into a link to the bug */
+							newHtml = newHtml.replace(BUG_REGEX, '<a class="bzLink" name="' + bugId + '" href="' + getBugUrl() + '">[' + bugId + ']</a>');
 						}
 						else {
-							bugId = null;
+							var branch = contents.querySelectorAll(".commit-ref")[1].children[0].innerHTML || "";
+							matches = branch.match(new RegExp("^(Bug|" + settings.terms.bug + ")[-|_]?\\d+", "i"));
+							
+							if (matches && matches.length) {
+								bugId = matches[0].match(/\d+/)[0];
+							
+								/* This will add the bug number as a link to the bug */
+								newHtml = '<a class="bzLink" name="' + bugId + '" href="' + getBugUrl() + '">[' + bugId + ']</a> ' + newHtml;
+							}
+							else {
+								bugId = null;
+							}
 						}
 					}
+		
+					$title.innerHTML = newHtml;
 				}
-	
-				$issueTitle.innerHTML = newHtml;
-			}
+			});
+
 			if ($comments.length) {
 				Array.prototype.forEach.call($comments, function(el, i) {
 					var $this = el;
