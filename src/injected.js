@@ -640,7 +640,7 @@ define("github-rollup-bzgh", [], function() {
 								+ `<div class="js-select-menu-deferred-content">`
 									+ `<div class="select-menu-filters">`
 										+ `<div class="is-loading p-5">`
-											+ `<img class="column centered" src="https://assets-cdn.github.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
+											+ `<img class="column centered" src="https://github.githubassets.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
 										+ `</div>`
 										+ `<div class="select-menu-list">`
 											+ `<div data-filterable-for="products-filter-field" data-filterable-type="substring"></div>`
@@ -1253,7 +1253,7 @@ define("github-rollup-bzgh", [], function() {
 								+ `<div class="js-select-menu-deferred-content">`
 									+ `<div class="select-menu-filters">`
 										+ `<div class="is-loading p-5">`
-											+ `<img class="column centered" src="https://assets-cdn.github.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
+											+ `<img class="column centered" src="https://github.githubassets.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
 										+ `</div>`
 										+ `<div class="select-menu-list">`
 											+ `<div data-filterable-for="milestones-filter-field" data-filterable-type="substring"></div>`
