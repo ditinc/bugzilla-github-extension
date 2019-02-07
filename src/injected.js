@@ -286,7 +286,7 @@ define("github-rollup-bzgh", [], function() {
 				/* Make sure we display correct new code status (new release) */
 				if (matches(event.target, "input#release_prerelease")) {
 					var isPreRelease = document.querySelectorAll("input#release_prerelease")[0].checked;
-					var mergeTarget = document.querySelectorAll(".js-release-target-wrapper .js-menu-target span")[0].innerHTML;
+					var mergeTarget = decodeURI(document.querySelectorAll(".js-previewable-comment-form")[0].dataset.previewUrl).split('[target_commitish]=')[1].split('&')[0];
 					var newCodeStatus;
 	
 					if (!isPreRelease && mergeTarget === "master") {
@@ -305,8 +305,9 @@ define("github-rollup-bzgh", [], function() {
 						$closeBugsDiv.classList.add("d-none");
 						$closeBugsDiv.querySelectorAll("#closeBugs")[0].disabled = true;
 					}
-	
+
 					document.querySelectorAll(".newCodeStatus")[0].innerHTML = newCodeStatus;
+					document.querySelectorAll(".newCodeStatus")[1].innerHTML = newCodeStatus;
 				}
 				
 				/* Make sure we display correct new code status (new release) */
@@ -1001,7 +1002,7 @@ define("github-rollup-bzgh", [], function() {
 		var injectReleaseOptions = function(contents) {
 			editSection(contents, 'form.js-release-form', function($div) {
 				if ($div.querySelectorAll("input#updateRevision").length === 0) {
-					var mergeTarget = $div.querySelectorAll(".js-release-target-wrapper .js-menu-target span")[0].innerHTML;
+					var mergeTarget = decodeURI($div.querySelectorAll(".js-previewable-comment-form")[0].dataset.previewUrl).split('[target_commitish]=')[1].split('&')[0];
 					var $preRelease = $div.querySelectorAll("input#release_prerelease")[0];
 					var newCodeStatus = settings.values.codestatusRelease;
 					var showCloseOption = false;
