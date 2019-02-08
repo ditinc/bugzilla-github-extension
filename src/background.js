@@ -10,7 +10,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	}
 });
 
-
 /* Show the options page when first installed */
 chrome.runtime.onInstalled.addListener(function(details){
 	if(details.reason == "install"){

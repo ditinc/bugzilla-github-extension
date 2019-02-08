@@ -4,13 +4,14 @@
 	"name": "bugzilla-github-extension",
 	"short_name": "BZ<->GH",
 	"description": "This extension integrates GitHub and Bugzilla",
-	"version": "1.18.3",
+	"version": "1.19.0",
 	"background": {
 		"scripts": ["src/background.js"]
 	},
 	"page_action": {
 		"default_icon": "images/icon48.png",
-		"default_title": "bugzilla-github-extension"
+		"default_title": "bugzilla-github-extension",
+		"default_popup": "src/page-action.html"
 	},
 	"content_scripts": [
 		{
@@ -19,7 +20,7 @@
 				"https://*/*"
 			],
 			"js": [
-				"lib/jquery-2.2.2.min.js",
+				"lib/jquery-3.3.1.min.js",
 				"lib/jquery.xmlrpc.min.js",
 				"src/globals.js",
 				"src/bugzilla.js",
@@ -37,7 +38,8 @@
 		"images/icon48.png"
 	],
 	"permissions": [
-		"storage"
+		"storage",
+		"https://*/"
 	],
 	"options_ui": {
 		"page": "src/options.html",
