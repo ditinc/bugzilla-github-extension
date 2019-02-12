@@ -78,7 +78,7 @@ function run(settings) {
 							var dupeBug = function(i) {
 								bugzilla
 									.updateBugs(dupes[i], {"dupe_of": dupeOf, "comment": {"body": "Marking as duplicate."}})
-									.success(function(response) {
+									.done(function(response) {
 										// Dupe the next bug, if there is one to dupe
 										if (dupes[i+1]) {
 											dupeBug(i+1);
@@ -87,7 +87,7 @@ function run(settings) {
 										// Close this bug now that it's duped
 										bugzilla
 											.updateBugs(dupes[i], {"status": "CLOSED", "comment": {"body": "Closing duplicate."}})
-											.success(function() {
+											.done(function() {
 												// Go to the real bug if there is nothing left to update
 												if (!dupes[i+1]) {
 													window.location.href = settings.bugzillaURL + "/show_bug.cgi?id=" + dupeOf;
@@ -536,7 +536,7 @@ function run(settings) {
 			
 			if (milestones.length === 0) {
 				bugzilla.getFieldInfo(["target_milestone"])
-					.error(function(response) {
+					.fail(function(response) {
 						var faultString = getFaultString(response);
 						
 						if (faultString.indexOf("You must log in") > -1) {
@@ -545,7 +545,7 @@ function run(settings) {
 							});
 						}
 					})
-					.success(function(response) {					
+					.done(function(response) {					
 						milestones = response[0].fields[0].values;
 		
 						populateMilestoneList();
@@ -616,10 +616,10 @@ function run(settings) {
 							$submitButton.prop("disabled", true);
 		
 							bugzilla.login($("#bzUsername").val(), $("#bzPassword").val())
-								.error(function(response) {
+								.fail(function(response) {
 									$errorLabel.html(getFaultString(response));
 								})
-								.success(function(response) {
+								.done(function(response) {
 									var $form = $("#bzLoginForm");
 									if (response[0].token) {
 										bugzilla.setToken(response[0].token);
@@ -653,7 +653,7 @@ function run(settings) {
 			var attachmentPromise = bugzilla.getAttachments(message.bugId);
 	
 			bugInfoPromise
-				.error(function(response) {
+				.fail(function(response) {
 					var faultString = getFaultString(response);
 					
 					if (faultString.indexOf("You must log in") > -1) {
@@ -662,7 +662,7 @@ function run(settings) {
 						});
 					}
 				})
-				.success(function(response) {
+				.done(function(response) {
 					var bugInfo = response[0].bugs[0];
 					var $sidebar = $('.sidebar-dit-bugzilla-details');
 		
@@ -678,7 +678,7 @@ function run(settings) {
 						);
 					}
 						
-					attachmentPromise.success(function(response) {
+					attachmentPromise.done(function(response) {
 						var attachments = response[0].bugs[message.bugId];
 						var $attachments = $(".sidebar-dit-bugzilla-attachments");
 		
@@ -708,7 +708,7 @@ function run(settings) {
 		
 		function loadBugLinkTitles(message) {
 			bugzilla.getBugs(message.bugIds, ["summary", "id"])
-				.error(function(response) {
+				.fail(function(response) {
 					var faultString = getFaultString(response);
 					
 					if (faultString.indexOf("You must log in") > -1) {
@@ -717,7 +717,7 @@ function run(settings) {
 						});
 					}
 				})
-				.success(function(response) {
+				.done(function(response) {
 					var bugInfo = response[0].bugs;
 
 					for (var i = 0; i < bugInfo.length; i++) {
@@ -734,7 +734,7 @@ function run(settings) {
 			var bugInfoPromise = bugzilla.getBug(message.bugId, ["summary"]);
 	
 			bugInfoPromise
-				.error(function(response) {
+				.fail(function(response) {
 					var faultString = getFaultString(response);
 					
 					if (faultString.indexOf("You must log in") > -1) {
@@ -743,7 +743,7 @@ function run(settings) {
 						});
 					}
 				})
-				.success(function(response) {
+				.done(function(response) {
 					var bugInfo = response[0].bugs[0];
 					var $title = $('#pull_request_title');
 

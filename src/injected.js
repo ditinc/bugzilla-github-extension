@@ -263,7 +263,7 @@ define("github-rollup-bzgh", [], function() {
 						}
 					}
 					
-					$container.removeChild($container.querySelectorAll("div.syncTitle"));
+					$container.removeChild($container.querySelector("div.syncTitle"));
 				}
 				
 				/* Make sure we display correct mergeTarget */
@@ -851,7 +851,7 @@ define("github-rollup-bzgh", [], function() {
 						var isPRComment = matches($buttons, '#partial-new-comment-form-actions');
 						var id = "workTime" + (new Date()).getTime();
 						$buttons.insertAdjacentHTML('beforeend',
-							`<input class="workTime" id="${id}" name="${id}" type="number" step="0.25" style="width: 2.5em; float: right; margin: ` + (isPRComment ? "5px" : "3px 5px") + `;" />`
+							`<input class="workTime" id="${id}" name="${id}" type="number" step="0.25" style="-moz-appearance: textfield; width: 2.5em; float: right; margin: ` + (isPRComment ? "5px" : "3px 5px") + `;" />`
 							+ `<label for="${id}" style="float: right; padding: ` + (isPRComment ? "7px 0" : "6px 0") + `">Hours Worked</label>`
 						);
 					}
@@ -966,7 +966,7 @@ define("github-rollup-bzgh", [], function() {
 					
 					$buttons.insertAdjacentHTML("beforeend",
 						`<label class="ml-2" for="workTimeMerge" style="vertical-align: middle;">Hours Worked</label>`
-						+ `<input class="ml-1" name="workTimeMerge" id="workTimeMerge" type="number" step="0.25" style="width: 2.5em; vertical-align: middle;" />`
+						+ `<input class="ml-1" name="workTimeMerge" id="workTimeMerge" type="number" step="0.25" style="-moz-appearance: textfield; width: 2.5em; vertical-align: middle;" />`
 						+ `<div class="form-checkbox">`
 							+ `<label for="resolveBug">`
 								+ "Resolve " + settings.terms.bug + " " + bugId

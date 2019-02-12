@@ -244,7 +244,7 @@ Bugzilla.prototype.getProducts = function() {
 		methodName: 'Product.get_enterable_products',
 		params: [{"Bugzilla_token": this.token}]
 	})
-	.error(function(response) {
+	.fail(function(response) {
 		return response;
 	})
 	.then(function(response) {
