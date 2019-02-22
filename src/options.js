@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		if (!fields) {
 			var bugzilla = new Bugzilla({bugzillaURL: bugzillaURL});
 			bugzilla.getFieldInfo()
-				.error(function(response) {
+				.fail(function(response) {
 					var faultString = $(response.responseXML).find("fault").find("member").first().find("string").html();
 					
 					$modal
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
 								})
 						);
 				})
-				.success(function(response) {					
+				.then(function(response) {					
 					fields = response[0].fields;
 					fields.sort(function(a, b) {
 						return (a.display_name < b.display_name ? -1 : (a.display_name > b.display_name ? 1 : 0));
@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			
 		var bugzilla = new Bugzilla({bugzillaURL: bugzillaURL});
 		bugzilla.getFieldInfo(field)
-			.error(function(response) {
+			.fail(function(response) {
 				var faultString = $(response.responseXML).find("fault").find("member").first().find("string").html();
 				
 				$modal
@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function () {
 							})
 					);
 			})
-			.success(function(response) {					
+			.then(function(response) {					
 				var values = response[0].fields[0].values;				
 				showSelectForm(values);
 			});

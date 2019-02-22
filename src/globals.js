@@ -35,6 +35,7 @@ var STORAGE_DEFAULTS = {
 	},
 	gitHubURL: "",
 	productMap: {},
+	selectedProduct: "",
 	terms: {
 		bug: "bug",
 		bugs: "bugs",

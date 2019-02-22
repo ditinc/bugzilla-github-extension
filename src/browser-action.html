@@ -8,6 +8,15 @@
 				font-size: 12px;
 				width: 430px;
 			}
+			div.header {
+				position: fixed;
+				top: 0;
+				background: white;
+				border-bottom: 1px solid lightgray;
+				width: 100%;
+				margin: 0 -3em;
+				padding: 0.5em 3em;
+			}
 			label {
 				font-weight: bold;
 				display: inline-block;
@@ -16,6 +25,7 @@
 			}
 			div.options {
 				margin-bottom: 2em;
+				margin-top: 6em;
 			}
 			div.optionsButtons {
 				position: fixed;
@@ -26,7 +36,7 @@
 				margin: 0 -3em;
 				padding: 0.5em 3em;
 			}
-			.options input {
+			.options input, .header select {
 				width: 30em;
 				margin-bottom: 1em;
 			}
@@ -85,14 +95,42 @@
 				background-color: white;
 				padding: 2em;
 			}
+			.modal button {
+				margin-left: 4px;
+			}
 			textarea#optionsJSON {
 				width: 100%;
 				height: 15em;
+			}
+			option.inactive {
+				font-style: italics;
+				color: #ccc;
+			}
+			.options select#milestone {
+				margin-left: 4px;
+				margin-bottom: 4px;
+				width: 100%;
+				float: none;
 			}
 		</style>
 	</head>
 
 	<body>
+		<div class="header">
+			<div>
+				<label for="product">
+					Quick Links
+				</label>
+				<select id="product" name="product"></select>
+			</div>
+			<div>
+				<button type="button" class="bugzilla-list-link" data-filter="bug_status=NEW&bug_status=ASSIGNED&bug_status=UNCONFIRMED&bug_status=REOPENED">View Unresolved</button>
+				<button type="button" class="bugzilla-list-link" data-filter="bug_status=RESOLVED">View Resolved</button>
+				<button type="button" id="milestoneModalLauncher">View Milestone...</button>
+				<button type="button" id="github">GitHub</button>
+			</div>
+		</div>
+
 		<div class="options">
 			<div>
 				<label for="bugzillaURL">
@@ -306,5 +344,6 @@
 		<script src="globals.js"></script>
 		<script src="bugzilla.js"></script>
 		<script src="options.js"></script>
+		<script src="browser-action.js"></script>
 	</body>
 </html>

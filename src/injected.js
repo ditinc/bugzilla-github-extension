@@ -599,7 +599,7 @@ define("github-rollup-bzgh", [], function() {
 									+ `</a>`
 							+ `</h3>`
 							+ `<div class="sidebar-dit-bugzilla-details">`
-								+ `<p class="reason text-small text-muted">Loading</p>`
+								+ `<p class="reason text-small text-muted">Loading...</p>`
 							+ `</div>`
 							+ `<h3 class="discussion-sidebar-heading">Attachments</h3>`
 							+ `<div class="sidebar-dit-bugzilla-attachments">`
