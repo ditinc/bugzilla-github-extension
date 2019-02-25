@@ -1,13 +1,14 @@
 document.addEventListener('DOMContentLoaded', function () {
 	"use strict";
 	var settings;
+	var products = [];
 	var milestones = [];
 	
 	chrome.storage.sync.get(
 		STORAGE_DEFAULTS, 
 		function(data) {
-			renderProducts(data.productMap, data.selectedProduct);
 			settings = data;
+			renderProducts();
 		}
 	);
 	
@@ -23,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			var opt = document.createElement("OPTION");
 			opt.value = field;
 			opt.text = label;
-			opt.dataset.repo = options[i].repo;
+			opt.dataset.repo = options[i].repo || null;
 			
 			if (typeof options[i].is_active !== 'undefined' && !options[i].is_active) {
 				opt.className = 'inactive';
@@ -33,15 +34,35 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
 	}
 	
-	function renderProducts(productMap, selectedProduct) {
+	function renderProducts() {
 		var $product = $('#product');
-		var options = Object.keys(productMap).map(function(repo) {
-			return {name: productMap[repo].name, label: productMap[repo].name + ' [' + repo + ']', repo: repo};
+		var bugzilla = new Bugzilla({bugzillaURL: settings.bugzillaURL});
+		bugzilla.getProducts().then(function(data) {
+			products = data[0].products;
+			var unsetProjects = products
+				.map(function(product) {
+					if (Object.values(settings.productMap).filter(function(mappedProduct) { return mappedProduct.name === product.name; }).length === 0) {
+						return {name: product.name, label: product.name};
+					}
+				})
+				.filter(function(el) { return el ? true : false; })
+				.sort(function(left, right) {
+					return left.name.localeCompare(right.name);
+				});
+			var selected = $product.val();
+			addOptions($product.get(0), unsetProjects, false);
+			
+			if (!selected) {
+				$product.val(settings.selectedProduct);
+			}
+		});
+		var options = Object.keys(settings.productMap).map(function(repo) {
+			return {name: settings.productMap[repo].name, label: settings.productMap[repo].name + ' [' + repo + ']', repo: repo};
 		}).sort(function(left, right) {
 			return left.name.localeCompare(right.name);
 		});
 		addOptions($product.get(0), options, true);
-		$product.val(selectedProduct);
+		$product.val(settings.selectedProduct);
 	}
 	
 	function getFieldListForUrl(fields) {
@@ -84,10 +105,13 @@ document.addEventListener('DOMContentLoaded', function () {
 	function showMilestonesModal(product) {
 		var modal = newModal("Loading milestones for " + product + " from " + settings.bugzillaURL + "...");		
 		var $modal = modal.getBody();
+		var productMilestones = (products.filter(function(p) {
+			return p.name === product;
+		})[0] || {}).milestones;
 		
 		var populateMilestoneSelect = function() {
-			var values = $.map(milestones, function(milestone) {
-				if ($.inArray(product, milestone.visibility_values) < 0) {
+			var values = $.map(productMilestones, function(milestone) {
+				if (milestone.visibility_values && $.inArray(product, milestone.visibility_values) < 0) {
 					return;
 				}
 				else {
@@ -155,34 +179,40 @@ document.addEventListener('DOMContentLoaded', function () {
 			addOptions(document.getElementById("milestone"), values);
 		};
 			
-		if (milestones.length === 0) {
-			var bugzilla = new Bugzilla({bugzillaURL: settings.bugzillaURL});
-			bugzilla.getFieldInfo(["target_milestone"])
-				.fail(function(response) {
-					var faultString = $(response.responseXML).find("fault").find("member").first().find("string").html();
-					
-					$modal
-						.html(
-							$("<p>").html("There was an error connecting to Bugzilla" + (faultString && faultString.length > 0 ? ":" : "."))
-						)
-						.append(
-							$("<p>").html(faultString)
-						)
-						.append(
-							$("<button>")
-								.html("OK")
-								.click(function() {
-									modal.remove();
-								})
-						);
-				})
-				.done(function(response) {					
-					milestones = response[0].fields[0].values;
-	
-					populateMilestoneSelect();
-				});
-		} else {
+		if (productMilestones) {
 			populateMilestoneSelect();
+		} else {
+			productMilestones = milestones;
+			if (milestones.length === 0) {				
+				var bugzilla = new Bugzilla({bugzillaURL: settings.bugzillaURL});
+				bugzilla.getFieldInfo(["target_milestone"])
+					.fail(function(response) {
+						var faultString = $(response.responseXML).find("fault").find("member").first().find("string").html();
+						
+						$modal
+							.html(
+								$("<p>").html("There was an error connecting to Bugzilla" + (faultString && faultString.length > 0 ? ":" : "."))
+							)
+							.append(
+								$("<p>").html(faultString)
+							)
+							.append(
+								$("<button>")
+									.html("OK")
+									.click(function() {
+										modal.remove();
+									})
+							);
+					})
+					.done(function(response) {					
+						milestones = response[0].fields[0].values;
+						productMilestones = milestones;
+		
+						populateMilestoneSelect();
+					});
+			} else {
+				populateMilestoneSelect();
+			}
 		}
 	}
 	
