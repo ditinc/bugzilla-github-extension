@@ -1,6 +1,6 @@
 'use strict';
 
-define("github-rollup-bzgh", [], function() {
+define(function() {
 	var DITBugzillaGitHub = function(settings, product) {
 		var bzUrl = settings.bugzillaURL;
 		var bugUrl = bzUrl + "/show_bug.cgi?id=";

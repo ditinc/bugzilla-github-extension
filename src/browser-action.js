@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	function renderProducts(productMap, selectedProduct) {
 		var $product = $('#product');
 		var options = Object.keys(productMap).map(function(repo) {
-			return {...productMap[repo], repo: repo};
+			return {name: productMap[repo].name, label: productMap[repo].name + ' [' + repo + ']', repo: repo};
 		}).sort(function(left, right) {
 			return left.name.localeCompare(right.name);
 		});
