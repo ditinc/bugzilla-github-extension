@@ -1,6 +1,10 @@
 [![Build Status](https://travis-ci.org/ditinc/bugzilla-github-extension.svg?branch=master)](https://travis-ci.org/ditinc/bugzilla-github-extension)
 # bugzilla-github-extension
-This Chrome extension integrates Bugzilla and GitHub to make your life easier.  It is a work in progress, so feel free to contribute!
+This browser extension integrates Bugzilla and GitHub to make your life easier.  It is a work in progress, so feel free to contribute!
+
+## Supported Browsers
+ - Chrome
+ - Firefox
 
 ## Features
 #### Bugzilla
@@ -41,7 +45,11 @@ This Chrome extension integrates Bugzilla and GitHub to make your life easier.  
 #### Chrome Web Store
 https://chrome.google.com/webstore/detail/bugzilla-github-extension/ofkjoeocpbkpamfhbfmgglkhhincgbdj
 
+#### Firefox Add-ons
+https://addons.mozilla.org/en-US/firefox/addon/bugzilla-github-extension-ff/
+
 #### Local Install
+###### Chrome
 Here's how you load an extension in Chrome when developing, taken from https://developer.chrome.com/extensions/getstarted#unpacked:
 > Extensions that you download from the Chrome Web Store are packaged up as .crx files, which is great for distribution, but not so great for development. Recognizing this, Chrome gives you a quick way of loading up your working directory for testing. Let's do that now.
 > 
@@ -56,3 +64,17 @@ Here's how you load an extension in Chrome when developing, taken from https://d
 > Alternatively, you can drag and drop the directory where your extension files live onto chrome://extensions in your browser to load it.
 > 
 > If the extension is valid, it'll be loaded up and active right away! If it's invalid, an error message will be displayed at the top of the page. Correct the error, and try again.
+
+###### Firefox
+Firefox is a little more complicated. In order for the sync storage to work, you need to have an applications key in the manifest.json file, with an email address as the value for "gecko". Something like this:
+
+```
+"applications": {
+  "gecko": {
+    "id": "bugzilla-github-extension@clango.com"
+  }
+}
+```
+
+Follow the instructions on this site for getting it installed locally: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension
+> Open "about:debugging" in Firefox, click "Load Temporary Add-on" and select any file in your extension's directory
