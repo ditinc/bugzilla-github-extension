@@ -1,4 +1,4 @@
-/* Make the icon active when we're on our GitHub or Bugzilla pages */
+/* Handle calls when we're on our GitHub or Bugzilla pages */
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	if (request.bugzillaSettings != null) {
 		// This object will be used to interact with Bugzilla.
@@ -102,8 +102,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			break;
 
 		case "updateBugs":
-			bugzilla
-			.updateBugs(request.bug, request.params);
+			bugzilla.updateBugs(request.bug, request.params);
 			break;
 
 		case "addComment":
