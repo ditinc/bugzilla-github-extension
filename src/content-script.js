@@ -76,7 +76,7 @@ chrome.runtime.onMessage.addListener((request) => {
 			chrome.runtime.sendMessage({
 				bugzillaSettings: request.settings,
 				method: "getAttachments",
-				bugId: bugInfo.bugId
+				bugId: request.bugId
 			});
 			break;
 		
@@ -103,7 +103,7 @@ chrome.runtime.onMessage.addListener((request) => {
 							
 			if (faultString.indexOf("You must log in") > -1) {
 				showLoginForm(function() {
-					showProductForm(getRepo(), [], settings.productMap, settings);
+					showProductForm([], settings.productMap, settings);
 				}, request.settings);
 			}
 			break;
@@ -543,7 +543,7 @@ function loadBugDetails(bugId, settings) {
 	});
 }
 
-function showProductForm(repo, products, productMap, settings) {
+function showProductForm(products, productMap, settings) {
 	if (products.length === 0) {
 		chrome.runtime.sendMessage({
 			bugzillaSettings: settings,
@@ -558,9 +558,6 @@ function showProductForm(repo, products, productMap, settings) {
 function run(settings) {
 	// Check the URL to determine if we're in Bugzilla or GitHub
 	if (location.href.indexOf(settings.bugzillaURL) > -1) {
-		// We're in Bugzilla
-		activateIcon();
-		
 		if (settings.fields.gitHubPullRequestURL.length > 0) {
 			var url = $('#' + settings.fields.gitHubPullRequestURL).val();
 			
@@ -683,7 +680,7 @@ function run(settings) {
 				
 				/* Shows a select control for Bugzilla product */
 				case "showProductForm":
-					showProductForm(repo, products, productMap, settings);
+					showProductForm(products, productMap, settings);
 					break;
 				
 				/* Shows a select control for Bugzilla milestone */

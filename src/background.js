@@ -48,7 +48,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 						method: request.callbackMessage,
 						response: response,
 						settings: request.bugzillaSettings,
-						fieldsToShow: request.fieldsToShow
+						fieldsToShow: request.fieldsToShow,
+						bugId: request.bugId
 					});
 				});
 			break;
@@ -69,7 +70,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 						method: request.callbackMessage,
 						response: response,
 						settings: request.bugzillaSettings,
-						fieldsToShow: request.fieldsToShow
+						fieldsToShow: request.fieldsToShow,
+						bugId: request.bugIds
 					});
 				});
 			break;
