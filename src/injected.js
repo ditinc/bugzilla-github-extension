@@ -272,7 +272,7 @@ System.register([], function(e, t) {
 						if (matches(event.target, ".btn-group-merge button[type='submit']")) {
 							if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 			
-							var mergeTarget = document.querySelectorAll(".commit-ref")[0].children.innerHTML;
+							var mergeTarget = document.querySelectorAll(".commit-ref")[0].title.split(':')[1];
 							var newCodeStatus;
 							
 							if (mergeTarget === "master") {
@@ -404,7 +404,7 @@ System.register([], function(e, t) {
 							var resolveBug = document.querySelectorAll("#resolveBug")[0].checked;
 							var updateBugCodeStatus = document.querySelectorAll("#updateBugCodeStatus")[0].checked;
 							var hoursWorked = document.querySelectorAll("#workTimeMerge")[0].value;
-							var mergeTarget = document.querySelectorAll(".commit-ref")[0].children[0].innerHTML;
+							var mergeTarget = document.querySelectorAll(".commit-ref")[0].title.split(':')[1];
 							var params = {};
 							var comment = "";
 							var newCodeStatus;
@@ -465,8 +465,9 @@ System.register([], function(e, t) {
 							}
 						}
 						
-						if (matches(event.target, "div.label-select-menu button.discussion-sidebar-heading")) {
-							var $labels = document.querySelectorAll("div.label-select-menu")[0];
+						if ((matches(event.target, ".discussion-sidebar-heading") && event.target.innerText === "Labels")
+								|| (matches(event.target.parentNode, ".discussion-sidebar-heading") && event.target.parentNode.innerText === "Labels")) {
+							var $labels = document.querySelectorAll("details.label-select-menu")[0];
 							
 							if (!matches($labels, ".active")) {
 								// Opened the label menu, so turn on label syncing (if there is a Bugzilla field defined)
@@ -954,7 +955,7 @@ System.register([], function(e, t) {
 							if (!$buttons) { return; }
 		
 							try {
-								var mergeTarget = document.querySelectorAll(".commit-ref")[0].children[0].innerHTML;
+								var mergeTarget = document.querySelectorAll(".commit-ref")[0].title.split(':')[1];
 							} catch (err) {
 								var mergeTarget = $div.getAttribute('data-channel').match(/ .*branch:([^ ]*) /g)[0].replace(/ .*branch:([^ ]*) /g, "$1");
 							}
@@ -1287,8 +1288,8 @@ System.register([], function(e, t) {
 					editSection(contents, '.discussion-sidebar-item.sidebar-labels', function($div) {
 						doLabelSync = false;
 						
-						var $labels = $div.querySelectorAll(".labels .label");
-						var labels = Array.prototype.slice.call($labels, function() { return this.innerHTML; });
+						var $labels = $div.querySelectorAll(".labels .IssueLabel span");
+						var labels = Array.prototype.map.call($labels, function(label) { return label.innerText; });
 						var params = {};
 						params[settings.fields.gitHubLabels] = labels.join(' ');
 						
