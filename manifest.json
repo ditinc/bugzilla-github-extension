@@ -6,7 +6,7 @@
 	"description": "This extension integrates GitHub and Bugzilla",
 	"version": "1.20.3",
 	"background": {
-		"scripts": ["src/background.js"]
+		"scripts": ["lib/jquery-3.3.1.min.js", "lib/jquery.xmlrpc.min.js", "src/bugzilla.js", "src/background.js"]
 	},
 	"browser_action": {
 		"default_icon": "images/icon48.png",
@@ -21,9 +21,7 @@
 			],
 			"js": [
 				"lib/jquery-3.3.1.min.js",
-				"lib/jquery.xmlrpc.min.js",
 				"src/globals.js",
-				"src/bugzilla.js",
 				"src/content-script.js"
 			]
 		}
