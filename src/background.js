@@ -139,7 +139,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 						bugzilla.updateBugs(request.duplicates[i], {"status": "CLOSED", "comment": {"body": "Closing duplicate."}})
 							.done(function(response) {
 								chrome.tabs.sendMessage(sender.tab.id, {
-									method: "duplicatesFinished",
+									method: "duplicateFinished",
 									response: response,
 									settings: request.bugzillaSettings,
 									duplicates: request.duplicates,
