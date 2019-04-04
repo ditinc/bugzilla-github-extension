@@ -102,7 +102,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			break;
 
 		case "updateBugs":
-			bugzilla.updateBugs(request.bug, request.params);
+			bugzilla.updateBugs(request.bugId, request.params);
 			break;
 
 		case "addComment":
