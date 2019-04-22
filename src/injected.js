@@ -809,7 +809,7 @@ System.register([], function(e, t) {
 							}
 							
 							var isReview = matches($this, ".pull-request-review-menu") || matches($this, ".review-summary-form-wrapper");
-							var toFind = (isReview ? "div.form-checkbox" : "div.float-left");
+							var toFind = (isReview ? "div.form-checkbox" : "div.comment-form-bottom");
 						
 							var target = $this.querySelectorAll(toFind)[0];
 							
@@ -821,7 +821,7 @@ System.register([], function(e, t) {
 												+ `<input class="syncComment" type="checkbox" checked />`
 											+ `</label>`
 											+ `<p class="note">`
-												+ "Add the "+ (isReview ? "summary" : "comment") + " to the " + settings.terms.bug + " in " + settings.terms.bugzilla + (isReview ? "." : " when you click Add Single Comment.")
+												+ "Add the "+ (isReview ? "summary" : "comment") + " to the " + settings.terms.bug + " in " + settings.terms.bugzilla + (isReview ? " when you click Add Single Comment." : ".")
 											+ `</p>`
 										+ `</div>`
 									+ `</div>`
