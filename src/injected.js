@@ -1075,16 +1075,20 @@ System.register([], function(e, t) {
 							var $headers = $div[0].querySelectorAll("div.release-header");
 							Array.prototype.forEach.call($headers, function(el, i) {
 								var $this = el;
-								var release = closest($this, "div.release").querySelectorAll("ul li a span")[0].textContent;
+								var releaseHolder = closest($this, "div.release").querySelectorAll("ul li a span")[0]; 
 								
-								$this.insertAdjacentHTML("afterbegin",
-									`<span class="bzButtons" style="float: right;">`
-										+ `<a class="btn btn-sm ml-2" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&" + settings.fields.revision + "=" + encodeURIComponent(release) + `" target="_blank">`
-											+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
-											+ " View in " + settings.terms.bugzilla + ""
-										+ `</a>`
-									+ `</span>`
-								);
+								if (releaseHolder) {
+									var release = releaseHolder.textContent;
+									
+									$this.insertAdjacentHTML("afterbegin",
+										`<span class="bzButtons" style="float: right;">`
+											+ `<a class="btn btn-sm ml-2" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&" + settings.fields.revision + "=" + encodeURIComponent(release) + `" target="_blank">`
+												+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
+												+ " View in " + settings.terms.bugzilla + ""
+											+ `</a>`
+										+ `</span>`
+									);
+								}
 							});
 						});
 					}
