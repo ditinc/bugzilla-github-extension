@@ -770,7 +770,7 @@ System.register([], function(e, t) {
 							var showResolveInput = matches($form, ".js-new-comment-form");
 							
 							if (showResolveInput) {
-								$this.querySelectorAll("div.preview-content")[0].insertAdjacentHTML('afterend',
+								$this.insertAdjacentHTML('afterend',
 									`<div class="pl-3">`
 									+ `<div class="form-checkbox">`
 										+ `<label>` + "Resolve " + settings.terms.bug + " " + bugId
@@ -793,14 +793,14 @@ System.register([], function(e, t) {
 								+ `</div>`
 								);
 								
-								$this.querySelectorAll("input.resolveBug")[0].addEventListener("change", function() {
+								$form.querySelectorAll("input.resolveBug")[0].addEventListener("change", function() {
 									var checked = this.checked;
 									if (checked) {
 										this.form.querySelectorAll(".reopenBug")[0].checked = false;
 									}
 								}, false);
 								
-								$this.querySelectorAll("input.reopenBug")[0].addEventListener("change", function() {
+								$form.querySelectorAll("input.reopenBug")[0].addEventListener("change", function() {
 									var checked = this.checked;
 									if (checked) {
 										this.form.querySelectorAll(".resolveBug")[0].checked = false;
@@ -904,7 +904,7 @@ System.register([], function(e, t) {
 								});
 							}
 							else {
-								var $div = $form.querySelectorAll("div.preview-content")[0];
+								var $div = $form.querySelectorAll("tab-container")[0];
 								
 								$div.insertAdjacentHTML("afterend",
 									`<div class="bugOptions pl-3">`
