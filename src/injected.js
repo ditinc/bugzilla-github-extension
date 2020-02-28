@@ -621,7 +621,7 @@ System.register([], function(e, t) {
 				};
 				
 				var injectProductName = function(contents) {
-					editSection(contents, 'div.repohead-details-container', function($el) {
+					editSection(contents, 'div.repohead .flex-auto', function($el) {
 						var existingNode = $el.querySelectorAll("h6#bzProduct");
 						if (existingNode.length) {
 							$el.removeChild(existingNode[0]);	
@@ -643,8 +643,8 @@ System.register([], function(e, t) {
 										+ `</div>`
 										+ `<div class="js-select-menu-deferred-content">`
 											+ `<div class="select-menu-filters">`
-												+ `<div class="is-loading p-5">`
-													+ `<img class="column centered" src="https://github.githubassets.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
+												+ `<div class="is-loading p-5 text-center">`
+													+ `<img class="column" src="https://github.githubassets.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
 												+ `</div>`
 												+ `<div class="select-menu-list">`
 													+ `<div data-filterable-for="products-filter-field" data-filterable-type="substring"></div>`
@@ -1260,8 +1260,8 @@ System.register([], function(e, t) {
 										+ `</div>`
 										+ `<div class="js-select-menu-deferred-content">`
 											+ `<div class="select-menu-filters">`
-												+ `<div class="is-loading p-5">`
-													+ `<img class="column centered" src="https://github.githubassets.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
+												+ `<div class="is-loading p-5 text-center">`
+													+ `<img class="column" src="https://github.githubassets.com/images/spinners/octocat-spinner-128.gif" width="64px" />`
 												+ `</div>`
 												+ `<div class="select-menu-list">`
 													+ `<div data-filterable-for="milestones-filter-field" data-filterable-type="substring"></div>`
