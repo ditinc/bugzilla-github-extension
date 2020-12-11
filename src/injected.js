@@ -182,10 +182,10 @@ System.register([], function(e, t) {
 						}
 			
 						/* Syncs pull request review comments with the bug in Bugzilla */
-						if (matches(event.target, ".pull-request-review-menu form button.btn-primary[type='submit'], .review-summary-form-wrapper form button.btn-primary[type='submit']")) {
+						if (matches(event.target, "#review-changes-modal form button.btn-primary[type='submit'], .review-summary-form-wrapper form button.btn-primary[type='submit']")) {
 							if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 			
-							var isFilesTab = matches(event.target, ".pull-request-review-menu form button.btn-primary[type='submit']");
+							var isFilesTab = matches(event.target, "#review-changes-modal form button.btn-primary[type='submit']");
 							var $form = closest(event.target, "form");
 							var syncComment = $form.querySelectorAll(".syncComment")[0].checked;
 							var syncPendingComments = $form.querySelectorAll(".syncPendingComments")[0].checked;
@@ -701,7 +701,7 @@ System.register([], function(e, t) {
 				};
 				
 				var injectRepoNavLinks = function(contents) {
-					editSection(contents, 'nav.reponav', function($nav) {
+					editSection(contents, 'nav.js-repo-nav', function($nav) {
 						var nodeToRemove = $nav.querySelectorAll("a#bzMilestonesButton")[0];
 						if (nodeToRemove) {
 							nodeToRemove.parentNode.removeChild(nodeToRemove);
@@ -712,14 +712,15 @@ System.register([], function(e, t) {
 						href = href.substr(0, href.lastIndexOf('/')) + '/milestones';
 						
 						// Remove the selected styling from the Issues link when Milestones is selected
-						var $issuesLink = $nav.querySelectorAll("a[data-selected-links*=repo_milestones]")[0];
-						if ($issuesLink) {
-							$issuesLink.setAttribute('data-selected-links', $issuesLink.getAttribute('data-selected-links').replace('repo_milestones', ''));
-						}
+						// TODO: No longer works
+						//var $issuesLink = $nav.querySelectorAll("a[data-selected-links*=repo_milestones]")[0];
+						//if ($issuesLink) {
+						//	$issuesLink.setAttribute('data-selected-links', $issuesLink.getAttribute('data-selected-links').replace('repo_milestones', ''));
+						//}
 			
 						$a.insertAdjacentHTML('afterEnd',
-							`<a id="bzMilestonesButton" href="${href}" data-selected-links="repo_milestones new_repo_milestone repo_milestone ${href}" data-hotkey="g m" class="js-selected-navigation-item reponav-item">`
-								+ '<svg aria-hidden="true" class="octicon octicon-milestone" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>'
+							`<a id="bzMilestonesButton" href="${href}" data-selected-links="repo_milestones new_repo_milestone repo_milestone ${href}" data-hotkey="g m" class="js-selected-navigation-item UnderlineNav-item hx_underlinenav-item no-wrap js-responsive-underlinenav-item">`
+								+ '<svg aria-hidden="true" class="octicon octicon-issue-opened UnderlineNav-octicon d-none d-sm-inline" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>'
 								+ " Milestones"
 							+ `</a>`
 						);
@@ -759,7 +760,7 @@ System.register([], function(e, t) {
 				var injectCommentOptions = function(contents) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 			
-					editSection(contents, '.js-previewable-comment-form, .pull-request-review-menu, .review-summary-form-wrapper', function($div) {
+					editSection(contents, '.js-previewable-comment-form, #review-changes-modal, .review-summary-form-wrapper', function($div) {
 						Array.prototype.forEach.call($div, function(item, i) {
 							var $this = item;
 							var $form = closest($this, "form"); 
@@ -808,7 +809,7 @@ System.register([], function(e, t) {
 								}, false);
 							}
 							
-							var isReview = !!(closest($this, '.pull-request-review-menu') || closest($this, ".review-summary-form-wrapper"));
+							var isReview = !!(closest($this, '#review-changes-modal') || closest($this, ".review-summary-form-wrapper"));
 							var toFind = (isReview ? "div.form-checkbox" : "div.comment-form-error.mb-2");
 						
 							var target = $this.querySelectorAll(toFind)[0];
@@ -846,7 +847,7 @@ System.register([], function(e, t) {
 				var injectHoursWorkedInput = function(contents) {
 					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
 					
-					editSection(contents, '#partial-new-comment-form-actions, .pull-request-review-menu .form-actions, .review-summary-form-wrapper .form-actions', function($buttonsArray) {
+					editSection(contents, '#partial-new-comment-form-actions, #review-changes-modal .form-actions, .review-summary-form-wrapper .form-actions', function($buttonsArray) {
 						if (!$buttonsArray) { return; }
 						Array.prototype.forEach.call($buttonsArray, function(item, i) {
 							var $buttons = item;
