@@ -621,7 +621,7 @@ System.register([], function(e, t) {
 				};
 				
 				var injectProductName = function(contents) {
-					editSection(contents, 'div.repohead .flex-auto', function($el) {
+					editSection(contents, 'main#js-repo-pjax-container>div>div>div.flex-auto', function($el) {
 						var existingNode = $el.querySelectorAll("h6#bzProduct");
 						if (existingNode.length) {
 							$el.removeChild(existingNode[0]);	
@@ -707,8 +707,8 @@ System.register([], function(e, t) {
 							nodeToRemove.parentNode.removeChild(nodeToRemove);
 						}
 						
-						var $a = $nav.querySelectorAll("a")[1];
-						var href = $a.getAttribute('href');
+						var $li = $nav.querySelectorAll("li")[1];
+						var href = $li.querySelectorAll("a")[0].getAttribute('href');
 						href = href.substr(0, href.lastIndexOf('/')) + '/milestones';
 						
 						// Remove the selected styling from the Issues link when Milestones is selected
@@ -718,11 +718,14 @@ System.register([], function(e, t) {
 						//	$issuesLink.setAttribute('data-selected-links', $issuesLink.getAttribute('data-selected-links').replace('repo_milestones', ''));
 						//}
 			
-						$a.insertAdjacentHTML('afterEnd',
-							`<a id="bzMilestonesButton" href="${href}" data-selected-links="repo_milestones new_repo_milestone repo_milestone ${href}" data-hotkey="g m" class="js-selected-navigation-item UnderlineNav-item hx_underlinenav-item no-wrap js-responsive-underlinenav-item">`
-								+ '<svg aria-hidden="true" class="octicon octicon-issue-opened UnderlineNav-octicon d-none d-sm-inline" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>'
-								+ " Milestones"
-							+ `</a>`
+						$li.insertAdjacentHTML('afterEnd',
+							`<li class="d-flex">`
+								+ `<a id="bzMilestonesButton" class="js-selected-navigation-item UnderlineNav-item hx_underlinenav-item no-wrap js-responsive-underlinenav-item" data-tab-item="i1issues-tab" data-hotkey="g m" aria-current="false" data-selected-links="repo_milestones ${href}" href="${href}">`
+									+ '<svg aria-hidden="true" class="octicon octicon-issue-opened UnderlineNav-octicon d-none d-sm-inline" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M8 2H6V0h2v2zm4 5H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h10l2 2-2 2zM8 4H6v2h2V4zM6 16h2V8H6v8z"></path></svg>'
+									+ `<span data-content="Milestones">Milestones</span>`
+									+ `<span title="Not available" class="Counter "></span>`
+								+ `</a>`
+							+ `</li>`
 						);
 					});
 				};
