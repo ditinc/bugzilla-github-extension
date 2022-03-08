@@ -461,7 +461,7 @@ function showLoginForm(callback, settings) {
 						.addClass("container")
 						.html(
 							$("<img>")
-								.attr({src: chrome.extension.getURL("images/icon48.png")})
+								.attr({src: chrome.runtime.getURL("images/icon48.png")})
 								.css({height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom'})
 						)
 						.append("You are not logged into " + settings.terms.bugzilla + ".  Please login:")
@@ -626,7 +626,7 @@ function run(settings) {
 	else if (location.href.indexOf(settings.gitHubURL) > -1) {
 		// This injects the script that requires access to the window object into the DOM.
 		var s = document.createElement('script');
-		s.src = chrome.extension.getURL('src/injected.js');
+		s.src = chrome.runtime.getURL('src/injected.js');
 		s.onload = function() {
 			this.parentNode.removeChild(this);
 			
