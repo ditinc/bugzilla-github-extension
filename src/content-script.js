@@ -98,7 +98,7 @@ chrome.runtime.onMessage.addListener((request) => {
 			break;
 
 		case "productsLoaded":
-			var products = request.response[0].products.sort(function (a, b) {
+			var products = request.response.sort(function (a, b) {
 				return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
 			});
 

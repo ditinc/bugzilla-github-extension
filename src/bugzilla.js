@@ -82,23 +82,7 @@ Bugzilla.prototype.getBug = function (bugId, includeFields) {
 	});
 
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -124,23 +108,7 @@ Bugzilla.prototype.getBugs = function (bugIds, includeFields) {
 		include_fields: includeFields
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -169,23 +137,7 @@ Bugzilla.prototype.addComment = function (bugId, comment, hoursWorked) {
 		work_time: hoursWorked
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -213,23 +165,7 @@ Bugzilla.prototype.updateBugs = function (bugIds, params) {
 		...params
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -257,23 +193,7 @@ Bugzilla.prototype.updateBug = function (bugId, params) {
 		...params
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -298,23 +218,7 @@ Bugzilla.prototype.getAttachments = function (bugId) {
 		exclude_fields: ["data"]
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -340,23 +244,7 @@ Bugzilla.prototype.login = async function (username, password) {
 		remember: true
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -378,23 +266,7 @@ Bugzilla.prototype.logout = function (username, password) {
 		Bugzilla_token: this.token
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -427,23 +299,7 @@ Bugzilla.prototype.searchBugs = function (searchCriteria) {
 		...searchCriteria
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -471,23 +327,7 @@ Bugzilla.prototype.getFieldInfo = function (fieldNames) {
 		names: fieldNames ? fieldNames : []
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
-		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
 };
 
 /**
@@ -518,29 +358,23 @@ Bugzilla.prototype.getProducts = function () {
 	// 	});
 	// });
 
-	const methodName = "Product.get_enterable_products";
+	let methodName = "Product.get_enterable_products";
 	// constructing the xml string from the appropriate fields
-	const reqBody = buildXMLString(methodName, {
+	let reqBody = buildXMLString(methodName, {
 		Bugzilla_token: this.token
 	});
 	// get the xml-rpc response
-	return fetch(this.xmlrpcUrl, {
-		method: "POST",
-		headers: {
-			"Content-Type": "text/xml"
-		},
-		body: reqBody
-	})
-		.then((response) => {
-			if (response.ok) {
-				return response.text();
-			} else {
-				throw new Error("Failed to fetch data from bugzilla");
-			}
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody)
+		.then((res) => {
+			methodName = "Product.get";
+			reqBody = buildXMLString(methodName, {
+				Bugzilla_token: this.token,
+				ids: res.member.value
+			});
+			return fetchQuantumXML(this.xmlrpcUrl, reqBody, false);
 		})
-		.then((response) => {
-			return fromXML(trimXML_RPCResponse(response)).methodResponse;
-		});
+		.then((res) => formatGetProducts(res))
+		.catch((err) => console.error(err));
 };
 
 /**

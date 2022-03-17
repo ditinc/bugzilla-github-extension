@@ -129,6 +129,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			console.log("Got to getProducts", request)
 			bugzilla.getProducts()
 				.then(function (response) {
+					console.log(response)
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "productsLoaded",
 						response: response,
