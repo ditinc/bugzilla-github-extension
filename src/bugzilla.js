@@ -218,7 +218,9 @@ Bugzilla.prototype.getAttachments = function (bugId) {
 		exclude_fields: ["data"]
 	});
 	// get the xml-rpc response
-	return fetchQuantumXML(this.xmlrpcUrl, reqBody);
+	return fetchQuantumXML(this.xmlrpcUrl, reqBody)
+		.then((res) => formatGetAttachements(res))
+		.catch((err) => console.log(err));
 };
 
 /**

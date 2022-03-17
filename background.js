@@ -5,7 +5,6 @@ try {
 }
 /* Handle calls when we're on our GitHub or Bugzilla pages */
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-
 	if (request.bugzillaSettings != null) {
 		// This object will be used to interact with Bugzilla.
 		var bugzilla = new Bugzilla(request.bugzillaSettings);
@@ -17,8 +16,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			break;
 
 		case "login":
-			console.log("Got to login", request)
-			bugzilla.login(request.username, request.password)
+			bugzilla
+				.login(request.username, request.password)
 				.then(function (response) {
 					if (response[0].token) {
 						bugzilla.setToken(response[0].token);
@@ -40,9 +39,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			break;
 
 		case "getBug":
-			console.log("Got to getBug", request)
-			bugzilla.getBug(request.bugId, request.fieldsToShow)
+			bugzilla
+				.getBug(request.bugId, request.fieldsToShow)
 				.then(function (response) {
+					console.log(response);
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: request.callbackMessage,
 						response: response,
@@ -52,7 +52,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 					});
 				})
 				.catch(function (response) {
-					var failMethod = request.callbackMessage === "titleLoaded" ? "titleLoadFailed" : "detailsLoadFailed";
+					var failMethod =
+						request.callbackMessage === "titleLoaded"
+							? "titleLoadFailed"
+							: "detailsLoadFailed";
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: failMethod,
 						response: response,
@@ -63,11 +66,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 			break;
 
-		case "getBugs":
-			console.log("Got to getBugs", request)
-			bugzilla.getBugs(request.bugIds, request.fieldsToShow)
+		case "getBugs":;
+			bugzilla
+				.getBugs(request.bugIds, request.fieldsToShow)
 				.then(function (response) {
-					console.log(response)
+					console.log("Get Bugs ", response);
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: request.callbackMessage,
 						response: response,
@@ -77,7 +80,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 					});
 				})
 				.catch(function (response) {
-					var failMethod = request.callbackMessage === "titlesLoaded" ? "titlesLoadFailed" : "detailsLoadFailed";
+					var failMethod =
+						request.callbackMessage === "titlesLoaded"
+							? "titlesLoadFailed"
+							: "detailsLoadFailed";
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: failMethod,
 						response: response,
@@ -88,8 +94,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			break;
 
 		case "getAttachments":
-			console.log("Got to getAttachments", request)
-			bugzilla.getAttachments(request.bugId)
+			console.log("Got to getAttachments", request);
+			bugzilla
+				.getAttachments(request.bugId)
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "attachmentsLoaded",
@@ -103,8 +110,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			break;
 
 		case "updateBug":
-			console.log("Got to updateBug", request)
-			bugzilla.updateBug(request.bugId, request.params)
+			bugzilla
+				.updateBug(request.bugId, request.params)
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "updateFinished",
@@ -116,20 +123,22 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			break;
 
 		case "updateBugs":
-			console.log("Got to updateBugs", request)
 			bugzilla.updateBugs(request.bugId, request.params);
 			break;
 
 		case "addComment":
-			console.log("Got to addComment", request)
-			bugzilla.addComment(request.bugId, request.comment, request.hoursWorked);
+			bugzilla.addComment(
+				request.bugId,
+				request.comment,
+				request.hoursWorked
+			);
 			break;
 
 		case "getProducts":
-			console.log("Got to getProducts", request)
-			bugzilla.getProducts()
+			bugzilla
+				.getProducts()
 				.then(function (response) {
-					console.log(response)
+					console.log(response);
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "productsLoaded",
 						response: response,
@@ -146,16 +155,23 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			break;
 
 		case "duplicateBugs":
-			console.log("Got to duplicateBugs", request)
 			var dupeBug = function (i) {
-				bugzilla.updateBugs(request.duplicates[i], { "dupe_of": request.dupeOf, "comment": { "body": "Marking as duplicate." } })
+				bugzilla
+					.updateBugs(request.duplicates[i], {
+						dupe_of: request.dupeOf,
+						comment: { body: "Marking as duplicate." }
+					})
 					.then(function (response) {
 						// Dupe the next bug, if there is one to dupe
 						if (request.duplicates[i + 1]) {
 							dupeBug(i + 1);
 						}
 
-						bugzilla.updateBugs(request.duplicates[i], { "status": "CLOSED", "comment": { "body": "Closing duplicate." } })
+						bugzilla
+							.updateBugs(request.duplicates[i], {
+								status: "CLOSED",
+								comment: { body: "Closing duplicate." }
+							})
 							.then(function (response) {
 								chrome.tabs.sendMessage(sender.tab.id, {
 									method: "duplicateFinished",
@@ -172,8 +188,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			break;
 
 		case "getFieldInfo":
-			console.log("Got to getFieldInfo", request)
-			bugzilla.getFieldInfo(request.fields)
+			bugzilla
+				.getFieldInfo(request.fields)
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "fieldInfoLoaded",
@@ -199,9 +215,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 /* Show the options page when first installed */
 chrome.runtime.onInstalled.addListener(function (details) {
 	if (details.reason == "install") {
-		chrome.runtime.sendMessage({ method: "options" }, function (response) { });
-	}
-	else if (details.reason == "update") {
+		chrome.runtime.sendMessage(
+			{ method: "options" },
+			function (response) {}
+		);
+	} else if (details.reason == "update") {
 		// Any need for this?
 	}
 });
