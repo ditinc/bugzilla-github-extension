@@ -1,8 +1,13 @@
 'use strict';
+// try {
+// 	importScripts("../lib/jquery-3.3.1.min.js");
+// } catch (e) {
+// 	console.error(e);
+// }
 
 chrome.storage.sync.get(
-	STORAGE_DEFAULTS, 
-	function(settings) {
+	STORAGE_DEFAULTS,
+	function (settings) {
 		if (settings.bugzillaURL.length > 0 && settings.gitHubURL.length > 0) {
 			run(settings);
 		}
@@ -10,7 +15,7 @@ chrome.storage.sync.get(
 );
 
 chrome.runtime.onMessage.addListener((request) => {
-	switch(request.method) {
+	switch (request.method) {
 		case "loginFinished":
 			var $form = $("#bzLoginForm");
 			$form.find("button").prop("disabled", false);
@@ -18,7 +23,7 @@ chrome.runtime.onMessage.addListener((request) => {
 			$form.remove();
 			request.callback();
 			break;
-		
+
 		case "loginFailed":
 			var $form = $("#bzLoginForm");
 			$form.find("button").prop("disabled", false);
@@ -31,18 +36,19 @@ chrome.runtime.onMessage.addListener((request) => {
 
 			$title.val("[" + request.bugId + "] " + bugInfo.summary);
 			break;
-		
+
 		case "titleLoadFailed":
 			var faultString = getFaultString(request.response);
-						
+
 			if (faultString.indexOf("You must log in") > -1) {
-				showLoginForm(function() {
-					setPullRequestTitleToBugTitle({bugId: request.bugId});
+				showLoginForm(function () {
+					setPullRequestTitleToBugTitle({ bugId: request.bugId });
 				}, request.settings);
 			}
 			break;
 
 		case "titlesLoaded":
+			console.log("Got to titlesLoaded", request)
 			var bugInfo = request.response[0].bugs;
 
 			for (var i = 0; i < bugInfo.length; i++) {
@@ -53,70 +59,72 @@ chrome.runtime.onMessage.addListener((request) => {
 					.attr("aria-label", title);
 			}
 			break;
-		
+
 		case "titlesLoadFailed":
 			break;
 
 		case "detailsLoaded":
-			var bugInfo = request.response[0].bugs[0];
+			var bugInfo = request.response.member.find(item => item.name === 'bugs').member;
 			var $sidebar = $('.sidebar-dit-bugzilla-details');
 
 			$sidebar.html('');
-			
+
 			for (var i = 0; i < request.settings.bugInfoFields.length; i++) {
 				var field = request.fieldsToShow[i];
 				var label = request.settings.bugInfoFields[i].label;
+				const text = bugInfo.find(item => item.name === field);
 				
 				$sidebar.append(
 					$('<p class="reason text-small text-muted">')
-						.html(label + ": " + bugInfo[field])
+						.html(label + ": " + (text && text.value ? text.value : "Not available"))
 				);
 			}
-			
+
 			chrome.runtime.sendMessage({
 				bugzillaSettings: request.settings,
 				method: "getAttachments",
 				bugId: request.bugId
 			});
 			break;
-		
+
 		case "detailsLoadFailed":
 			var faultString = getFaultString(request.response);
-						
+
 			if (faultString.indexOf("You must log in") > -1) {
-				showLoginForm(function() {
+				showLoginForm(function () {
 					loadBugDetails(request.bugId, request.settings);
 				}, request.settings);
 			}
 			break;
 
 		case "productsLoaded":
-			var products = request.response[0].products.sort(function(a, b) {
+			var products = request.response[0].products.sort(function (a, b) {
 				return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
 			});
 
 			populateProductList(products, request.settings.productMap);
 			break;
-		
+
 		case "productsLoadFailed":
 			var faultString = getFaultString(request.response);
-							
+
 			if (faultString.indexOf("You must log in") > -1) {
-				showLoginForm(function() {
+				showLoginForm(function () {
 					showProductForm([], settings.productMap, settings);
 				}, request.settings);
 			}
 			break;
 
 		case "attachmentsLoaded":
-			var attachments = request.response[0].bugs[request.bugId];
+			var attachments = request.response.member.find(item => item.name === 'bugs').member.data
 			var $attachments = $(".sidebar-dit-bugzilla-attachments");
+			if (attachments) {
+				attachments = $.grep(attachments, function (attachment) {
+					return !attachment.is_obsolete;
+				});
+			}
 
-			attachments = $.grep(attachments, function(attachment) {
-				return !attachment.is_obsolete;
-			});
-			
-			if (attachments.length > 0) {
+			if (attachments && attachments.length > 0) {
 				$attachments.html("");
 				for (var i = 0; i < attachments.length; i++) {
 					var attachment = attachments[i];
@@ -144,10 +152,12 @@ chrome.runtime.onMessage.addListener((request) => {
 
 		case "fieldInfoLoaded":
 			var milestones = request.response[0].fields[0].values;
-			
+
 			populateMilestoneList(milestones, request.settings.productMap);
 			break;
 	}
+
+	return true;
 });
 
 function getRepo() {
@@ -161,11 +171,11 @@ function getFaultString(response) {
 function populateProductList(products, productMap) {
 	var repo = getRepo();
 	var $div = $(".product-select-menu").find(".select-menu-list");
-	
+
 	$div.prev(".is-loading").remove();
 	$div.prev(".select-menu-clear-item").remove();
 	$div.prev(".select-menu-text-filter").remove();
-	
+
 	$div
 		.before(
 			$("<div>")
@@ -183,15 +193,15 @@ function populateProductList(products, productMap) {
 							placeholder: "Filter products",
 							autocomplete: "off"
 						})
-						.keyup(function(e) {
+						.keyup(function (e) {
 							e.stopPropagation();
 							var searchVal = $.trim(this.value);
-							
-							$(this).parent().parent().find(".select-menu-list .select-menu-item").each(function() {
+
+							$(this).parent().parent().find(".select-menu-list .select-menu-item").each(function () {
 								var $el = $(this);
 								var text = $el.find(".select-menu-item-heading").text();
-								
-								if(searchVal.length && text.toLowerCase().indexOf(searchVal.toLowerCase()) < 0) {
+
+								if (searchVal.length && text.toLowerCase().indexOf(searchVal.toLowerCase()) < 0) {
 									$el.hide();
 								}
 								else {
@@ -199,11 +209,11 @@ function populateProductList(products, productMap) {
 								}
 							});
 						})
-						.keydown(function(e) {
+						.keydown(function (e) {
 							// Stops GitHub's JS interaction from messing us up
 							if (e.keyCode === 13) {
 								e.stopPropagation();
-								
+
 								var name = $div.find(".navigation-focus .select-menu-item-heading").html() || "";
 								setProduct(name, productMap, repo);
 							}
@@ -226,20 +236,20 @@ function populateProductList(products, productMap) {
 						.addClass("select-menu-item-text")
 						.html("Clear product")
 				)
-				.click(function(e) {
+				.click(function (e) {
 					e.stopPropagation();
-					
+
 					setProduct("", productMap, repo);
 				})
 		);
-			
+
 	$("input#product-filter-field").focus();
 	$div = $div.children("div").last();
 	$div.html("");
-	
-	$.each(products, function(i, el) {
+
+	$.each(products, function (i, el) {
 		var selected = productMap[repo] && el.name === productMap[repo].name;
-		
+
 		$div.append(
 			$("<div>")
 				.addClass("select-menu-item js-navigation-item" + (selected ? " selected" : ""))
@@ -253,9 +263,9 @@ function populateProductList(products, productMap) {
 								.html(el.name)
 						)
 				)
-				.click(function(e) {
+				.click(function (e) {
 					e.stopPropagation();
-					
+
 					setProduct(el.name, productMap, repo);
 				})
 		);
@@ -271,20 +281,20 @@ function setProduct(productName, productMap, repo) {
 			name: productName
 		};
 	}
-	
-	chrome.storage.sync.set({productMap: productMap}, function(obj) {
-		window.postMessage({method: "setProduct", product: productMap[repo]}, '*');
+
+	chrome.storage.sync.set({ productMap: productMap }, function (obj) {
+		window.postMessage({ method: "setProduct", product: productMap[repo] }, '*');
 	});
 };
 
 function populateMilestoneList(milestones, productMap) {
 	var repo = getRepo();
 	var $div = $(".milestone-select-menu").find(".select-menu-list");
-	
+
 	$div.prev(".is-loading").remove();
 	$div.prev(".select-menu-clear-item").remove();
 	$div.prev(".select-menu-text-filter").remove();
-	
+
 	$div
 		.before(
 			$("<div>")
@@ -303,15 +313,15 @@ function populateMilestoneList(milestones, productMap) {
 							placeholder: "Filter milestones",
 							autocomplete: "off"
 						})
-						.keyup(function(e) {
+						.keyup(function (e) {
 							e.stopPropagation();
 							var searchVal = $.trim(this.value);
-							
-							$(this).parent().parent().find(".select-menu-list .select-menu-item").each(function() {
+
+							$(this).parent().parent().find(".select-menu-list .select-menu-item").each(function () {
 								var $el = $(this);
 								var text = $el.find(".select-menu-item-heading").text();
-								
-								if(searchVal.length && text.toLowerCase().indexOf(searchVal.toLowerCase()) < 0) {
+
+								if (searchVal.length && text.toLowerCase().indexOf(searchVal.toLowerCase()) < 0) {
 									$el.hide();
 								}
 								else {
@@ -319,41 +329,41 @@ function populateMilestoneList(milestones, productMap) {
 								}
 							});
 						})
-						.keydown(function(e) {
+						.keydown(function (e) {
 							// Stops GitHub's JS interaction from messing us up
-							switch(e.keyCode) {
+							switch (e.keyCode) {
 								case 13:
 									e.preventDefault();
 									e.stopPropagation();
-									
+
 									var name = $div.find(".navigation-focus .select-menu-item-heading").html() || "";
 									setMilestone(name);
 									break;
 								case 40:
 									e.stopPropagation();
-									
+
 									var $items = $(e.target).closest(".js-menu-container").find(".js-navigation-item");
-									
+
 									if ($items.length) {
 										var index = $items.index($(".js-navigation-item.navigation-focus"));
 										$items.eq(index).removeClass("navigation-focus");
 										var $select = $items.eq(Math.min($items.length - 1, index + 1));
 										$select.addClass("navigation-focus");
 									}
-									
+
 									break;
 								case 38:
 									e.stopPropagation();
-									
+
 									var $items = $(e.target).closest(".js-menu-container").find(".js-navigation-item");
-									
+
 									if ($items.length) {
 										var index = $items.index($(".js-navigation-item.navigation-focus"));
 										$items.eq(index).removeClass("navigation-focus");
 										var $select = $items.eq(Math.max(0, index - 1));
 										$select.addClass("navigation-focus");
 									}
-									
+
 									break;
 							}
 						})
@@ -365,9 +375,9 @@ function populateMilestoneList(milestones, productMap) {
 							$("<label>")
 								.append(
 									$('<input class="showAllMilestones mr-1 d-inline" type="checkbox" style="width: auto;" />')
-										.change(function(e) {
+										.change(function (e) {
 											e.stopPropagation();
-											
+
 											var checked = e.target.checked;
 											if (checked) {
 												$(".bzInactive").removeClass("d-none");
@@ -395,9 +405,9 @@ function populateMilestoneList(milestones, productMap) {
 						.addClass("select-menu-item-text")
 						.html("Clear milestone")
 				)
-				.click(function(e) {
+				.click(function (e) {
 					e.stopPropagation();
-					
+
 					setMilestone("");
 				})
 		);
@@ -405,23 +415,23 @@ function populateMilestoneList(milestones, productMap) {
 	$("input#milestone-filter-field").focus();
 	$div = $div.children("div").last();
 	$div.html("");
-	
-	var values = $.map(milestones, function(milestone) {
+
+	var values = $.map(milestones, function (milestone) {
 		if ($.inArray(productMap[repo].name, milestone.visibility_values) < 0) {
 			return;
 		}
 		else {
-			return {name: milestone.name, sortkey: milestone.sortkey, is_active: milestone.is_active};
+			return { name: milestone.name, sortkey: milestone.sortkey, is_active: milestone.is_active };
 		}
 	});
-	
-	values.sort(function(a, b) {
+
+	values.sort(function (a, b) {
 		return (a.sortkey < b.sortkey ? -1 : (a.sortkey > b.sortkey ? 1 : 0));
 	});
-	
-	$.each(values, function(i, el) {
+
+	$.each(values, function (i, el) {
 		var selected = $("input#milestone_title").val() === el.name;
-		
+
 		$div.append(
 			$("<div>")
 				.addClass("select-menu-item js-navigation-item" + (selected ? " selected" : "") + (el.is_active ? "" : " bzInactive d-none"))
@@ -435,9 +445,9 @@ function populateMilestoneList(milestones, productMap) {
 								.html(el.name)
 						)
 				)
-				.click(function(e) {
+				.click(function (e) {
 					e.stopPropagation();
-					
+
 					setMilestone(el.name);
 				})
 		);
@@ -453,7 +463,7 @@ function showLoginForm(callback, settings) {
 	if ($("#bzLoginForm").length === 0) {
 		$(".header").before(
 			$("<form>")
-				.attr({id: "bzLoginForm"})
+				.attr({ id: "bzLoginForm" })
 				.addClass("commit-tease js-sticky")
 				.css("z-index", 100)
 				.html(
@@ -461,8 +471,8 @@ function showLoginForm(callback, settings) {
 						.addClass("container")
 						.html(
 							$("<img>")
-								.attr({src: chrome.runtime.getURL("images/icon48.png")})
-								.css({height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom'})
+								.attr({ src: chrome.runtime.getURL("images/icon48.png") })
+								.css({ height: '1.5em', margin: '0 5px', 'vertical-align': 'text-bottom' })
 						)
 						.append("You are not logged into " + settings.terms.bugzilla + ".  Please login:")
 						.append(
@@ -499,12 +509,12 @@ function showLoginForm(callback, settings) {
 								.addClass("ml-3 text-red one-fifth")
 						)
 				)
-				.submit(function(e) {
+				.submit(function (e) {
 					e.preventDefault();
-					
+
 					var $errorLabel = $("#bzLoginForm label");
 					var $submitButton = $(this).find("button");
-					
+
 					$errorLabel.html("");
 					$submitButton.prop("disabled", true);
 
@@ -521,13 +531,13 @@ function showLoginForm(callback, settings) {
 }
 
 function loadBugDetails(bugId, settings) {
-	var fieldsToShow = $.map(settings.bugInfoFields, function(el) {
+	var fieldsToShow = $.map(settings.bugInfoFields, function (el) {
 		var field = el.field;
-		
+
 		field = field
 			// We need to remove anything with "bug_" as the prefix so that we get the correct field
 			.replace(/^bug_/, "")
-		
+
 			// Hours Worked (work_time) is actually actual_time
 			.replace("work_time", "actual_time");
 
@@ -560,22 +570,22 @@ function run(settings) {
 	if (location.href.indexOf(settings.bugzillaURL) > -1) {
 		if (settings.fields.gitHubPullRequestURL.length > 0) {
 			var url = $('#' + settings.fields.gitHubPullRequestURL).val();
-			
+
 			if (url && url.length) {
 				var urlArray = url.split('/');
 				var pr = urlArray[urlArray.length - 1];
-				
+
 				/* This will put the pull request # as a link next to the bug title */
 				if (url) {
 					var $bugTitle = $('#summary_alias_container, #summary_container');
-					
+
 					if ($bugTitle[0]) {
 						if ($($bugTitle[0].previousSibling).is("A")) {
 							$($bugTitle[0].previousSibling).remove();
 						}
-						
+
 						$bugTitle[0].previousSibling.textContent = " - ";
-						
+
 						$bugTitle.before(
 							$("<a>")
 								.attr({
@@ -587,7 +597,7 @@ function run(settings) {
 				}
 			}
 		}
-		
+
 		var $form = $('form[name="changeform"]');
 
 		$form.find('input#check_all').after(
@@ -598,17 +608,17 @@ function run(settings) {
 					value: "Mark as Duplicate"
 				})
 				.css("margin-left", "4px")
-				.click(function() {
-					var dupes = $('.bz_checkbox_column :checked').map(function() {
+				.click(function () {
+					var dupes = $('.bz_checkbox_column :checked').map(function () {
 						return this.name.replace("id_", "");
 					}).toArray();
-					
+
 					if (dupes.length) {
 						var dupeOf = prompt("Please enter the " + settings.terms.bug + " to mark the selected " + settings.terms.bug + "s as duplicates of.");
-						
+
 						if (dupeOf) {
 							$(this).prop("disabled", true).val("Marking as duplicate of " + dupeOf + "...");
-							
+
 							chrome.runtime.sendMessage({
 								bugzillaSettings: settings,
 								method: "duplicateBugs",
@@ -627,67 +637,67 @@ function run(settings) {
 		// This injects the script that requires access to the window object into the DOM.
 		var s = document.createElement('script');
 		s.src = chrome.runtime.getURL('src/injected.js');
-		s.onload = function() {
+		s.onload = function () {
 			this.parentNode.removeChild(this);
-			
+
 			var product;
 			var repo = getRepo();
-					
+
 			if (repo && repo.length > 0 && settings.productMap[repo]) {
 				product = settings.productMap[repo];
 			}
-			
-			window.postMessage({method: "init", settings: settings, product: product}, '*');
+
+			window.postMessage({ method: "init", settings: settings, product: product }, '*');
 		};
 		(document.head || document.documentElement).appendChild(s);
-				
+
 		// This object will be used to map GitHub repos with Bugzilla products.
 		var productMap = settings.productMap;
-		
+
 		// These will be used to cache info from Bugzilla.
 		var products = [];
 		var milestones = [];
-		
+
 		// We'll accept messages from the injected script in order to make calls to Bugzilla.
-		window.addEventListener('message', function(event) {
+		window.addEventListener('message', function (event) {
 			// Only accept messages from same frame
 			if (event.source !== window) {
 				return;
 			}
-		
+
 			var message = event.data;
-		
+
 			// Only accept messages that we know are ours
 			if (typeof message !== 'object' || message === null || !message.method) {
 				return;
 			}
-		
-			switch (message.method) {				
+
+			switch (message.method) {
 				/* Puts Bugzilla bug info into our sidebar section */
 				case "loadBugDetails":
 					loadBugDetails(message.bugId, settings);
 					break;
-				
+
 				/* Puts Bugzilla bug titles into bug number links */
 				case "loadBugLinkTitles":
 					loadBugLinkTitles(message);
 					break;
-						
+
 				/* Sets the pull request title to the bug title */
 				case "setPullRequestTitleToBugTitle":
 					setPullRequestTitleToBugTitle(message);
 					break;
-				
+
 				/* Shows a select control for Bugzilla product */
 				case "showProductForm":
 					showProductForm(products, productMap, settings);
 					break;
-				
+
 				/* Shows a select control for Bugzilla milestone */
 				case "showMilestoneForm":
 					showMilestoneForm();
 					break;
-				
+
 				/* Sends comment to Bugzilla */
 				case "addComment":
 					chrome.runtime.sendMessage({
@@ -698,7 +708,7 @@ function run(settings) {
 						hoursWorked: message.hoursWorked
 					});
 					break;
-					
+
 				/* Updates bug details */
 				case "updateBug":
 					chrome.runtime.sendMessage({
@@ -708,7 +718,7 @@ function run(settings) {
 						params: message.params
 					});
 					break;
-					
+
 				/* Updates bug details */
 				case "updateBugs":
 					chrome.runtime.sendMessage({
@@ -720,22 +730,22 @@ function run(settings) {
 					break;
 			}
 		});
-		
+
 		function syncProductMap() {
 			// Here, we're setting up a map between Bugzilla product and GitHub repo in the user's storage.
 			chrome.storage.sync.get('productMap', function (obj) {
 				if (obj && obj.productMap) {
 					productMap = obj.productMap;
-					
+
 					var repo = getRepo();
-					
+
 					if (repo && repo.length > 0 && productMap[repo]) {
-						window.postMessage({method: "setProduct", product: productMap[repo]}, '*');
+						window.postMessage({ method: "setProduct", product: productMap[repo] }, '*');
 					}
 				}
 			});
 		}
-		
+
 		function showMilestoneForm(repo) {
 			if (milestones.length === 0) {
 				chrome.runtime.sendMessage({
@@ -748,7 +758,7 @@ function run(settings) {
 				populateMilestoneList(milestones, productMap);
 			}
 		}
-		
+
 		function loadBugLinkTitles(message) {
 			chrome.runtime.sendMessage({
 				bugzillaSettings: settings,
@@ -758,7 +768,7 @@ function run(settings) {
 				callbackMessage: "tilesLoaded"
 			});
 		}
-		
+
 		function setPullRequestTitleToBugTitle(message) {
 			chrome.runtime.sendMessage({
 				bugzillaSettings: settings,
