@@ -26,7 +26,7 @@ chrome.runtime.onMessage.addListener((request) => {
 			break;
 
 		case "titleLoaded":
-			var bugInfo = request.response[0].bugs[0];
+			var bugInfo = request.response.bugs[0];
 			var $title = $('#pull_request_title');
 
 			$title.val("[" + request.bugId + "] " + bugInfo.summary);
@@ -43,7 +43,7 @@ chrome.runtime.onMessage.addListener((request) => {
 			break;
 
 		case "titlesLoaded":
-			var bugInfo = request.response[0].bugs;
+			var bugInfo = request.response.bugs;
 
 			for (var i = 0; i < bugInfo.length; i++) {
 				var bugId = bugInfo[i].id;
@@ -58,7 +58,7 @@ chrome.runtime.onMessage.addListener((request) => {
 			break;
 
 		case "detailsLoaded":
-			var bugInfo = request.response[0].bugs[0];
+			var bugInfo = request.response.bugs[0];
 			var $sidebar = $('.sidebar-dit-bugzilla-details');
 
 			$sidebar.html('');
@@ -91,7 +91,7 @@ chrome.runtime.onMessage.addListener((request) => {
 			break;
 
 		case "productsLoaded":
-			var products = request.response[0].products.sort(function(a, b) {
+			var products = request.response.products.sort(function(a, b) {
 				return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
 			});
 
@@ -109,12 +109,10 @@ chrome.runtime.onMessage.addListener((request) => {
 			break;
 
 		case "attachmentsLoaded":
-			var attachments = request.response[0].bugs[request.bugId];
+			var attachments = request.response.bugs[request.bugId];
 			var $attachments = $(".sidebar-dit-bugzilla-attachments");
 
-			attachments = $.grep(attachments, function(attachment) {
-				return !attachment.is_obsolete;
-			});
+			attachments = attachments.filter(item => item.is_obsolete === 0)
 			
 			if (attachments.length > 0) {
 				$attachments.html("");
@@ -143,11 +141,13 @@ chrome.runtime.onMessage.addListener((request) => {
 			break;
 
 		case "fieldInfoLoaded":
-			var milestones = request.response[0].fields[0].values;
+			var milestones = request.response.fields[0].values;
 			
 			populateMilestoneList(milestones, request.settings.productMap);
 			break;
 	}
+
+	return true;
 });
 
 function getRepo() {
@@ -155,7 +155,8 @@ function getRepo() {
 }
 
 function getFaultString(response) {
-	return $(response.responseXML).find("fault").find("member").first().find("string").html();
+	// return $(response.responseXML).find("fault").find("member").first().find("string").html();
+	return response.toString()
 }
 
 function populateProductList(products, productMap) {
@@ -451,7 +452,7 @@ function setMilestone(milestoneName) {
 
 function showLoginForm(callback, settings) {
 	if ($("#bzLoginForm").length === 0) {
-		$(".header").before(
+		$(".js-header-wrapper").before(
 			$("<form>")
 				.attr({id: "bzLoginForm"})
 				.addClass("commit-tease js-sticky")
