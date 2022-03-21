@@ -39,7 +39,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		var $product = $("#product");
 		var bugzilla = new Bugzilla({ bugzillaURL: settings.bugzillaURL });
 		bugzilla.getProducts().then(function (data) {
-			console.log(data);
 			products = data.products;
 			var unsetProjects = products
 				.map(function (product) {

@@ -52,7 +52,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 					});
 				})
 				.catch(function (response) {
-					console.log(response)
 					var failMethod =
 						request.callbackMessage === "titleLoaded"
 							? "titleLoadFailed"
