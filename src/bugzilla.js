@@ -259,7 +259,7 @@ Bugzilla.prototype.getProducts = function () {
 			return fetchRpcResponse(this.rpcUrl, "Product.get", [
 				{
 					Bugzilla_token: this.token,
-					ids: response.result.ids
+					ids: response.ids
 				}
 			]);
 		}
