@@ -6,7 +6,7 @@ chrome.storage.sync.get(STORAGE_DEFAULTS, function (settings) {
 	}
 });
 
-// use a dictionary to store the callbacks to be 
+// use a dictionary to store the callbacks to be
 // invoked with the callback ids from showLoginForm()
 let callbacks = {};
 
@@ -158,8 +158,6 @@ chrome.runtime.onMessage.addListener((request) => {
 			populateMilestoneList(milestones, request.settings.productMap);
 			break;
 	}
-
-	return true;
 });
 
 function getRepo() {

@@ -4,7 +4,11 @@ try {
 	console.error(e);
 }
 /* Handle calls when we're on our GitHub or Bugzilla pages */
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (
+	request,
+	sender,
+	sendResponse
+) {
 	if (request.bugzillaSettings != null) {
 		// This object will be used to interact with Bugzilla.
 		var bugzilla = new Bugzilla(request.bugzillaSettings);
@@ -207,7 +211,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 /* Show the options page when first installed */
-chrome.runtime.onInstalled.addListener(function (details) {
+chrome.runtime.onInstalled.addListener(async function (details) {
 	if (details.reason == "install") {
 		chrome.runtime.sendMessage(
 			{ method: "options" },
