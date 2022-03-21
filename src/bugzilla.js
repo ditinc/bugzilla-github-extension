@@ -1,5 +1,3 @@
-importScripts("../lib/quantumJsonRpc.js");
-
 /**
  * Constructs a Bugzilla object.
  * @class
@@ -267,22 +265,31 @@ Bugzilla.prototype.getProducts = function () {
 };
 
 /**
- * Modification to jquery.xmlrpc to handle dates.
- * See https://github.com/timheap/jquery-xmlrpc/issues/5
+ * 
+ * @param {String} url the url to fetch the jsonRPC data from
+ * @param {String} methodName the method being used. Reference Bugzilla documentations https://www.bugzilla.org/docs/4.0/en/html/api/Bugzilla/WebService/Bug.html
+ * @param {List<Struct>} params an array of param structs representing the params being passed into the method
+ * @returns {Promise} On success will return a response object from Bugzilla, on error will return the error message 
  */
-// $.xmlrpc.makeType('dateTime.iso8601', true, function(d) {
-// 	return [
-// 		d.getUTCFullYear(), '-', _pad(d.getUTCMonth()+1), '-',
-// 		_pad(d.getUTCDate()), 'T', _pad(d.getUTCHours()), ':',
-// 		_pad(d.getUTCMinutes()), ':', _pad(d.getUTCSeconds()), 'Z'
-// 	].join('');
-// }, function(text, node) {
-// 		// ISO 8601 dates can be either YYYY-MM-DD _or_
-// 		// YYYYMMDD. Added check for the latter case, since it's
-// 		// not handled by FireFox's Date constructor. jfuller
-// 		// 2013-05-13
-// 		if (!/-/.test(text)) {
-// 			text = text.replace(/(\d{4})(\d{2})(\d{2})(.+)/, "$1-$2-$3$4");
-// 		}
-// 	return new Date(text);
-// });
+const fetchRpcResponse = (url, methodName, params) => {
+	return fetch(url, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			jsonrpc: "2.0",
+			method: methodName,
+			params: params,
+			id: methodName
+		})
+	})
+		.then((res) => res.json())
+		.then((res) => {
+			if (res.error) {
+				throw res.error;
+			}
+
+			return res.result;
+		});
+};
