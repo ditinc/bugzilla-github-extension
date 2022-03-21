@@ -235,10 +235,11 @@ Bugzilla.prototype.getFieldInfo = function (fieldNames) {
 	const methodName = "Bug.fields";
 	const params = [
 		{
-			Bugzilla_token: this.token,
-			names: fieldNames ? fieldNames : []
+			Bugzilla_token: this.token
 		}
 	];
+	if (fieldNames) params[0].names = fieldNames;
+
 	return fetchRpcResponse(this.rpcUrl, methodName, params);
 };
 
@@ -265,11 +266,11 @@ Bugzilla.prototype.getProducts = function () {
 };
 
 /**
- * 
+ *
  * @param {String} url the url to fetch the jsonRPC data from
  * @param {String} methodName the method being used. Reference Bugzilla documentations https://www.bugzilla.org/docs/4.0/en/html/api/Bugzilla/WebService/Bug.html
  * @param {List<Struct>} params an array of param structs representing the params being passed into the method
- * @returns {Promise} On success will return a response object from Bugzilla, on error will return the error message 
+ * @returns {Promise} On success will return a response object from Bugzilla, on error will return the error message
  */
 const fetchRpcResponse = (url, methodName, params) => {
 	return fetch(url, {
