@@ -234,7 +234,7 @@ Bugzilla.prototype.searchBugs = function (searchCriteria) {
 Bugzilla.prototype.getFieldInfo = function (fieldNames) {
 	"use strict";
 
-	const methodName = "User.logout";
+	const methodName = "Bug.fields";
 	const params = [
 		{
 			Bugzilla_token: this.token,

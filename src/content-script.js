@@ -12,6 +12,7 @@ chrome.storage.sync.get(
 chrome.runtime.onMessage.addListener((request) => {
 	switch(request.method) {
 		case "loginFinished":
+			console.log(request)
 			var $form = $("#bzLoginForm");
 			$form.find("button").prop("disabled", false);
 			$form.prev(".is-placeholder").remove();
@@ -156,7 +157,7 @@ function getRepo() {
 
 function getFaultString(response) {
 	// return $(response.responseXML).find("fault").find("member").first().find("string").html();
-	return response.toString()
+	return response.message.toString()
 }
 
 function populateProductList(products, productMap) {
@@ -508,7 +509,6 @@ function showLoginForm(callback, settings) {
 					
 					$errorLabel.html("");
 					$submitButton.prop("disabled", true);
-
 					chrome.runtime.sendMessage({
 						bugzillaSettings: settings,
 						method: "login",

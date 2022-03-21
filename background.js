@@ -20,12 +20,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				.login(request.username, request.password)
 
 				.then(function (response) {
-					if (response[0].token) {
-						bugzilla.setToken(response[0].token);
+					if (response.token) {
+						bugzilla.setToken(response.token);
 					}
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "loginFinished",
-						response: response.result,
+						response: response,
 						settings: request.bugzillaSettings,
 						callback: request.callback
 					});
@@ -33,7 +33,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				.catch(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "loginFailed",
-						response: response.error,
+						response: response,
 						settings: request.bugzillaSettings
 					});
 				});
@@ -45,20 +45,21 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: request.callbackMessage,
-						response: response.result,
+						response: response,
 						settings: request.bugzillaSettings,
 						fieldsToShow: request.fieldsToShow,
 						bugId: request.bugId
 					});
 				})
 				.catch(function (response) {
+					console.log(response)
 					var failMethod =
 						request.callbackMessage === "titleLoaded"
 							? "titleLoadFailed"
 							: "detailsLoadFailed";
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: failMethod,
-						response: response.error,
+						response: response,
 						settings: request.bugzillaSettings,
 						bugId: request.bugId
 					});
@@ -71,7 +72,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: request.callbackMessage,
-						response: response.result,
+						response: response,
 						settings: request.bugzillaSettings,
 						fieldsToShow: request.fieldsToShow,
 						bugId: request.bugIds
@@ -84,7 +85,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 							: "detailsLoadFailed";
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: failMethod,
-						response: response.error,
+						response: response,
 						settings: request.bugzillaSettings,
 						bugId: request.bugIds
 					});
@@ -95,7 +96,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			bugzilla.getAttachments(request.bugId).then(function (response) {
 				chrome.tabs.sendMessage(sender.tab.id, {
 					method: "attachmentsLoaded",
-					response: response.result,
+					response: response,
 					settings: request.bugzillaSettings,
 					bugId: request.bugId,
 					attachmentUrl: bugzilla.attachmentUrl
@@ -109,7 +110,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "updateFinished",
-						response: response.result,
+						response: response,
 						settings: request.bugzillaSettings,
 						bugId: request.bugId
 					});
@@ -135,14 +136,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "productsLoaded",
-						response: response.result,
+						response: response,
 						settings: request.bugzillaSettings
 					});
 				})
 				.catch(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "productsLoadFailed",
-						response: response.error,
+						response: response,
 						settings: request.bugzillaSettings
 					});
 				});
@@ -169,7 +170,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 							.then(function (response) {
 								chrome.tabs.sendMessage(sender.tab.id, {
 									method: "duplicateFinished",
-									response: response.result,
+									response: response,
 									settings: request.bugzillaSettings,
 									duplicates: request.duplicates,
 									dupeOf: request.dupeOf
@@ -188,12 +189,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: "fieldInfoLoaded",
-						response: response.result,
+						response: response,
 						settings: request.bugzillaSettings
 					});
 				})
 				.catch(function (response) {
-					var faultString = getFaultString(response.error);
+					var faultString = getFaultString(response);
 
 					if (faultString.indexOf("You must log in") > -1) {
 						showLoginForm(function () {
