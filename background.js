@@ -1,25 +1,21 @@
 try {
-	importScripts("src/bugzilla.js");
+	importScripts('src/bugzilla.js');
 } catch (e) {
 	console.error(e);
 }
 /* Handle calls when we're on our GitHub or Bugzilla pages */
-chrome.runtime.onMessage.addListener(function (
-	request,
-	sender,
-	sendResponse
-) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	if (request.bugzillaSettings != null) {
 		// This object will be used to interact with Bugzilla.
 		var bugzilla = new Bugzilla(request.bugzillaSettings);
 	}
 
 	switch (request.method) {
-		case "options":
+		case 'options':
 			chrome.runtime.openOptionsPage();
 			break;
 
-		case "login":
+		case 'login':
 			bugzilla
 				.login(request.username, request.password)
 
@@ -28,7 +24,7 @@ chrome.runtime.onMessage.addListener(function (
 						bugzilla.setToken(response.token);
 					}
 					chrome.tabs.sendMessage(sender.tab.id, {
-						method: "loginFinished",
+						method: 'loginFinished',
 						response: response,
 						settings: request.bugzillaSettings,
 						callback: request.callback
@@ -36,14 +32,14 @@ chrome.runtime.onMessage.addListener(function (
 				})
 				.catch(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
-						method: "loginFailed",
+						method: 'loginFailed',
 						response: response,
 						settings: request.bugzillaSettings
 					});
 				});
 			break;
 
-		case "getBug":
+		case 'getBug':
 			bugzilla
 				.getBug(request.bugId, request.fieldsToShow)
 				.then(function (response) {
@@ -56,10 +52,7 @@ chrome.runtime.onMessage.addListener(function (
 					});
 				})
 				.catch(function (response) {
-					var failMethod =
-						request.callbackMessage === "titleLoaded"
-							? "titleLoadFailed"
-							: "detailsLoadFailed";
+					var failMethod = request.callbackMessage === 'titleLoaded' ? 'titleLoadFailed' : 'detailsLoadFailed';
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: failMethod,
 						response: response,
@@ -69,7 +62,7 @@ chrome.runtime.onMessage.addListener(function (
 				});
 			break;
 
-		case "getBugs":
+		case 'getBugs':
 			bugzilla
 				.getBugs(request.bugIds, request.fieldsToShow)
 				.then(function (response) {
@@ -82,10 +75,7 @@ chrome.runtime.onMessage.addListener(function (
 					});
 				})
 				.catch(function (response) {
-					var failMethod =
-						request.callbackMessage === "titlesLoaded"
-							? "titlesLoadFailed"
-							: "detailsLoadFailed";
+					var failMethod = request.callbackMessage === 'titlesLoaded' ? 'titlesLoadFailed' : 'detailsLoadFailed';
 					chrome.tabs.sendMessage(sender.tab.id, {
 						method: failMethod,
 						response: response,
@@ -95,10 +85,10 @@ chrome.runtime.onMessage.addListener(function (
 				});
 			break;
 
-		case "getAttachments":
+		case 'getAttachments':
 			bugzilla.getAttachments(request.bugId).then(function (response) {
 				chrome.tabs.sendMessage(sender.tab.id, {
-					method: "attachmentsLoaded",
+					method: 'attachmentsLoaded',
 					response: response,
 					settings: request.bugzillaSettings,
 					bugId: request.bugId,
@@ -107,57 +97,51 @@ chrome.runtime.onMessage.addListener(function (
 			});
 			break;
 
-		case "updateBug":
-			bugzilla
-				.updateBug(request.bugId, request.params)
-				.then(function (response) {
-					chrome.tabs.sendMessage(sender.tab.id, {
-						method: "updateFinished",
-						response: response,
-						settings: request.bugzillaSettings,
-						bugId: request.bugId
-					});
+		case 'updateBug':
+			bugzilla.updateBug(request.bugId, request.params).then(function (response) {
+				chrome.tabs.sendMessage(sender.tab.id, {
+					method: 'updateFinished',
+					response: response,
+					settings: request.bugzillaSettings,
+					bugId: request.bugId
 				});
+			});
 			break;
 
-		case "updateBugs":
+		case 'updateBugs':
 			bugzilla.updateBugs(request.bugId, request.params);
 			break;
 
-		case "addComment":
-			bugzilla.addComment(
-				request.bugId,
-				request.comment,
-				request.hoursWorked
-			);
+		case 'addComment':
+			bugzilla.addComment(request.bugId, request.comment, request.hoursWorked);
 			break;
 
-		case "getProducts":
+		case 'getProducts':
 			bugzilla
 				.getProducts()
 
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
-						method: "productsLoaded",
+						method: 'productsLoaded',
 						response: response,
 						settings: request.bugzillaSettings
 					});
 				})
 				.catch(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
-						method: "productsLoadFailed",
+						method: 'productsLoadFailed',
 						response: response,
 						settings: request.bugzillaSettings
 					});
 				});
 			break;
 
-		case "duplicateBugs":
+		case 'duplicateBugs':
 			var dupeBug = function (i) {
 				bugzilla
 					.updateBugs(request.duplicates[i], {
 						dupe_of: request.dupeOf,
-						comment: { body: "Marking as duplicate." }
+						comment: { body: 'Marking as duplicate.' }
 					})
 					.then(function (response) {
 						// Dupe the next bug, if there is one to dupe
@@ -167,12 +151,12 @@ chrome.runtime.onMessage.addListener(function (
 
 						bugzilla
 							.updateBugs(request.duplicates[i], {
-								status: "CLOSED",
-								comment: { body: "Closing duplicate." }
+								status: 'CLOSED',
+								comment: { body: 'Closing duplicate.' }
 							})
 							.then(function (response) {
 								chrome.tabs.sendMessage(sender.tab.id, {
-									method: "duplicateFinished",
+									method: 'duplicateFinished',
 									response: response,
 									settings: request.bugzillaSettings,
 									duplicates: request.duplicates,
@@ -185,13 +169,13 @@ chrome.runtime.onMessage.addListener(function (
 			dupeBug(0);
 			break;
 
-		case "getFieldInfo":
+		case 'getFieldInfo':
 			bugzilla
 				.getFieldInfo(request.fields)
 
 				.then(function (response) {
 					chrome.tabs.sendMessage(sender.tab.id, {
-						method: "fieldInfoLoaded",
+						method: 'fieldInfoLoaded',
 						response: response,
 						settings: request.bugzillaSettings
 					});
@@ -199,7 +183,7 @@ chrome.runtime.onMessage.addListener(function (
 				.catch(function (response) {
 					var faultString = getFaultString(response);
 
-					if (faultString.indexOf("You must log in") > -1) {
+					if (faultString.indexOf('You must log in') > -1) {
 						showLoginForm(function () {
 							showMilestoneForm(repo);
 						});
@@ -207,17 +191,15 @@ chrome.runtime.onMessage.addListener(function (
 				});
 			break;
 	}
+	// mark asynchronous communication between background and content-script
 	return true;
 });
 
 /* Show the options page when first installed */
 chrome.runtime.onInstalled.addListener(async function (details) {
-	if (details.reason == "install") {
-		chrome.runtime.sendMessage(
-			{ method: "options" },
-			function (response) {}
-		);
-	} else if (details.reason == "update") {
+	if (details.reason == 'install') {
+		chrome.runtime.sendMessage({ method: 'options' }, function (response) {});
+	} else if (details.reason == 'update') {
 		// Any need for this?
 	}
 });
