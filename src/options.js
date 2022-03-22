@@ -1,5 +1,5 @@
-document.addEventListener("DOMContentLoaded", function () {
-	"use strict";
+document.addEventListener('DOMContentLoaded', function () {
+	'use strict';
 	var fields;
 
 	function addOptions(select, options, clear) {
@@ -9,10 +9,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		for (var i = 0; i < options.length; i++) {
 			var field = options[i].field || options[i].name;
-			var label =
-				options[i].label || options[i].display_name || options[i].name;
+			var label = options[i].label || options[i].display_name || options[i].name;
 
-			var opt = document.createElement("OPTION");
+			var opt = document.createElement('OPTION');
 			opt.value = field;
 			opt.text = label;
 
@@ -32,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			var label = options[i].label;
 
 			if ($.inArray(field, values) < 0) {
-				var opt = document.createElement("OPTION");
+				var opt = document.createElement('OPTION');
 				opt.value = field;
 				opt.text = label;
 
@@ -42,55 +41,37 @@ document.addEventListener("DOMContentLoaded", function () {
 	}
 
 	function flashStatus(msg) {
-		var status = document.getElementById("status");
+		var status = document.getElementById('status');
 		status.textContent = msg;
 		setTimeout(function () {
-			status.textContent = "";
+			status.textContent = '';
 		}, 1750);
 	}
 
 	function updateForm(items) {
-		document.getElementById("bugzillaURL").value = items.bugzillaURL;
-		document.getElementById("gitHubURL").value = items.gitHubURL;
-		document.getElementById("gitHubPullRequestURL").value =
-			items.fields.gitHubPullRequestURL;
-		document.getElementById("gitHubLabels").value =
-			items.fields.gitHubLabels;
-		document.getElementById("revision").value = items.fields.revision;
-		document.getElementById("codestatus").value = items.fields.codestatus;
-		document.getElementById("codestatusMerge").value =
-			items.values.codestatusMerge;
-		document.getElementById("codestatusMergeParent").value =
-			items.values.codestatusMergeParent;
-		document.getElementById("codestatusRelease").value =
-			items.values.codestatusRelease;
-		document.getElementById("codestatusPreRelease").value =
-			items.values.codestatusPreRelease;
-		document.getElementById("termBugzilla").value = items.terms.bugzilla;
-		document.getElementById("termBug").value = items.terms.bug;
-		document.getElementById("termBugs").value = items.terms.bugs;
+		document.getElementById('bugzillaURL').value = items.bugzillaURL;
+		document.getElementById('gitHubURL').value = items.gitHubURL;
+		document.getElementById('gitHubPullRequestURL').value = items.fields.gitHubPullRequestURL;
+		document.getElementById('gitHubLabels').value = items.fields.gitHubLabels;
+		document.getElementById('revision').value = items.fields.revision;
+		document.getElementById('codestatus').value = items.fields.codestatus;
+		document.getElementById('codestatusMerge').value = items.values.codestatusMerge;
+		document.getElementById('codestatusMergeParent').value = items.values.codestatusMergeParent;
+		document.getElementById('codestatusRelease').value = items.values.codestatusRelease;
+		document.getElementById('codestatusPreRelease').value = items.values.codestatusPreRelease;
+		document.getElementById('termBugzilla').value = items.terms.bugzilla;
+		document.getElementById('termBug').value = items.terms.bug;
+		document.getElementById('termBugs').value = items.terms.bugs;
 		updateCodeStatusSelects();
 
-		addOptions(
-			document.getElementById("bugInfoFields"),
-			items.bugInfoFields,
-			true
-		);
-		addOptions(
-			document.getElementById("bugListFields"),
-			items.bugList.fields,
-			true
-		);
-		addOptions(
-			document.getElementById("bugListSortOrder"),
-			items.bugList.sortOrder,
-			true
-		);
+		addOptions(document.getElementById('bugInfoFields'), items.bugInfoFields, true);
+		addOptions(document.getElementById('bugListFields'), items.bugList.fields, true);
+		addOptions(document.getElementById('bugListSortOrder'), items.bugList.sortOrder, true);
 	}
 
 	function updateCodeStatusSelects() {
-		var field = $("#codestatus").val();
-		$("[data-field]").data("field", field);
+		var field = $('#codestatus').val();
+		$('[data-field]').data('field', field);
 	}
 
 	// Restores options using the preferences stored in chrome.storage.
@@ -99,46 +80,30 @@ document.addEventListener("DOMContentLoaded", function () {
 	});
 
 	// Saves options to chrome.storage.sync.
-	document.getElementById("save").addEventListener("click", function () {
-		var bugzillaURL = document.getElementById("bugzillaURL").value;
-		var gitHubURL = document.getElementById("gitHubURL").value;
-		var gitHubPullRequestURL = document.getElementById(
-			"gitHubPullRequestURL"
-		).value;
-		var gitHubLabels = document.getElementById("gitHubLabels").value;
-		var revision = document.getElementById("revision").value;
-		var codestatus = document.getElementById("codestatus").value;
-		var codestatusMerge = document.getElementById("codestatusMerge").value;
-		var codestatusMergeParent = document.getElementById(
-			"codestatusMergeParent"
-		).value;
-		var codestatusRelease =
-			document.getElementById("codestatusRelease").value;
-		var codestatusPreRelease = document.getElementById(
-			"codestatusPreRelease"
-		).value;
-		var termBugzilla = document.getElementById("termBugzilla").value;
-		var termBug = document.getElementById("termBug").value;
-		var termBugs = document.getElementById("termBugs").value;
+	document.getElementById('save').addEventListener('click', function () {
+		var bugzillaURL = document.getElementById('bugzillaURL').value;
+		var gitHubURL = document.getElementById('gitHubURL').value;
+		var gitHubPullRequestURL = document.getElementById('gitHubPullRequestURL').value;
+		var gitHubLabels = document.getElementById('gitHubLabels').value;
+		var revision = document.getElementById('revision').value;
+		var codestatus = document.getElementById('codestatus').value;
+		var codestatusMerge = document.getElementById('codestatusMerge').value;
+		var codestatusMergeParent = document.getElementById('codestatusMergeParent').value;
+		var codestatusRelease = document.getElementById('codestatusRelease').value;
+		var codestatusPreRelease = document.getElementById('codestatusPreRelease').value;
+		var termBugzilla = document.getElementById('termBugzilla').value;
+		var termBug = document.getElementById('termBug').value;
+		var termBugs = document.getElementById('termBugs').value;
 
-		var bugInfoFields = $.map(
-			document.getElementById("bugInfoFields").options,
-			function (el) {
-				return { field: el.value, label: el.text };
-			}
-		);
-		var bugListFields = $.map(
-			document.getElementById("bugListFields").options,
-			function (el) {
-				return { field: el.value, label: el.text };
-			}
-		);
-		var bugListSortOrder = $.map(
-			document.getElementById("bugListSortOrder").options,
-			function (el) {
-				return { field: el.value, label: el.text };
-			}
-		);
+		var bugInfoFields = $.map(document.getElementById('bugInfoFields').options, function (el) {
+			return { field: el.value, label: el.text };
+		});
+		var bugListFields = $.map(document.getElementById('bugListFields').options, function (el) {
+			return { field: el.value, label: el.text };
+		});
+		var bugListSortOrder = $.map(document.getElementById('bugListSortOrder').options, function (el) {
+			return { field: el.value, label: el.text };
+		});
 
 		chrome.storage.sync.set(
 			{
@@ -169,39 +134,33 @@ document.addEventListener("DOMContentLoaded", function () {
 			},
 			function () {
 				// Update status to let user know options were saved.
-				flashStatus("Options saved.");
+				flashStatus('Options saved.');
 			}
 		);
 	});
 
 	// Resets to defaults and saves to chrome.storage.sync.
-	document.getElementById("defaults").addEventListener("click", function () {
+	document.getElementById('defaults').addEventListener('click', function () {
 		var modal = newModal();
 		modal
 			.getBody()
-			.html(
-				"<p>This will clear all currently saved options. " +
-					"Are you sure you want reset to defaults?</p>"
-			)
+			.html('<p>This will clear all currently saved options. ' + 'Are you sure you want reset to defaults?</p>')
 			.append(
-				$("<button>")
-					.html("Yes")
+				$('<button>')
+					.html('Yes')
 					.click(function () {
-						chrome.storage.sync.set(
-							STORAGE_DEFAULTS,
-							function (items) {
-								updateForm(STORAGE_DEFAULTS);
-								modal.remove();
+						chrome.storage.sync.set(STORAGE_DEFAULTS, function (items) {
+							updateForm(STORAGE_DEFAULTS);
+							modal.remove();
 
-								// Update status to let user know options were saved.
-								flashStatus("Options reset.");
-							}
-						);
+							// Update status to let user know options were saved.
+							flashStatus('Options reset.');
+						});
 					})
 			)
 			.append(
-				$("<button>")
-					.html("No")
+				$('<button>')
+					.html('No')
 					.click(function () {
 						modal.remove();
 					})
@@ -209,148 +168,145 @@ document.addEventListener("DOMContentLoaded", function () {
 	});
 
 	// Shows modal for exporting/importing settings as JSON.
-	document.getElementById("imexport").addEventListener("click", function () {
+	document.getElementById('imexport').addEventListener('click', function () {
 		var modal = newModal();
 		modal
 			.getBody()
 			.html(
-				"<p>All options can be exported and imported as JSON. " +
-					"Below, the current options are displayed by default or by clicking Reset to Current. " +
-					"Make any changes and click Import to import the settings.</p>"
+				'<p>All options can be exported and imported as JSON. ' +
+					'Below, the current options are displayed by default or by clicking Reset to Current. ' +
+					'Make any changes and click Import to import the settings.</p>'
 			)
 			.append(
-				$("<textarea>").attr({
-					id: "optionsJSON"
+				$('<textarea>').attr({
+					id: 'optionsJSON'
 				})
 			)
 			.append(
-				$("<button>")
-					.html("Reset to Current")
+				$('<button>')
+					.html('Reset to Current')
 					.click(function () {
-						$(this).parent().find(".status").html("");
-						chrome.storage.sync.get(
-							STORAGE_DEFAULTS,
-							function (items) {
-								$("#optionsJSON").val(JSON.stringify(items));
-							}
-						);
+						$(this).parent().find('.status').html('');
+						chrome.storage.sync.get(STORAGE_DEFAULTS, function (items) {
+							$('#optionsJSON').val(JSON.stringify(items));
+						});
 					})
 			)
 			.append(
-				$("<button>")
-					.html("Import")
+				$('<button>')
+					.html('Import')
 					.click(function () {
-						var $status = $(this).parent().find(".status");
-						$status.html("");
+						var $status = $(this).parent().find('.status');
+						$status.html('');
 						try {
-							var options = JSON.parse($("#optionsJSON").val());
+							var options = JSON.parse($('#optionsJSON').val());
 							chrome.storage.sync.set(options, function () {
 								updateForm(options);
-								$status.html("Import successful!");
+								$status.html('Import successful!');
 							});
 						} catch (e) {
-							$(this).parent().find(".status").html(e);
+							$(this).parent().find('.status').html(e);
 						}
 					})
 			)
 			.append(
-				$("<button>")
-					.html("Cancel")
+				$('<button>')
+					.html('Cancel')
 					.click(function () {
 						modal.remove();
 					})
 			)
-			.append($("<div>").addClass("status"));
+			.append($('<div>').addClass('status'));
 
 		chrome.storage.sync.get(STORAGE_DEFAULTS, function (items) {
-			$("#optionsJSON").val(JSON.stringify(items));
+			$('#optionsJSON').val(JSON.stringify(items));
 		});
 	});
 
 	// Manipulates options in a select control
-	$(".selectButtons").on("click", function (e) {
-		var $select = $("#" + e.target.dataset.select);
+	$('.selectButtons').on('click', function (e) {
+		var $select = $('#' + e.target.dataset.select);
 
 		switch (e.target.className) {
-			case "moveTop":
+			case 'moveTop':
 				var $first;
 				var $options = $select.children();
 
 				for (var i = 0; i < $options.length; i++) {
 					var $option = $options.eq(i);
 					if (!$first) {
-						if (!$option.is(":selected")) {
+						if (!$option.is(':selected')) {
 							$first = $option;
 						}
-					} else if ($option.is(":selected")) {
+					} else if ($option.is(':selected')) {
 						$first.before($option);
 					}
 				}
 
 				break;
-			case "moveUp":
+			case 'moveUp':
 				var $options = $select.children();
 
 				for (var i = 0; i < $options.length; i++) {
 					var $option = $options.eq(i);
 
-					if ($option.is(":selected") && i > 0) {
+					if ($option.is(':selected') && i > 0) {
 						var $prev = $option.prev();
-						if (!$prev.is(":selected")) {
+						if (!$prev.is(':selected')) {
 							$prev.before($option);
 						}
 					}
 				}
 
 				break;
-			case "moveDown":
+			case 'moveDown':
 				var $options = $select.children();
 
 				for (var i = $options.length - 1; i > -1; i--) {
 					var $option = $options.eq(i);
 
-					if ($option.is(":selected") && i < $options.length - 1) {
+					if ($option.is(':selected') && i < $options.length - 1) {
 						var $next = $option.next();
-						if (!$next.is(":selected")) {
+						if (!$next.is(':selected')) {
 							$next.after($option);
 						}
 					}
 				}
 
 				break;
-			case "moveBottom":
+			case 'moveBottom':
 				var $last;
 				var $options = $select.children();
 
 				for (var i = $options.length - 1; i > -1; i--) {
 					var $option = $options.eq(i);
 					if (!$last) {
-						if (!$option.is(":selected")) {
+						if (!$option.is(':selected')) {
 							$last = $option;
 						}
-					} else if ($option.is(":selected")) {
+					} else if ($option.is(':selected')) {
 						$last.after($option);
 					}
 				}
 
 				break;
-			case "remove":
-				$select.find(":selected").remove();
+			case 'remove':
+				$select.find(':selected').remove();
 				break;
-			case "add":
+			case 'add':
 				showBugzillaFieldModal($select);
 				break;
 		}
 	});
 
-	$(".fieldSelect").on("click", function (e) {
-		var $el = $("#" + e.target.dataset.target);
+	$('.fieldSelect').on('click', function (e) {
+		var $el = $('#' + e.target.dataset.target);
 		showBugzillaFieldModal($el);
 	});
 
-	$(".valueSelect").on("click", function (e) {
-		var $el = $("#" + e.target.dataset.target);
-		var field = $(e.target).data("field");
+	$('.valueSelect').on('click', function (e) {
+		var $el = $('#' + e.target.dataset.target);
+		var field = $(e.target).data('field');
 
 		if (field.length > 0) {
 			showBugzillaValueModal($el, field);
@@ -358,10 +314,10 @@ document.addEventListener("DOMContentLoaded", function () {
 			var modal = newModal();
 			modal
 				.getBody()
-				.html("<p>You must provide a valid field for Code Status.</p>")
+				.html('<p>You must provide a valid field for Code Status.</p>')
 				.append(
-					$("<button>")
-						.html("OK")
+					$('<button>')
+						.html('OK')
 						.click(function () {
 							modal.remove();
 						})
@@ -370,22 +326,20 @@ document.addEventListener("DOMContentLoaded", function () {
 	});
 
 	//
-	$("#bugzillaURL").change(function () {
+	$('#bugzillaURL').change(function () {
 		fields = false;
 	});
 
 	//
-	$("#codestatus").change(function () {
+	$('#codestatus').change(function () {
 		updateCodeStatusSelects();
 	});
 
 	function newModal(html) {
-		$(".options")
-			.append($("<div>").addClass("modalBackground"))
-			.append($("<div>").addClass("modal").html(html));
+		$('.options').append($('<div>').addClass('modalBackground')).append($('<div>').addClass('modal').html(html));
 
-		var $modal = $(".modal");
-		var $modalBackground = $(".modalBackground");
+		var $modal = $('.modal');
+		var $modalBackground = $('.modalBackground');
 
 		return {
 			getBody: function () {
@@ -399,58 +353,49 @@ document.addEventListener("DOMContentLoaded", function () {
 	}
 
 	function showBugzillaFieldModal($el) {
-		var multiple = $el.is("[multiple]");
-		var bugzillaURL = $("#bugzillaURL").val();
+		var multiple = $el.is('[multiple]');
+		var bugzillaURL = $('#bugzillaURL').val();
 
-		var modal = newModal("Loading fields from " + bugzillaURL + "...");
+		var modal = newModal('Loading fields from ' + bugzillaURL + '...');
 		var $modal = modal.getBody();
 
 		var showSelectForm = function () {
 			$modal
 				.html(
-					$("<select>")
+					$('<select>')
 						.attr({
-							id: "fieldSelect",
-							name: "fieldSelect"
+							id: 'fieldSelect',
+							name: 'fieldSelect'
 						})
 						.prop({
 							multiple: multiple
 						})
 				)
 				.append(
-					$("<div>")
+					$('<div>')
 						.append(
-							$("<button>")
-								.html(multiple ? "Add Selected" : "OK")
+							$('<button>')
+								.html(multiple ? 'Add Selected' : 'OK')
 								.click(function () {
-									if ($el.is("select")) {
-										addSelected(
-											$el.get(0),
-											$(
-												"#fieldSelect option:selected"
-											).get()
-										);
+									if ($el.is('select')) {
+										addSelected($el.get(0), $('#fieldSelect option:selected').get());
 									} else {
-										$el.val(
-											$(
-												"#fieldSelect option:selected"
-											).val()
-										);
+										$el.val($('#fieldSelect option:selected').val());
 									}
 
 									modal.remove();
 								})
 						)
 						.append(
-							$("<button>")
-								.html("Cancel")
+							$('<button>')
+								.html('Cancel')
 								.click(function () {
 									modal.remove();
 								})
 						)
 				);
 
-			addOptions(document.getElementById("fieldSelect"), fields);
+			addOptions(document.getElementById('fieldSelect'), fields);
 		};
 
 		if (!fields) {
@@ -460,11 +405,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				.then(function (response) {
 					fields = response.fields;
 					fields.sort(function (a, b) {
-						return a.display_name < b.display_name
-							? -1
-							: a.display_name > b.display_name
-							? 1
-							: 0;
+						return a.display_name < b.display_name ? -1 : a.display_name > b.display_name ? 1 : 0;
 					});
 
 					showSelectForm();
@@ -474,17 +415,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 					$modal
 						.html(
-							$("<p>").html(
-								"There was an error connecting to Bugzilla" +
-									(faultString && faultString.length > 0
-										? ":"
-										: ".")
-							)
+							$('<p>').html('There was an error connecting to Bugzilla' + (faultString && faultString.length > 0 ? ':' : '.'))
 						)
-						.append($("<p>").html(faultString))
+						.append($('<p>').html(faultString))
 						.append(
-							$("<button>")
-								.html("OK")
+							$('<button>')
+								.html('OK')
 								.click(function () {
 									modal.remove();
 								})
@@ -496,60 +432,49 @@ document.addEventListener("DOMContentLoaded", function () {
 	}
 
 	function showBugzillaValueModal($el, field) {
-		var multiple = $el.is("[multiple]");
-		var bugzillaURL = $("#bugzillaURL").val();
+		var multiple = $el.is('[multiple]');
+		var bugzillaURL = $('#bugzillaURL').val();
 
-		var modal = newModal(
-			"Loading values for " + field + " from " + bugzillaURL + "..."
-		);
+		var modal = newModal('Loading values for ' + field + ' from ' + bugzillaURL + '...');
 		var $modal = modal.getBody();
 
 		var showSelectForm = function (values) {
 			$modal
 				.html(
-					$("<select>")
+					$('<select>')
 						.attr({
-							id: "valueSelect",
-							name: "valueSelect"
+							id: 'valueSelect',
+							name: 'valueSelect'
 						})
 						.prop({
 							multiple: multiple
 						})
 				)
 				.append(
-					$("<div>")
+					$('<div>')
 						.append(
-							$("<button>")
-								.html(multiple ? "Add Selected" : "OK")
+							$('<button>')
+								.html(multiple ? 'Add Selected' : 'OK')
 								.click(function () {
-									if ($el.is("select")) {
-										addSelected(
-											$el.get(0),
-											$(
-												"#valueSelect option:selected"
-											).get()
-										);
+									if ($el.is('select')) {
+										addSelected($el.get(0), $('#valueSelect option:selected').get());
 									} else {
-										$el.val(
-											$(
-												"#valueSelect option:selected"
-											).val()
-										);
+										$el.val($('#valueSelect option:selected').val());
 									}
 
 									modal.remove();
 								})
 						)
 						.append(
-							$("<button>")
-								.html("Cancel")
+							$('<button>')
+								.html('Cancel')
 								.click(function () {
 									modal.remove();
 								})
 						)
 				);
 
-			addOptions(document.getElementById("valueSelect"), values);
+			addOptions(document.getElementById('valueSelect'), values);
 		};
 
 		var bugzilla = new Bugzilla({ bugzillaURL: bugzillaURL });
@@ -562,18 +487,11 @@ document.addEventListener("DOMContentLoaded", function () {
 			.catch(function (response) {
 				var faultString = response.toString();
 				$modal
-					.html(
-						$("<p>").html(
-							"There was an error connecting to Bugzilla" +
-								(faultString && faultString.length > 0
-									? ":"
-									: ".")
-						)
-					)
-					.append($("<p>").html(faultString))
+					.html($('<p>').html('There was an error connecting to Bugzilla' + (faultString && faultString.length > 0 ? ':' : '.')))
+					.append($('<p>').html(faultString))
 					.append(
-						$("<button>")
-							.html("OK")
+						$('<button>')
+							.html('OK')
 							.click(function () {
 								modal.remove();
 							})

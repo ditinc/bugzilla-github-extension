@@ -4,7 +4,7 @@
  * @classdesc An object that communicates with Bugzilla via XML-RPC.
  */
 var Bugzilla = function (settings) {
-	"use strict";
+	'use strict';
 
 	/**
 	 * The URL of the Bugzilla server.
@@ -18,14 +18,14 @@ var Bugzilla = function (settings) {
 	 * @private
 	 * @type {String}
 	 */
-	this.rpcUrl = this.url + "/jsonrpc.cgi";
+	this.rpcUrl = this.url + '/jsonrpc.cgi';
 
 	/**
 	 * The URL for Bugzilla attachments.
 	 * @private
 	 * @type {String}
 	 */
-	this.attachmentUrl = this.url + "/attachment.cgi";
+	this.attachmentUrl = this.url + '/attachment.cgi';
 
 	/**
 	 * The token used for logging in in newer versions of Bugzilla.
@@ -40,9 +40,9 @@ var Bugzilla = function (settings) {
  * Not really useful other than confirming connectivity.
  */
 Bugzilla.prototype.getVersion = function () {
-	"use strict";
+	'use strict';
 
-	return fetchRpcResponse(this.rpcUrl, "Bugzilla.version");
+	return fetchRpcResponse(this.rpcUrl, 'Bugzilla.version');
 };
 
 /**
@@ -52,9 +52,9 @@ Bugzilla.prototype.getVersion = function () {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.getBug = function (bugId, includeFields) {
-	"use strict";
+	'use strict';
 
-	const methodName = "Bug.get";
+	const methodName = 'Bug.get';
 	const params = [
 		{
 			Bugzilla_token: this.token,
@@ -72,9 +72,9 @@ Bugzilla.prototype.getBug = function (bugId, includeFields) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.getBugs = function (bugIds, includeFields) {
-	"use strict";
+	'use strict';
 
-	const methodName = "Bug.get";
+	const methodName = 'Bug.get';
 	const params = [
 		{
 			Bugzilla_token: this.token,
@@ -94,10 +94,10 @@ Bugzilla.prototype.getBugs = function (bugIds, includeFields) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.addComment = function (bugId, comment, hoursWorked) {
-	"use strict";
+	'use strict';
 
 	hoursWorked = hoursWorked || 0;
-	const methodName = "Bug.add_comment";
+	const methodName = 'Bug.add_comment';
 	const params = [
 		{
 			Bugzilla_token: this.token,
@@ -116,9 +116,9 @@ Bugzilla.prototype.addComment = function (bugId, comment, hoursWorked) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.updateBugs = function (bugIds, params) {
-	"use strict";
+	'use strict';
 
-	const methodName = "Bug.update";
+	const methodName = 'Bug.update';
 	const body = [
 		{
 			Bugzilla_token: this.token,
@@ -136,9 +136,9 @@ Bugzilla.prototype.updateBugs = function (bugIds, params) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.updateBug = function (bugId, params) {
-	"use strict";
+	'use strict';
 
-	const methodName = "Bug.update";
+	const methodName = 'Bug.update';
 	const body = [
 		{
 			Bugzilla_token: this.token,
@@ -155,14 +155,14 @@ Bugzilla.prototype.updateBug = function (bugId, params) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.getAttachments = function (bugId) {
-	"use strict";
+	'use strict';
 
-	const methodName = "Bug.attachments";
+	const methodName = 'Bug.attachments';
 	const params = [
 		{
 			Bugzilla_token: this.token,
 			ids: [bugId],
-			exclude_fields: ["data"]
+			exclude_fields: ['data']
 		}
 	];
 	return fetchRpcResponse(this.rpcUrl, methodName, params);
@@ -175,9 +175,9 @@ Bugzilla.prototype.getAttachments = function (bugId) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.login = function (username, password) {
-	"use strict";
+	'use strict';
 
-	const methodName = "User.login";
+	const methodName = 'User.login';
 	const params = [
 		{
 			login: username,
@@ -193,9 +193,9 @@ Bugzilla.prototype.login = function (username, password) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.logout = function (username, password) {
-	"use strict";
+	'use strict';
 
-	const methodName = "User.logout";
+	const methodName = 'User.logout';
 	const params = [{ Bugzilla_token: this.token }];
 	return fetchRpcResponse(this.rpcUrl, methodName, params);
 };
@@ -205,7 +205,7 @@ Bugzilla.prototype.logout = function (username, password) {
  * @param {string} token - The token of the user used to log in.
  */
 Bugzilla.prototype.setToken = function (token) {
-	"use strict";
+	'use strict';
 
 	this.token = token;
 };
@@ -216,10 +216,10 @@ Bugzilla.prototype.setToken = function (token) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.searchBugs = function (searchCriteria) {
-	"use strict";
+	'use strict';
 
 	searchCriteria.Bugzilla_token = this.token;
-	const methodName = "Bug.search";
+	const methodName = 'Bug.search';
 	const params = [searchCriteria];
 	return fetchRpcResponse(this.rpcUrl, methodName, params);
 };
@@ -230,9 +230,9 @@ Bugzilla.prototype.searchBugs = function (searchCriteria) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.getFieldInfo = function (fieldNames) {
-	"use strict";
+	'use strict';
 
-	const methodName = "Bug.fields";
+	const methodName = 'Bug.fields';
 	const params = [
 		{
 			Bugzilla_token: this.token
@@ -248,25 +248,22 @@ Bugzilla.prototype.getFieldInfo = function (fieldNames) {
  * @return {Promise} On success, will return the response object from Bugzilla.
  */
 Bugzilla.prototype.getProducts = function () {
-	"use strict";
+	'use strict';
 	var xmlrpcUrl = this.xmlrpcUrl;
 
-	const methodName = "Product.get_enterable_products";
+	const methodName = 'Product.get_enterable_products';
 	const params = [{ Bugzilla_token: this.token }];
-	return fetchRpcResponse(this.rpcUrl, methodName, params).then(
-		(response) => {
-			return fetchRpcResponse(this.rpcUrl, "Product.get", [
-				{
-					Bugzilla_token: this.token,
-					ids: response.ids
-				}
-			]);
-		}
-	);
+	return fetchRpcResponse(this.rpcUrl, methodName, params).then((response) => {
+		return fetchRpcResponse(this.rpcUrl, 'Product.get', [
+			{
+				Bugzilla_token: this.token,
+				ids: response.ids
+			}
+		]);
+	});
 };
 
 /**
- *
  * @param {String} url the url to fetch the jsonRPC data from
  * @param {String} methodName the method being used. Reference Bugzilla documentations https://www.bugzilla.org/docs/4.0/en/html/api/Bugzilla/WebService/Bug.html
  * @param {List<Struct>} params an array of param structs representing the params being passed into the method
@@ -274,12 +271,12 @@ Bugzilla.prototype.getProducts = function () {
  */
 const fetchRpcResponse = (url, methodName, params) => {
 	return fetch(url, {
-		method: "POST",
+		method: 'POST',
 		headers: {
-			"Content-Type": "application/json"
+			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify({
-			jsonrpc: "2.0",
+			jsonrpc: '2.0',
 			method: methodName,
 			params: params,
 			id: methodName
