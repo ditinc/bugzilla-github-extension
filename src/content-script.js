@@ -10,7 +10,7 @@ chrome.storage.sync.get(STORAGE_DEFAULTS, function (settings) {
 // invoked with the callback ids from showLoginForm()
 let callbacks = {};
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 	switch (request.method) {
 		case "loginFinished":
 			var $form = $("#bzLoginForm");
@@ -160,7 +160,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	}
 	
 	// complete the communication cycle between the background and content-script
-	sendResponse({status: "done"})
+	sendResponse({})
 });
 
 function getRepo() {

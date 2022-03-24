@@ -4,7 +4,7 @@ try {
 	console.error(e);
 }
 /* Handle calls when we're on our GitHub or Bugzilla pages */
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 	if (request.bugzillaSettings != null) {
 		// This object will be used to interact with Bugzilla.
 		var bugzilla = new Bugzilla(request.bugzillaSettings);
@@ -191,8 +191,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				});
 			break;
 	}
-	// mark asynchronous communication between background and content-script
-	return true;
+
+	sendResponse({});
 });
 
 /* Show the options page when first installed */
