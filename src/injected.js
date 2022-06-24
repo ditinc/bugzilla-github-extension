@@ -239,8 +239,20 @@
 							}
 						}
 						
-						if ((syncComment && summary.length > 0) || (syncPendingComments && $pendingComments.length > 0)) {					
+						if ((syncComment && summary.length > 0) || (syncPendingComments && $pendingComments.length > 0)) {
+							// Always submit the comment, just in case reopening fails
 							window.postMessage({method: "addComment", bugId: bugId, comment: comment, hoursWorked: hoursWorked}, '*');
+							
+							// If rejecting, try to reopen... this could fail, like when the quark isn't RESOLVED/VERIFIED/CLOSED.
+							if (reviewType === "reject") {
+								var params = {
+									status: "REOPENED",
+									resolution: "",
+									"comment": {"body": "Setting to REOPENED."}
+								};
+
+								window.postMessage({method: "updateBug", bugId: bugId, params: params}, '*');
+							}
 						}
 					}
 				}
@@ -393,6 +405,13 @@
 							window.postMessage({method: "updateBugs", bugIds: bugIds, params: params}, '*');
 						}
 					}
+				}
+				
+				/* Makes sure the merge options are loaded before merging */
+				if (matches(event.target, "button[type='button'].merge-box-button")) {
+					if (!bugId) { return; } // Don't continue if we aren't mapped to a bug
+
+					injectMergeOptions(closest(event.target, "div#partial-pull-merging"));
 				}
 				
 				/* Updates the bug in Bugzilla when merging a pull request */
