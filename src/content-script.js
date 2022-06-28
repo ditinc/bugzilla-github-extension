@@ -325,7 +325,7 @@ function populateMilestoneList(milestones, productMap) {
 
 	$div.before(
 		$("<div>")
-			.addClass("select-menu-text-filter pb-10")
+			.addClass("select-menu-text-filter")
 			.css({
 				"padding-bottom": "10px",
 				"border-bottom": "1px solid #ddd",

@@ -102,12 +102,12 @@
 	
 		var createListeners = function() {
 			// proxy the html replaceWith instead of jQuery's replaceWith
-			var testReplace = HTMLDivElement.prototype.replaceWith;
+			var proxiedReplace = HTMLDivElement.prototype.replaceWith;
 			
 			HTMLDivElement.prototype.replaceWith = function(newNode) {
 				var element = newNode.querySelector('div');
 				applyExtension(element);
-				testReplace.apply(this, arguments);
+				proxiedReplace.apply(this, arguments);
 			}
 
 			var pjaxBeforeReplaceHandler = function(e) {
@@ -117,6 +117,22 @@
 			/* Allows us to modify content before GitHub renders it... this handles PJAX */
 			document.removeEventListener("pjax:beforeReplace", pjaxBeforeReplaceHandler);
 			document.addEventListener("pjax:beforeReplace", pjaxBeforeReplaceHandler);
+
+			// proxy the Turbo FrameRenderer's loadFrameElement function to catch navigation
+			var proxiedLoadFrameElement = Turbo.FrameRenderer.prototype.loadFrameElement;
+			
+			Turbo.FrameRenderer.prototype.loadFrameElement = function() {
+				proxiedLoadFrameElement.apply(this, arguments);
+				applyExtension(this.currentSnapshot.element);
+			}
+
+			// proxy the Turbo navigator's visitCompleted function to catch navigation
+			var proxiedVisitCompleted = Turbo.navigator.visitCompleted;
+			
+			Turbo.navigator.visitCompleted = function() {
+				proxiedVisitCompleted.apply(this, arguments);
+				applyExtension(this.view.element);
+			}
 				
 			var clickHandler = function(event) {
 				/* Syncs comments with the bug in Bugzilla */
@@ -1189,27 +1205,26 @@
 				});
 			});
 			
-			/* Add button to milestone in sidebar */
-			editSection(contents, '#partial-discussion-sidebar', function($sidebar) {
-				var nodeToRemove = $sidebar.querySelectorAll("#bzButtonMilestone")[0];
+			/* Add button to milestone in button bar */
+			editSection(contents, '.milestones-flexbox-gap', function($buttonbar) {
+				var nodeToRemove = $buttonbar.querySelectorAll("#bzButtonMilestone")[0];
 				if (nodeToRemove) {
 					nodeToRemove.parentNode.removeChild(nodeToRemove);
 				}
-				nodeToRemove = $sidebar.querySelectorAll("#bzButtonMilestoneUnresolved")[0];
+				nodeToRemove = $buttonbar.querySelectorAll("#bzButtonMilestoneUnresolved")[0];
 				if (nodeToRemove) {
 					nodeToRemove.parentNode.removeChild(nodeToRemove);
 				}
-				var $a = $sidebar.querySelectorAll("a.milestone-name")[0];
+				var $a = $buttonbar.querySelectorAll("a.btn.mr-1")[0];
 				
 				if ($a) {
-					var milestone = $a.getAttribute("title");
-						
-					$a.insertAdjacentHTML("afterend",
-						`<a class="btn btn-sm" style="width: 100%; text-align: center; margin-top: 5px;" id="bzButtonMilestoneUnresolved" href="` + bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
+					var milestone = $buttonbar.querySelectorAll("a.btn.btn-primary")[0].getAttribute("href").split("=")[1];
+					$a.insertAdjacentHTML("beforebegin",
+						`<a class="btn" style="text-align: center;" id="bzButtonMilestoneUnresolved" href="` + bugListUrl + "&resolution=---&product=" + encodeURIComponent(product.name) + "&target_milestone=" + milestone + `" target="_blank">`
 							+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
 							+ " View unresolved only"
 						+ `</a>`
-						+ `<a class="btn btn-sm" style="width: 100%; text-align: center; margin-top: 5px;" id="bzButtonMilestone" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + encodeURIComponent(milestone) + `" target="_blank">`
+						+ `<a class="btn mr-2" style="text-align: center;" id="bzButtonMilestone" href="` + bugListUrl + "&product=" + encodeURIComponent(product.name) + "&target_milestone=" + milestone + `" target="_blank">`
 							+ '<svg height="16" width="16" class="octicon octicon-bug"><path d="M11 10h3v-1H11v-1l3.17-1.03-0.34-0.94-2.83 0.97v-1c0-0.55-0.45-1-1-1v-1c0-0.48-0.36-0.88-0.83-0.97l1.03-1.03h1.8V1H9.8L7.8 3h-0.59L5.2 1H3v1h1.8l1.03 1.03c-0.47 0.09-0.83 0.48-0.83 0.97v1c-0.55 0-1 0.45-1 1v1L1.17 6.03l-0.34 0.94 3.17 1.03v1H1v1h3v1L0.83 12.03l0.34 0.94 2.83-0.97v1c0 0.55 0.45 1 1 1h1l1-1V6h1v7l1 1h1c0.55 0 1-0.45 1-1v-1l2.83 0.97 0.34-0.94-3.17-1.03v-1zM9 5H6v-1h3v1z" /></svg>'
 							+ " View all in " + settings.terms.bugzilla + ""
 						+ `</a>`
